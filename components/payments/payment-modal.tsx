@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { QrCode, CreditCard, CheckCircle, XCircle, RefreshCw, TestTube } from 'lucide-react'
-import Image from 'next/image'
+import { CreditCard, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
 import { useRouter } from 'next/navigation'
@@ -25,21 +24,37 @@ type PaymentStatus = 'idle' | 'loading' | 'qr_ready' | 'checking' | 'success' | 
 
 export function PaymentModal({ isOpen, onClose, onPaymentSuccess, course }: PaymentModalProps) {
   const [status, setStatus] = useState<PaymentStatus>('idle')
-  const [qrCode, setQrCode] = useState<string | null>(null)
   const [orderId, setOrderId] = useState<string | null>(null)
   const [checkInterval, setCheckInterval] = useState<NodeJS.Timeout | null>(null)
   const [isTestMode, setIsTestMode] = useState(false)
+  const [payUrl, setPayUrl] = useState<string | null>(null)
   const { toast } = useToast()
   const { user } = useAuth()
   const router = useRouter()
+
+  // Auto-open provider page on desktop once the pay URL is ready (keep original tab for polling)
+  useEffect(() => {
+    if (
+      isOpen &&
+      status === 'qr_ready' &&
+      payUrl &&
+      !isTestMode &&
+      typeof window !== 'undefined' &&
+      !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+    ) {
+      try {
+        window.open(payUrl, '_blank', 'noopener')
+      } catch {}
+    }
+  }, [isOpen, status, payUrl, isTestMode])
 
   // Reset state when modal opens/closes
   useEffect(() => {
     if (!isOpen) {
       setStatus('idle')
-      setQrCode(null)
       setOrderId(null)
       setIsTestMode(false)
+      setPayUrl(null)
       if (checkInterval) {
         clearInterval(checkInterval)
         setCheckInterval(null)
@@ -75,8 +90,8 @@ export function PaymentModal({ isOpen, onClose, onPaymentSuccess, course }: Paym
       const data = await response.json()
 
       if (response.ok) {
-        setQrCode(data.qrImage)
         setOrderId(data.orderId)
+        setPayUrl(data.bylUrl || data.qpayUrl || null)
         setStatus('qr_ready')
         
         // Check if this is test mode (QR code contains test data or placeholder)
@@ -107,7 +122,7 @@ export function PaymentModal({ isOpen, onClose, onPaymentSuccess, course }: Paym
 
         toast({
           title: 'Төлбөрийн хүсэлт үүсгэгдлээ',
-          description: isTestMode ? 'Тест горимд QR код үүсгэгдлээ' : 'QR код-оор төлбөр төлнө үү'
+          description: 'Төлбөрийн холбоос үүсгэгдлээ'
         })
       } else {
         throw new Error(data.error || 'Төлбөрийн хүсэлт үүсгэхэд алдаа гарлаа')
@@ -123,52 +138,7 @@ export function PaymentModal({ isOpen, onClose, onPaymentSuccess, course }: Paym
     }
   }
 
-  const handleTestPayment = async () => {
-    if (!orderId) return
-
-    try {
-      const response = await fetch(`/api/payments/test/complete/${orderId}`, {
-        method: 'POST'
-      })
-
-      if (response.ok) {
-        setStatus('success')
-        // Ensure user.enrolledCourses is updated (idempotent)
-        try {
-          await fetch('/api/users/enroll', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ courseId: course._id })
-          })
-        } catch (e) {
-          console.error('Enroll mirror save failed (test):', e)
-        }
-        if (checkInterval) {
-          clearInterval(checkInterval)
-          setCheckInterval(null)
-        }
-        toast({
-          title: 'Тест төлбөр амжилттай!',
-          description: 'Та одоо хичээлээ үзэх боломжтой',
-        })
-        
-        // Call success callback and redirect to course after 3 seconds
-        setTimeout(() => {
-          onPaymentSuccess?.()
-          onClose()
-          router.push(`/learn/${course._id}`)
-        }, 3000)
-      } else {
-        throw new Error('Тест төлбөр төлөхэд алдаа гарлаа')
-      }
-    } catch (error) {
-      toast({
-        title: 'Тест төлбөрийн алдаа',
-        description: 'Дахин оролдоно уу',
-        variant: 'destructive'
-      })
-    }
-  }
+  // Removed test payment handler and QR preview in favor of provider link only
 
   const checkPaymentStatus = async (orderId: string) => {
     try {
@@ -270,68 +240,29 @@ export function PaymentModal({ isOpen, onClose, onPaymentSuccess, course }: Paym
             </div>
           )}
 
-          {status === 'qr_ready' && qrCode && (
+          {status === 'qr_ready' && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-center flex items-center justify-center">
-                  {isTestMode && <TestTube className="w-5 h-5 mr-2 text-orange-500" />}
-                  QR код скан хийнэ үү
-                  {isTestMode && <span className="text-xs text-orange-500 ml-2">(Тест)</span>}
-                </CardTitle>
+                <CardTitle className="text-center flex items-center justify-center">Төлбөрийн мэдээлэл</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <div className="flex justify-center mb-4">
-                  <div className="relative w-[200px] h-[200px] border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
-                    {isTestMode && qrCode.includes('api.qrserver.com') ? (
-                      <Image
-                        src={qrCode}
-                        alt="Test QR Code"
-                        width={200}
-                        height={200}
-                        className="rounded-lg"
-                      />
-                    ) : isTestMode ? (
-                      <div className="text-center">
-                        <TestTube className="w-12 h-12 mx-auto mb-2 text-orange-500" />
-                        <p className="text-sm text-gray-600">Тест QR код</p>
-                        <p className="text-xs text-gray-500">200x200px</p>
-                      </div>
-                    ) : (
-                      <Image
-                        src={qrCode}
-                        alt="Byl QR Code"
-                        width={200}
-                        height={200}
-                        className="rounded-lg"
-                      />
-                    )}
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 mb-4">
-                  {isTestMode 
-                    ? 'Тест горимд байна. Доорх товчийг дарж төлбөр төлөх боломжтой.'
-                    : 'Бил апп-аар QR код скан хийж төлбөр төлнө үү'
-                  }
-                </p>
+                {payUrl ? (
+                  <>
+                    <p className="text-sm text-gray-600 mb-4">Дараах товчийг дарж төлбөрийн хуудсыг нээнэ үү.</p>
+                    <Button asChild className="w-full mb-3">
+                      <a href={payUrl} target="_blank" rel="noopener noreferrer">Төлбөрийн хуудсыг нээх</a>
+                    </Button>
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-600 mb-4">Төлбөрийн холбоос үүсгэхэд алдаа гарлаа. Дахин оролдоно уу.</p>
+                )}
                 <div className="text-xs text-gray-500 mb-4">
                   Захиалгын дугаар: {orderId}
                 </div>
-                
-                {isTestMode ? (
-                  <Button 
-                    onClick={handleTestPayment}
-                    className="w-full"
-                    variant="outline"
-                  >
-                    <TestTube className="w-4 h-4 mr-2" />
-                    Тест төлбөр төлөх
-                  </Button>
-                ) : (
-                  <div className="flex items-center justify-center text-sm text-blue-600">
-                    <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                    Төлбөрийн статус шалгаж байна...
-                  </div>
-                )}
+                <div className="flex items-center justify-center text-sm text-blue-600">
+                  <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                  Төлбөрийн статус шалгаж байна...
+                </div>
               </CardContent>
             </Card>
           )}

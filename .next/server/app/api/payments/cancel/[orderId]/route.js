@@ -1,0 +1,176 @@
+"use strict";
+/*
+ * ATTENTION: An "eval-source-map" devtool has been used.
+ * This devtool is neither made for production nor for readable output files.
+ * It uses "eval()" calls to create a separate source file with attached SourceMaps in the browser devtools.
+ * If you are trying to read the output file, select a different devtool (https://webpack.js.org/configuration/devtool/)
+ * or disable the default devtool with "devtool: false".
+ * If you are looking for production-ready output files, see mode: "production" (https://webpack.js.org/configuration/mode/).
+ */
+(() => {
+var exports = {};
+exports.id = "app/api/payments/cancel/[orderId]/route";
+exports.ids = ["app/api/payments/cancel/[orderId]/route"];
+exports.modules = {
+
+/***/ "mongoose":
+/*!***************************!*\
+  !*** external "mongoose" ***!
+  \***************************/
+/***/ ((module) => {
+
+module.exports = require("mongoose");
+
+/***/ }),
+
+/***/ "../../client/components/action-async-storage.external":
+/*!*******************************************************************************!*\
+  !*** external "next/dist/client/components/action-async-storage.external.js" ***!
+  \*******************************************************************************/
+/***/ ((module) => {
+
+module.exports = require("next/dist/client/components/action-async-storage.external.js");
+
+/***/ }),
+
+/***/ "../../client/components/request-async-storage.external":
+/*!********************************************************************************!*\
+  !*** external "next/dist/client/components/request-async-storage.external.js" ***!
+  \********************************************************************************/
+/***/ ((module) => {
+
+module.exports = require("next/dist/client/components/request-async-storage.external.js");
+
+/***/ }),
+
+/***/ "../../client/components/static-generation-async-storage.external":
+/*!******************************************************************************************!*\
+  !*** external "next/dist/client/components/static-generation-async-storage.external.js" ***!
+  \******************************************************************************************/
+/***/ ((module) => {
+
+module.exports = require("next/dist/client/components/static-generation-async-storage.external.js");
+
+/***/ }),
+
+/***/ "next/dist/compiled/next-server/app-page.runtime.dev.js":
+/*!*************************************************************************!*\
+  !*** external "next/dist/compiled/next-server/app-page.runtime.dev.js" ***!
+  \*************************************************************************/
+/***/ ((module) => {
+
+module.exports = require("next/dist/compiled/next-server/app-page.runtime.dev.js");
+
+/***/ }),
+
+/***/ "next/dist/compiled/next-server/app-route.runtime.dev.js":
+/*!**************************************************************************!*\
+  !*** external "next/dist/compiled/next-server/app-route.runtime.dev.js" ***!
+  \**************************************************************************/
+/***/ ((module) => {
+
+module.exports = require("next/dist/compiled/next-server/app-route.runtime.dev.js");
+
+/***/ }),
+
+/***/ "buffer":
+/*!*************************!*\
+  !*** external "buffer" ***!
+  \*************************/
+/***/ ((module) => {
+
+module.exports = require("buffer");
+
+/***/ }),
+
+/***/ "crypto":
+/*!*************************!*\
+  !*** external "crypto" ***!
+  \*************************/
+/***/ ((module) => {
+
+module.exports = require("crypto");
+
+/***/ }),
+
+/***/ "stream":
+/*!*************************!*\
+  !*** external "stream" ***!
+  \*************************/
+/***/ ((module) => {
+
+module.exports = require("stream");
+
+/***/ }),
+
+/***/ "util":
+/*!***********************!*\
+  !*** external "util" ***!
+  \***********************/
+/***/ ((module) => {
+
+module.exports = require("util");
+
+/***/ }),
+
+/***/ "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader.js?name=app%2Fapi%2Fpayments%2Fcancel%2F%5BorderId%5D%2Froute&page=%2Fapi%2Fpayments%2Fcancel%2F%5BorderId%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fpayments%2Fcancel%2F%5BorderId%5D%2Froute.ts&appDir=%2FUsers%2Fbayarbayasgalanulambayar%2FDocuments%2FCustomers%20webs%2Fmongolian-training-center%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fbayarbayasgalanulambayar%2FDocuments%2FCustomers%20webs%2Fmongolian-training-center&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!":
+/*!***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/next/dist/build/webpack/loaders/next-app-loader.js?name=app%2Fapi%2Fpayments%2Fcancel%2F%5BorderId%5D%2Froute&page=%2Fapi%2Fpayments%2Fcancel%2F%5BorderId%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fpayments%2Fcancel%2F%5BorderId%5D%2Froute.ts&appDir=%2FUsers%2Fbayarbayasgalanulambayar%2FDocuments%2FCustomers%20webs%2Fmongolian-training-center%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fbayarbayasgalanulambayar%2FDocuments%2FCustomers%20webs%2Fmongolian-training-center&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D! ***!
+  \***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   originalPathname: () => (/* binding */ originalPathname),\n/* harmony export */   patchFetch: () => (/* binding */ patchFetch),\n/* harmony export */   requestAsyncStorage: () => (/* binding */ requestAsyncStorage),\n/* harmony export */   routeModule: () => (/* binding */ routeModule),\n/* harmony export */   serverHooks: () => (/* binding */ serverHooks),\n/* harmony export */   staticGenerationAsyncStorage: () => (/* binding */ staticGenerationAsyncStorage)\n/* harmony export */ });\n/* harmony import */ var next_dist_server_future_route_modules_app_route_module_compiled__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! next/dist/server/future/route-modules/app-route/module.compiled */ \"(rsc)/./node_modules/next/dist/server/future/route-modules/app-route/module.compiled.js\");\n/* harmony import */ var next_dist_server_future_route_modules_app_route_module_compiled__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(next_dist_server_future_route_modules_app_route_module_compiled__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var next_dist_server_future_route_kind__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! next/dist/server/future/route-kind */ \"(rsc)/./node_modules/next/dist/server/future/route-kind.js\");\n/* harmony import */ var next_dist_server_lib_patch_fetch__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! next/dist/server/lib/patch-fetch */ \"(rsc)/./node_modules/next/dist/server/lib/patch-fetch.js\");\n/* harmony import */ var next_dist_server_lib_patch_fetch__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(next_dist_server_lib_patch_fetch__WEBPACK_IMPORTED_MODULE_2__);\n/* harmony import */ var _Users_bayarbayasgalanulambayar_Documents_Customers_webs_mongolian_training_center_app_api_payments_cancel_orderId_route_ts__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./app/api/payments/cancel/[orderId]/route.ts */ \"(rsc)/./app/api/payments/cancel/[orderId]/route.ts\");\n\n\n\n\n// We inject the nextConfigOutput here so that we can use them in the route\n// module.\nconst nextConfigOutput = \"\"\nconst routeModule = new next_dist_server_future_route_modules_app_route_module_compiled__WEBPACK_IMPORTED_MODULE_0__.AppRouteRouteModule({\n    definition: {\n        kind: next_dist_server_future_route_kind__WEBPACK_IMPORTED_MODULE_1__.RouteKind.APP_ROUTE,\n        page: \"/api/payments/cancel/[orderId]/route\",\n        pathname: \"/api/payments/cancel/[orderId]\",\n        filename: \"route\",\n        bundlePath: \"app/api/payments/cancel/[orderId]/route\"\n    },\n    resolvedPagePath: \"/Users/bayarbayasgalanulambayar/Documents/Customers webs/mongolian-training-center/app/api/payments/cancel/[orderId]/route.ts\",\n    nextConfigOutput,\n    userland: _Users_bayarbayasgalanulambayar_Documents_Customers_webs_mongolian_training_center_app_api_payments_cancel_orderId_route_ts__WEBPACK_IMPORTED_MODULE_3__\n});\n// Pull out the exports that we need to expose from the module. This should\n// be eliminated when we've moved the other routes to the new format. These\n// are used to hook into the route.\nconst { requestAsyncStorage, staticGenerationAsyncStorage, serverHooks } = routeModule;\nconst originalPathname = \"/api/payments/cancel/[orderId]/route\";\nfunction patchFetch() {\n    return (0,next_dist_server_lib_patch_fetch__WEBPACK_IMPORTED_MODULE_2__.patchFetch)({\n        serverHooks,\n        staticGenerationAsyncStorage\n    });\n}\n\n\n//# sourceMappingURL=app-route.js.map//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHJzYykvLi9ub2RlX21vZHVsZXMvbmV4dC9kaXN0L2J1aWxkL3dlYnBhY2svbG9hZGVycy9uZXh0LWFwcC1sb2FkZXIuanM/bmFtZT1hcHAlMkZhcGklMkZwYXltZW50cyUyRmNhbmNlbCUyRiU1Qm9yZGVySWQlNUQlMkZyb3V0ZSZwYWdlPSUyRmFwaSUyRnBheW1lbnRzJTJGY2FuY2VsJTJGJTVCb3JkZXJJZCU1RCUyRnJvdXRlJmFwcFBhdGhzPSZwYWdlUGF0aD1wcml2YXRlLW5leHQtYXBwLWRpciUyRmFwaSUyRnBheW1lbnRzJTJGY2FuY2VsJTJGJTVCb3JkZXJJZCU1RCUyRnJvdXRlLnRzJmFwcERpcj0lMkZVc2VycyUyRmJheWFyYmF5YXNnYWxhbnVsYW1iYXlhciUyRkRvY3VtZW50cyUyRkN1c3RvbWVycyUyMHdlYnMlMkZtb25nb2xpYW4tdHJhaW5pbmctY2VudGVyJTJGYXBwJnBhZ2VFeHRlbnNpb25zPXRzeCZwYWdlRXh0ZW5zaW9ucz10cyZwYWdlRXh0ZW5zaW9ucz1qc3gmcGFnZUV4dGVuc2lvbnM9anMmcm9vdERpcj0lMkZVc2VycyUyRmJheWFyYmF5YXNnYWxhbnVsYW1iYXlhciUyRkRvY3VtZW50cyUyRkN1c3RvbWVycyUyMHdlYnMlMkZtb25nb2xpYW4tdHJhaW5pbmctY2VudGVyJmlzRGV2PXRydWUmdHNjb25maWdQYXRoPXRzY29uZmlnLmpzb24mYmFzZVBhdGg9JmFzc2V0UHJlZml4PSZuZXh0Q29uZmlnT3V0cHV0PSZwcmVmZXJyZWRSZWdpb249Jm1pZGRsZXdhcmVDb25maWc9ZTMwJTNEISIsIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7Ozs7Ozs7QUFBc0c7QUFDdkM7QUFDYztBQUM2RTtBQUMxSjtBQUNBO0FBQ0E7QUFDQSx3QkFBd0IsZ0hBQW1CO0FBQzNDO0FBQ0EsY0FBYyx5RUFBUztBQUN2QjtBQUNBO0FBQ0E7QUFDQTtBQUNBLEtBQUs7QUFDTDtBQUNBO0FBQ0EsWUFBWTtBQUNaLENBQUM7QUFDRDtBQUNBO0FBQ0E7QUFDQSxRQUFRLGlFQUFpRTtBQUN6RTtBQUNBO0FBQ0EsV0FBVyw0RUFBVztBQUN0QjtBQUNBO0FBQ0EsS0FBSztBQUNMO0FBQ3VIOztBQUV2SCIsInNvdXJjZXMiOlsid2VicGFjazovL215LXYwLXByb2plY3QvPzE3NDIiXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgQXBwUm91dGVSb3V0ZU1vZHVsZSB9IGZyb20gXCJuZXh0L2Rpc3Qvc2VydmVyL2Z1dHVyZS9yb3V0ZS1tb2R1bGVzL2FwcC1yb3V0ZS9tb2R1bGUuY29tcGlsZWRcIjtcbmltcG9ydCB7IFJvdXRlS2luZCB9IGZyb20gXCJuZXh0L2Rpc3Qvc2VydmVyL2Z1dHVyZS9yb3V0ZS1raW5kXCI7XG5pbXBvcnQgeyBwYXRjaEZldGNoIGFzIF9wYXRjaEZldGNoIH0gZnJvbSBcIm5leHQvZGlzdC9zZXJ2ZXIvbGliL3BhdGNoLWZldGNoXCI7XG5pbXBvcnQgKiBhcyB1c2VybGFuZCBmcm9tIFwiL1VzZXJzL2JheWFyYmF5YXNnYWxhbnVsYW1iYXlhci9Eb2N1bWVudHMvQ3VzdG9tZXJzIHdlYnMvbW9uZ29saWFuLXRyYWluaW5nLWNlbnRlci9hcHAvYXBpL3BheW1lbnRzL2NhbmNlbC9bb3JkZXJJZF0vcm91dGUudHNcIjtcbi8vIFdlIGluamVjdCB0aGUgbmV4dENvbmZpZ091dHB1dCBoZXJlIHNvIHRoYXQgd2UgY2FuIHVzZSB0aGVtIGluIHRoZSByb3V0ZVxuLy8gbW9kdWxlLlxuY29uc3QgbmV4dENvbmZpZ091dHB1dCA9IFwiXCJcbmNvbnN0IHJvdXRlTW9kdWxlID0gbmV3IEFwcFJvdXRlUm91dGVNb2R1bGUoe1xuICAgIGRlZmluaXRpb246IHtcbiAgICAgICAga2luZDogUm91dGVLaW5kLkFQUF9ST1VURSxcbiAgICAgICAgcGFnZTogXCIvYXBpL3BheW1lbnRzL2NhbmNlbC9bb3JkZXJJZF0vcm91dGVcIixcbiAgICAgICAgcGF0aG5hbWU6IFwiL2FwaS9wYXltZW50cy9jYW5jZWwvW29yZGVySWRdXCIsXG4gICAgICAgIGZpbGVuYW1lOiBcInJvdXRlXCIsXG4gICAgICAgIGJ1bmRsZVBhdGg6IFwiYXBwL2FwaS9wYXltZW50cy9jYW5jZWwvW29yZGVySWRdL3JvdXRlXCJcbiAgICB9LFxuICAgIHJlc29sdmVkUGFnZVBhdGg6IFwiL1VzZXJzL2JheWFyYmF5YXNnYWxhbnVsYW1iYXlhci9Eb2N1bWVudHMvQ3VzdG9tZXJzIHdlYnMvbW9uZ29saWFuLXRyYWluaW5nLWNlbnRlci9hcHAvYXBpL3BheW1lbnRzL2NhbmNlbC9bb3JkZXJJZF0vcm91dGUudHNcIixcbiAgICBuZXh0Q29uZmlnT3V0cHV0LFxuICAgIHVzZXJsYW5kXG59KTtcbi8vIFB1bGwgb3V0IHRoZSBleHBvcnRzIHRoYXQgd2UgbmVlZCB0byBleHBvc2UgZnJvbSB0aGUgbW9kdWxlLiBUaGlzIHNob3VsZFxuLy8gYmUgZWxpbWluYXRlZCB3aGVuIHdlJ3ZlIG1vdmVkIHRoZSBvdGhlciByb3V0ZXMgdG8gdGhlIG5ldyBmb3JtYXQuIFRoZXNlXG4vLyBhcmUgdXNlZCB0byBob29rIGludG8gdGhlIHJvdXRlLlxuY29uc3QgeyByZXF1ZXN0QXN5bmNTdG9yYWdlLCBzdGF0aWNHZW5lcmF0aW9uQXN5bmNTdG9yYWdlLCBzZXJ2ZXJIb29rcyB9ID0gcm91dGVNb2R1bGU7XG5jb25zdCBvcmlnaW5hbFBhdGhuYW1lID0gXCIvYXBpL3BheW1lbnRzL2NhbmNlbC9bb3JkZXJJZF0vcm91dGVcIjtcbmZ1bmN0aW9uIHBhdGNoRmV0Y2goKSB7XG4gICAgcmV0dXJuIF9wYXRjaEZldGNoKHtcbiAgICAgICAgc2VydmVySG9va3MsXG4gICAgICAgIHN0YXRpY0dlbmVyYXRpb25Bc3luY1N0b3JhZ2VcbiAgICB9KTtcbn1cbmV4cG9ydCB7IHJvdXRlTW9kdWxlLCByZXF1ZXN0QXN5bmNTdG9yYWdlLCBzdGF0aWNHZW5lcmF0aW9uQXN5bmNTdG9yYWdlLCBzZXJ2ZXJIb29rcywgb3JpZ2luYWxQYXRobmFtZSwgcGF0Y2hGZXRjaCwgIH07XG5cbi8vIyBzb3VyY2VNYXBwaW5nVVJMPWFwcC1yb3V0ZS5qcy5tYXAiXSwibmFtZXMiOltdLCJzb3VyY2VSb290IjoiIn0=\n//# sourceURL=webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader.js?name=app%2Fapi%2Fpayments%2Fcancel%2F%5BorderId%5D%2Froute&page=%2Fapi%2Fpayments%2Fcancel%2F%5BorderId%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fpayments%2Fcancel%2F%5BorderId%5D%2Froute.ts&appDir=%2FUsers%2Fbayarbayasgalanulambayar%2FDocuments%2FCustomers%20webs%2Fmongolian-training-center%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fbayarbayasgalanulambayar%2FDocuments%2FCustomers%20webs%2Fmongolian-training-center&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!\n");
+
+/***/ }),
+
+/***/ "(rsc)/./app/api/payments/cancel/[orderId]/route.ts":
+/*!****************************************************!*\
+  !*** ./app/api/payments/cancel/[orderId]/route.ts ***!
+  \****************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   POST: () => (/* binding */ POST)\n/* harmony export */ });\n/* harmony import */ var next_server__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! next/server */ \"(rsc)/./node_modules/next/dist/api/server.js\");\n/* harmony import */ var _lib_mongodb__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @/lib/mongodb */ \"(rsc)/./lib/mongodb.ts\");\n/* harmony import */ var _lib_models_order__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @/lib/models/order */ \"(rsc)/./lib/models/order.ts\");\n/* harmony import */ var _lib_auth__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @/lib/auth */ \"(rsc)/./lib/auth.ts\");\n\n\n\n\nasync function POST(request, { params }) {\n    try {\n        await (0,_lib_mongodb__WEBPACK_IMPORTED_MODULE_1__.connectDB)();\n        const user = await (0,_lib_auth__WEBPACK_IMPORTED_MODULE_3__.verifyToken)(request);\n        if (!user) {\n            return next_server__WEBPACK_IMPORTED_MODULE_0__.NextResponse.json({\n                error: \"Нэвтрэх шаардлагатай\"\n            }, {\n                status: 401\n            });\n        }\n        const { orderId } = params;\n        const order = await _lib_models_order__WEBPACK_IMPORTED_MODULE_2__.Order.findOne({\n            _id: orderId,\n            user: user.userId\n        });\n        if (!order) {\n            return next_server__WEBPACK_IMPORTED_MODULE_0__.NextResponse.json({\n                error: \"Захиалга олдсонгүй\"\n            }, {\n                status: 404\n            });\n        }\n        if (order.status === \"pending\") {\n            order.status = \"failed\";\n            await order.save();\n        }\n        return next_server__WEBPACK_IMPORTED_MODULE_0__.NextResponse.json({\n            message: \"Захиалга цуцлагдлаа\",\n            status: order.status\n        });\n    } catch (error) {\n        console.error(\"Cancel order error:\", error);\n        return next_server__WEBPACK_IMPORTED_MODULE_0__.NextResponse.json({\n            error: \"Захиалга цуцлахад алдаа гарлаа\"\n        }, {\n            status: 500\n        });\n    }\n}\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHJzYykvLi9hcHAvYXBpL3BheW1lbnRzL2NhbmNlbC9bb3JkZXJJZF0vcm91dGUudHMiLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7QUFBdUQ7QUFDZDtBQUNDO0FBQ0Y7QUFFakMsZUFBZUksS0FDcEJDLE9BQW9CLEVBQ3BCLEVBQUVDLE1BQU0sRUFBbUM7SUFFM0MsSUFBSTtRQUNGLE1BQU1MLHVEQUFTQTtRQUVmLE1BQU1NLE9BQU8sTUFBTUosc0RBQVdBLENBQUNFO1FBQy9CLElBQUksQ0FBQ0UsTUFBTTtZQUNULE9BQU9QLHFEQUFZQSxDQUFDUSxJQUFJLENBQ3RCO2dCQUFFQyxPQUFPO1lBQXVCLEdBQ2hDO2dCQUFFQyxRQUFRO1lBQUk7UUFFbEI7UUFFQSxNQUFNLEVBQUVDLE9BQU8sRUFBRSxHQUFHTDtRQUVwQixNQUFNTSxRQUFRLE1BQU1WLG9EQUFLQSxDQUFDVyxPQUFPLENBQUM7WUFBRUMsS0FBS0g7WUFBU0osTUFBTUEsS0FBS1EsTUFBTTtRQUFDO1FBQ3BFLElBQUksQ0FBQ0gsT0FBTztZQUNWLE9BQU9aLHFEQUFZQSxDQUFDUSxJQUFJLENBQ3RCO2dCQUFFQyxPQUFPO1lBQXFCLEdBQzlCO2dCQUFFQyxRQUFRO1lBQUk7UUFFbEI7UUFFQSxJQUFJRSxNQUFNRixNQUFNLEtBQUssV0FBVztZQUM5QkUsTUFBTUYsTUFBTSxHQUFHO1lBQ2YsTUFBTUUsTUFBTUksSUFBSTtRQUNsQjtRQUVBLE9BQU9oQixxREFBWUEsQ0FBQ1EsSUFBSSxDQUFDO1lBQUVTLFNBQVM7WUFBdUJQLFFBQVFFLE1BQU1GLE1BQU07UUFBQztJQUNsRixFQUFFLE9BQU9ELE9BQU87UUFDZFMsUUFBUVQsS0FBSyxDQUFDLHVCQUF1QkE7UUFDckMsT0FBT1QscURBQVlBLENBQUNRLElBQUksQ0FDdEI7WUFBRUMsT0FBTztRQUFpQyxHQUMxQztZQUFFQyxRQUFRO1FBQUk7SUFFbEI7QUFDRiIsInNvdXJjZXMiOlsid2VicGFjazovL215LXYwLXByb2plY3QvLi9hcHAvYXBpL3BheW1lbnRzL2NhbmNlbC9bb3JkZXJJZF0vcm91dGUudHM/NjNmMyJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBOZXh0UmVxdWVzdCwgTmV4dFJlc3BvbnNlIH0gZnJvbSAnbmV4dC9zZXJ2ZXInXG5pbXBvcnQgeyBjb25uZWN0REIgfSBmcm9tICdAL2xpYi9tb25nb2RiJ1xuaW1wb3J0IHsgT3JkZXIgfSBmcm9tICdAL2xpYi9tb2RlbHMvb3JkZXInXG5pbXBvcnQgeyB2ZXJpZnlUb2tlbiB9IGZyb20gJ0AvbGliL2F1dGgnXG5cbmV4cG9ydCBhc3luYyBmdW5jdGlvbiBQT1NUKFxuICByZXF1ZXN0OiBOZXh0UmVxdWVzdCxcbiAgeyBwYXJhbXMgfTogeyBwYXJhbXM6IHsgb3JkZXJJZDogc3RyaW5nIH0gfVxuKSB7XG4gIHRyeSB7XG4gICAgYXdhaXQgY29ubmVjdERCKClcblxuICAgIGNvbnN0IHVzZXIgPSBhd2FpdCB2ZXJpZnlUb2tlbihyZXF1ZXN0KVxuICAgIGlmICghdXNlcikge1xuICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKFxuICAgICAgICB7IGVycm9yOiAn0J3RjdCy0YLRgNGN0YUg0YjQsNCw0YDQtNC70LDQs9Cw0YLQsNC5JyB9LFxuICAgICAgICB7IHN0YXR1czogNDAxIH1cbiAgICAgIClcbiAgICB9XG5cbiAgICBjb25zdCB7IG9yZGVySWQgfSA9IHBhcmFtc1xuXG4gICAgY29uc3Qgb3JkZXIgPSBhd2FpdCBPcmRlci5maW5kT25lKHsgX2lkOiBvcmRlcklkLCB1c2VyOiB1c2VyLnVzZXJJZCB9KVxuICAgIGlmICghb3JkZXIpIHtcbiAgICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbihcbiAgICAgICAgeyBlcnJvcjogJ9CX0LDRhdC40LDQu9Cz0LAg0L7Qu9C00YHQvtC90LPSr9C5JyB9LFxuICAgICAgICB7IHN0YXR1czogNDA0IH1cbiAgICAgIClcbiAgICB9XG5cbiAgICBpZiAob3JkZXIuc3RhdHVzID09PSAncGVuZGluZycpIHtcbiAgICAgIG9yZGVyLnN0YXR1cyA9ICdmYWlsZWQnXG4gICAgICBhd2FpdCBvcmRlci5zYXZlKClcbiAgICB9XG5cbiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBtZXNzYWdlOiAn0JfQsNGF0LjQsNC70LPQsCDRhtGD0YbQu9Cw0LPQtNC70LDQsCcsIHN0YXR1czogb3JkZXIuc3RhdHVzIH0pXG4gIH0gY2F0Y2ggKGVycm9yKSB7XG4gICAgY29uc29sZS5lcnJvcignQ2FuY2VsIG9yZGVyIGVycm9yOicsIGVycm9yKVxuICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbihcbiAgICAgIHsgZXJyb3I6ICfQl9Cw0YXQuNCw0LvQs9CwINGG0YPRhtC70LDRhdCw0LQg0LDQu9C00LDQsCDQs9Cw0YDQu9Cw0LAnIH0sXG4gICAgICB7IHN0YXR1czogNTAwIH1cbiAgICApXG4gIH1cbn1cblxuXG4iXSwibmFtZXMiOlsiTmV4dFJlc3BvbnNlIiwiY29ubmVjdERCIiwiT3JkZXIiLCJ2ZXJpZnlUb2tlbiIsIlBPU1QiLCJyZXF1ZXN0IiwicGFyYW1zIiwidXNlciIsImpzb24iLCJlcnJvciIsInN0YXR1cyIsIm9yZGVySWQiLCJvcmRlciIsImZpbmRPbmUiLCJfaWQiLCJ1c2VySWQiLCJzYXZlIiwibWVzc2FnZSIsImNvbnNvbGUiXSwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///(rsc)/./app/api/payments/cancel/[orderId]/route.ts\n");
+
+/***/ }),
+
+/***/ "(rsc)/./lib/auth.ts":
+/*!*********************!*\
+  !*** ./lib/auth.ts ***!
+  \*********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   getUserFromCookies: () => (/* binding */ getUserFromCookies),\n/* harmony export */   verifyToken: () => (/* binding */ verifyToken)\n/* harmony export */ });\n/* harmony import */ var jsonwebtoken__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! jsonwebtoken */ \"(rsc)/./node_modules/jsonwebtoken/index.js\");\n/* harmony import */ var jsonwebtoken__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(jsonwebtoken__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var next_headers__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! next/headers */ \"(rsc)/./node_modules/next/dist/api/headers.js\");\n\n\nasync function verifyToken(request) {\n    try {\n        const token = request.cookies.get(\"token\")?.value;\n        if (!token) {\n            return null;\n        }\n        const decoded = jsonwebtoken__WEBPACK_IMPORTED_MODULE_0___default().verify(token, process.env.JWT_SECRET);\n        return decoded;\n    } catch (error) {\n        return null;\n    }\n}\n// Server-side helper to read the current user from cookies in server components\nfunction getUserFromCookies() {\n    try {\n        const token = (0,next_headers__WEBPACK_IMPORTED_MODULE_1__.cookies)().get(\"token\")?.value;\n        if (!token) return null;\n        const decoded = jsonwebtoken__WEBPACK_IMPORTED_MODULE_0___default().verify(token, process.env.JWT_SECRET);\n        return decoded;\n    } catch (error) {\n        return null;\n    }\n}\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHJzYykvLi9saWIvYXV0aC50cyIsIm1hcHBpbmdzIjoiOzs7Ozs7OztBQUE4QjtBQUVRO0FBRS9CLGVBQWVFLFlBQVlDLE9BQW9CO0lBQ3BELElBQUk7UUFDRixNQUFNQyxRQUFRRCxRQUFRRixPQUFPLENBQUNJLEdBQUcsQ0FBQyxVQUFVQztRQUU1QyxJQUFJLENBQUNGLE9BQU87WUFDVixPQUFPO1FBQ1Q7UUFFQSxNQUFNRyxVQUFVUCwwREFBVSxDQUFDSSxPQUFPSyxRQUFRQyxHQUFHLENBQUNDLFVBQVU7UUFDeEQsT0FBT0o7SUFDVCxFQUFFLE9BQU9LLE9BQU87UUFDZCxPQUFPO0lBQ1Q7QUFDRjtBQUVBLGdGQUFnRjtBQUN6RSxTQUFTQztJQUtkLElBQUk7UUFDRixNQUFNVCxRQUFRSCxxREFBT0EsR0FBR0ksR0FBRyxDQUFDLFVBQVVDO1FBQ3RDLElBQUksQ0FBQ0YsT0FBTyxPQUFPO1FBQ25CLE1BQU1HLFVBQVVQLDBEQUFVLENBQUNJLE9BQU9LLFFBQVFDLEdBQUcsQ0FBQ0MsVUFBVTtRQUN4RCxPQUFPSjtJQUNULEVBQUUsT0FBT0ssT0FBTztRQUNkLE9BQU87SUFDVDtBQUNGIiwic291cmNlcyI6WyJ3ZWJwYWNrOi8vbXktdjAtcHJvamVjdC8uL2xpYi9hdXRoLnRzP2JmN2UiXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IGp3dCBmcm9tICdqc29ud2VidG9rZW4nXG5pbXBvcnQgeyBOZXh0UmVxdWVzdCB9IGZyb20gJ25leHQvc2VydmVyJ1xuaW1wb3J0IHsgY29va2llcyB9IGZyb20gJ25leHQvaGVhZGVycydcblxuZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIHZlcmlmeVRva2VuKHJlcXVlc3Q6IE5leHRSZXF1ZXN0KSB7XG4gIHRyeSB7XG4gICAgY29uc3QgdG9rZW4gPSByZXF1ZXN0LmNvb2tpZXMuZ2V0KCd0b2tlbicpPy52YWx1ZVxuXG4gICAgaWYgKCF0b2tlbikge1xuICAgICAgcmV0dXJuIG51bGxcbiAgICB9XG5cbiAgICBjb25zdCBkZWNvZGVkID0gand0LnZlcmlmeSh0b2tlbiwgcHJvY2Vzcy5lbnYuSldUX1NFQ1JFVCEpIGFzIGFueVxuICAgIHJldHVybiBkZWNvZGVkXG4gIH0gY2F0Y2ggKGVycm9yKSB7XG4gICAgcmV0dXJuIG51bGxcbiAgfVxufVxuXG4vLyBTZXJ2ZXItc2lkZSBoZWxwZXIgdG8gcmVhZCB0aGUgY3VycmVudCB1c2VyIGZyb20gY29va2llcyBpbiBzZXJ2ZXIgY29tcG9uZW50c1xuZXhwb3J0IGZ1bmN0aW9uIGdldFVzZXJGcm9tQ29va2llcygpOiBudWxsIHwge1xuICB1c2VySWQ6IHN0cmluZ1xuICBlbWFpbD86IHN0cmluZ1xuICByb2xlPzogc3RyaW5nXG59IHtcbiAgdHJ5IHtcbiAgICBjb25zdCB0b2tlbiA9IGNvb2tpZXMoKS5nZXQoJ3Rva2VuJyk/LnZhbHVlXG4gICAgaWYgKCF0b2tlbikgcmV0dXJuIG51bGxcbiAgICBjb25zdCBkZWNvZGVkID0gand0LnZlcmlmeSh0b2tlbiwgcHJvY2Vzcy5lbnYuSldUX1NFQ1JFVCEpIGFzIGFueVxuICAgIHJldHVybiBkZWNvZGVkXG4gIH0gY2F0Y2ggKGVycm9yKSB7XG4gICAgcmV0dXJuIG51bGxcbiAgfVxufVxuIl0sIm5hbWVzIjpbImp3dCIsImNvb2tpZXMiLCJ2ZXJpZnlUb2tlbiIsInJlcXVlc3QiLCJ0b2tlbiIsImdldCIsInZhbHVlIiwiZGVjb2RlZCIsInZlcmlmeSIsInByb2Nlc3MiLCJlbnYiLCJKV1RfU0VDUkVUIiwiZXJyb3IiLCJnZXRVc2VyRnJvbUNvb2tpZXMiXSwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///(rsc)/./lib/auth.ts\n");
+
+/***/ }),
+
+/***/ "(rsc)/./lib/models/order.ts":
+/*!*****************************!*\
+  !*** ./lib/models/order.ts ***!
+  \*****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   Order: () => (/* binding */ Order)\n/* harmony export */ });\n/* harmony import */ var mongoose__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! mongoose */ \"mongoose\");\n/* harmony import */ var mongoose__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(mongoose__WEBPACK_IMPORTED_MODULE_0__);\n\nconst orderSchema = new (mongoose__WEBPACK_IMPORTED_MODULE_0___default().Schema)({\n    user: {\n        type: (mongoose__WEBPACK_IMPORTED_MODULE_0___default().Schema).Types.ObjectId,\n        ref: \"User\",\n        required: true\n    },\n    course: {\n        type: (mongoose__WEBPACK_IMPORTED_MODULE_0___default().Schema).Types.ObjectId,\n        ref: \"Course\",\n        required: true\n    },\n    amount: {\n        type: Number,\n        required: true\n    },\n    currency: {\n        type: String,\n        default: \"MNT\"\n    },\n    status: {\n        type: String,\n        enum: [\n            \"pending\",\n            \"completed\",\n            \"failed\",\n            \"cancelled\"\n        ],\n        default: \"pending\"\n    },\n    qpayInvoiceId: {\n        type: String\n    },\n    bylInvoiceId: {\n        type: String\n    },\n    paidAt: {\n        type: Date\n    },\n    createdAt: {\n        type: Date,\n        default: Date.now\n    }\n});\nconst Order = (mongoose__WEBPACK_IMPORTED_MODULE_0___default().models).Order || mongoose__WEBPACK_IMPORTED_MODULE_0___default().model(\"Order\", orderSchema);\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHJzYykvLi9saWIvbW9kZWxzL29yZGVyLnRzIiwibWFwcGluZ3MiOiI7Ozs7OztBQUErQjtBQUUvQixNQUFNQyxjQUFjLElBQUlELHdEQUFlLENBQUM7SUFDdENHLE1BQU07UUFDSkMsTUFBTUosd0RBQWUsQ0FBQ0ssS0FBSyxDQUFDQyxRQUFRO1FBQ3BDQyxLQUFLO1FBQ0xDLFVBQVU7SUFDWjtJQUNBQyxRQUFRO1FBQ05MLE1BQU1KLHdEQUFlLENBQUNLLEtBQUssQ0FBQ0MsUUFBUTtRQUNwQ0MsS0FBSztRQUNMQyxVQUFVO0lBQ1o7SUFDQUUsUUFBUTtRQUNOTixNQUFNTztRQUNOSCxVQUFVO0lBQ1o7SUFDQUksVUFBVTtRQUNSUixNQUFNUztRQUNOQyxTQUFTO0lBQ1g7SUFDQUMsUUFBUTtRQUNOWCxNQUFNUztRQUNORyxNQUFNO1lBQUM7WUFBVztZQUFhO1lBQVU7U0FBWTtRQUNyREYsU0FBUztJQUNYO0lBQ0FHLGVBQWU7UUFDYmIsTUFBTVM7SUFDUjtJQUNBSyxjQUFjO1FBQ1pkLE1BQU1TO0lBQ1I7SUFDQU0sUUFBUTtRQUNOZixNQUFNZ0I7SUFDUjtJQUNBQyxXQUFXO1FBQ1RqQixNQUFNZ0I7UUFDTk4sU0FBU00sS0FBS0UsR0FBRztJQUNuQjtBQUNGO0FBRU8sTUFBTUMsUUFBUXZCLHdEQUFlLENBQUN1QixLQUFLLElBQUl2QixxREFBYyxDQUFDLFNBQVNDLGFBQVkiLCJzb3VyY2VzIjpbIndlYnBhY2s6Ly9teS12MC1wcm9qZWN0Ly4vbGliL21vZGVscy9vcmRlci50cz9mZGQ0Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCBtb25nb29zZSBmcm9tICdtb25nb29zZSdcblxuY29uc3Qgb3JkZXJTY2hlbWEgPSBuZXcgbW9uZ29vc2UuU2NoZW1hKHtcbiAgdXNlcjoge1xuICAgIHR5cGU6IG1vbmdvb3NlLlNjaGVtYS5UeXBlcy5PYmplY3RJZCxcbiAgICByZWY6ICdVc2VyJyxcbiAgICByZXF1aXJlZDogdHJ1ZVxuICB9LFxuICBjb3Vyc2U6IHtcbiAgICB0eXBlOiBtb25nb29zZS5TY2hlbWEuVHlwZXMuT2JqZWN0SWQsXG4gICAgcmVmOiAnQ291cnNlJyxcbiAgICByZXF1aXJlZDogdHJ1ZVxuICB9LFxuICBhbW91bnQ6IHtcbiAgICB0eXBlOiBOdW1iZXIsXG4gICAgcmVxdWlyZWQ6IHRydWVcbiAgfSxcbiAgY3VycmVuY3k6IHtcbiAgICB0eXBlOiBTdHJpbmcsXG4gICAgZGVmYXVsdDogJ01OVCdcbiAgfSxcbiAgc3RhdHVzOiB7XG4gICAgdHlwZTogU3RyaW5nLFxuICAgIGVudW06IFsncGVuZGluZycsICdjb21wbGV0ZWQnLCAnZmFpbGVkJywgJ2NhbmNlbGxlZCddLFxuICAgIGRlZmF1bHQ6ICdwZW5kaW5nJ1xuICB9LFxuICBxcGF5SW52b2ljZUlkOiB7XG4gICAgdHlwZTogU3RyaW5nXG4gIH0sXG4gIGJ5bEludm9pY2VJZDoge1xuICAgIHR5cGU6IFN0cmluZ1xuICB9LFxuICBwYWlkQXQ6IHtcbiAgICB0eXBlOiBEYXRlXG4gIH0sXG4gIGNyZWF0ZWRBdDoge1xuICAgIHR5cGU6IERhdGUsXG4gICAgZGVmYXVsdDogRGF0ZS5ub3dcbiAgfVxufSlcblxuZXhwb3J0IGNvbnN0IE9yZGVyID0gbW9uZ29vc2UubW9kZWxzLk9yZGVyIHx8IG1vbmdvb3NlLm1vZGVsKCdPcmRlcicsIG9yZGVyU2NoZW1hKVxuIl0sIm5hbWVzIjpbIm1vbmdvb3NlIiwib3JkZXJTY2hlbWEiLCJTY2hlbWEiLCJ1c2VyIiwidHlwZSIsIlR5cGVzIiwiT2JqZWN0SWQiLCJyZWYiLCJyZXF1aXJlZCIsImNvdXJzZSIsImFtb3VudCIsIk51bWJlciIsImN1cnJlbmN5IiwiU3RyaW5nIiwiZGVmYXVsdCIsInN0YXR1cyIsImVudW0iLCJxcGF5SW52b2ljZUlkIiwiYnlsSW52b2ljZUlkIiwicGFpZEF0IiwiRGF0ZSIsImNyZWF0ZWRBdCIsIm5vdyIsIk9yZGVyIiwibW9kZWxzIiwibW9kZWwiXSwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///(rsc)/./lib/models/order.ts\n");
+
+/***/ }),
+
+/***/ "(rsc)/./lib/mongodb.ts":
+/*!************************!*\
+  !*** ./lib/mongodb.ts ***!
+  \************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   connectDB: () => (/* binding */ connectDB)\n/* harmony export */ });\n/* harmony import */ var mongoose__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! mongoose */ \"mongoose\");\n/* harmony import */ var mongoose__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(mongoose__WEBPACK_IMPORTED_MODULE_0__);\n\nconst MONGODB_URI = process.env.MONGODB_URI;\nif (!MONGODB_URI) {\n    throw new Error(\"Please define the MONGODB_URI environment variable inside .env.local\");\n}\nlet cached = global.mongoose;\nif (!cached) {\n    cached = global.mongoose = {\n        conn: null,\n        promise: null\n    };\n}\nasync function connectDB() {\n    if (cached.conn) {\n        return cached.conn;\n    }\n    if (!cached.promise) {\n        const opts = {\n            bufferCommands: false\n        };\n        cached.promise = mongoose__WEBPACK_IMPORTED_MODULE_0___default().connect(MONGODB_URI, opts).then((mongoose)=>{\n            return mongoose;\n        });\n    }\n    try {\n        cached.conn = await cached.promise;\n    } catch (e) {\n        cached.promise = null;\n        throw e;\n    }\n    return cached.conn;\n}\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHJzYykvLi9saWIvbW9uZ29kYi50cyIsIm1hcHBpbmdzIjoiOzs7Ozs7QUFBK0I7QUFFL0IsTUFBTUMsY0FBY0MsUUFBUUMsR0FBRyxDQUFDRixXQUFXO0FBRTNDLElBQUksQ0FBQ0EsYUFBYTtJQUNoQixNQUFNLElBQUlHLE1BQU07QUFDbEI7QUFFQSxJQUFJQyxTQUFTQyxPQUFPTixRQUFRO0FBRTVCLElBQUksQ0FBQ0ssUUFBUTtJQUNYQSxTQUFTQyxPQUFPTixRQUFRLEdBQUc7UUFBRU8sTUFBTTtRQUFNQyxTQUFTO0lBQUs7QUFDekQ7QUFFTyxlQUFlQztJQUNwQixJQUFJSixPQUFPRSxJQUFJLEVBQUU7UUFDZixPQUFPRixPQUFPRSxJQUFJO0lBQ3BCO0lBRUEsSUFBSSxDQUFDRixPQUFPRyxPQUFPLEVBQUU7UUFDbkIsTUFBTUUsT0FBTztZQUNYQyxnQkFBZ0I7UUFDbEI7UUFFQU4sT0FBT0csT0FBTyxHQUFHUix1REFBZ0IsQ0FBQ0MsYUFBYVMsTUFBTUcsSUFBSSxDQUFDLENBQUNiO1lBQ3pELE9BQU9BO1FBQ1Q7SUFDRjtJQUVBLElBQUk7UUFDRkssT0FBT0UsSUFBSSxHQUFHLE1BQU1GLE9BQU9HLE9BQU87SUFDcEMsRUFBRSxPQUFPTSxHQUFHO1FBQ1ZULE9BQU9HLE9BQU8sR0FBRztRQUNqQixNQUFNTTtJQUNSO0lBRUEsT0FBT1QsT0FBT0UsSUFBSTtBQUNwQiIsInNvdXJjZXMiOlsid2VicGFjazovL215LXYwLXByb2plY3QvLi9saWIvbW9uZ29kYi50cz8wNWJkIl0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCBtb25nb29zZSBmcm9tICdtb25nb29zZSdcblxuY29uc3QgTU9OR09EQl9VUkkgPSBwcm9jZXNzLmVudi5NT05HT0RCX1VSSSFcblxuaWYgKCFNT05HT0RCX1VSSSkge1xuICB0aHJvdyBuZXcgRXJyb3IoJ1BsZWFzZSBkZWZpbmUgdGhlIE1PTkdPREJfVVJJIGVudmlyb25tZW50IHZhcmlhYmxlIGluc2lkZSAuZW52LmxvY2FsJylcbn1cblxubGV0IGNhY2hlZCA9IGdsb2JhbC5tb25nb29zZVxuXG5pZiAoIWNhY2hlZCkge1xuICBjYWNoZWQgPSBnbG9iYWwubW9uZ29vc2UgPSB7IGNvbm46IG51bGwsIHByb21pc2U6IG51bGwgfVxufVxuXG5leHBvcnQgYXN5bmMgZnVuY3Rpb24gY29ubmVjdERCKCkge1xuICBpZiAoY2FjaGVkLmNvbm4pIHtcbiAgICByZXR1cm4gY2FjaGVkLmNvbm5cbiAgfVxuXG4gIGlmICghY2FjaGVkLnByb21pc2UpIHtcbiAgICBjb25zdCBvcHRzID0ge1xuICAgICAgYnVmZmVyQ29tbWFuZHM6IGZhbHNlLFxuICAgIH1cblxuICAgIGNhY2hlZC5wcm9taXNlID0gbW9uZ29vc2UuY29ubmVjdChNT05HT0RCX1VSSSwgb3B0cykudGhlbigobW9uZ29vc2UpID0+IHtcbiAgICAgIHJldHVybiBtb25nb29zZVxuICAgIH0pXG4gIH1cblxuICB0cnkge1xuICAgIGNhY2hlZC5jb25uID0gYXdhaXQgY2FjaGVkLnByb21pc2VcbiAgfSBjYXRjaCAoZSkge1xuICAgIGNhY2hlZC5wcm9taXNlID0gbnVsbFxuICAgIHRocm93IGVcbiAgfVxuXG4gIHJldHVybiBjYWNoZWQuY29ublxufVxuIl0sIm5hbWVzIjpbIm1vbmdvb3NlIiwiTU9OR09EQl9VUkkiLCJwcm9jZXNzIiwiZW52IiwiRXJyb3IiLCJjYWNoZWQiLCJnbG9iYWwiLCJjb25uIiwicHJvbWlzZSIsImNvbm5lY3REQiIsIm9wdHMiLCJidWZmZXJDb21tYW5kcyIsImNvbm5lY3QiLCJ0aGVuIiwiZSJdLCJzb3VyY2VSb290IjoiIn0=\n//# sourceURL=webpack-internal:///(rsc)/./lib/mongodb.ts\n");
+
+/***/ })
+
+};
+;
+
+// load runtime
+var __webpack_require__ = require("../../../../../webpack-runtime.js");
+__webpack_require__.C(exports);
+var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
+var __webpack_exports__ = __webpack_require__.X(0, ["vendor-chunks/next","vendor-chunks/semver","vendor-chunks/jsonwebtoken","vendor-chunks/lodash.includes","vendor-chunks/jws","vendor-chunks/lodash.once","vendor-chunks/jwa","vendor-chunks/lodash.isinteger","vendor-chunks/ecdsa-sig-formatter","vendor-chunks/lodash.isplainobject","vendor-chunks/ms","vendor-chunks/lodash.isstring","vendor-chunks/lodash.isnumber","vendor-chunks/lodash.isboolean","vendor-chunks/safe-buffer","vendor-chunks/buffer-equal-constant-time"], () => (__webpack_exec__("(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader.js?name=app%2Fapi%2Fpayments%2Fcancel%2F%5BorderId%5D%2Froute&page=%2Fapi%2Fpayments%2Fcancel%2F%5BorderId%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fpayments%2Fcancel%2F%5BorderId%5D%2Froute.ts&appDir=%2FUsers%2Fbayarbayasgalanulambayar%2FDocuments%2FCustomers%20webs%2Fmongolian-training-center%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2Fbayarbayasgalanulambayar%2FDocuments%2FCustomers%20webs%2Fmongolian-training-center&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!")));
+module.exports = __webpack_exports__;
+
+})();

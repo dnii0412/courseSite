@@ -42,22 +42,31 @@ export async function POST(request: NextRequest) {
     if (!process.env.QPAY_API_URL || !process.env.QPAY_ACCESS_TOKEN || !process.env.QPAY_MERCHANT_CODE) {
       console.log('QPay credentials not found, using test mode')
       
-      // Test mode - create a mock payment with a local placeholder image
+      // Test mode - generate a unique QR using a public QR generator
+      const payload = JSON.stringify({
+        gw: 'qpay-test',
+        orderId: String(order._id),
+        ts: Date.now(),
+      })
+      const qr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(payload)}&cb=${Date.now()}`
       return NextResponse.json({
         orderId: order._id,
         qpayUrl: 'https://test.qpay.mn/pay',
-        qrImage: '/placeholder.svg'
-      })
+        qrImage: qr
+      }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
     // QPay API integration
     const qpayPayload: any = {
-      invoice_code: `COURSE_${order._id}`,
       sender_invoice_no: order._id.toString(),
-      invoice_receiver_code: process.env.QPAY_MERCHANT_CODE,
+      receiver_code: process.env.QPAY_MERCHANT_CODE,
       invoice_description: `${course.title} хичээлийн төлбөр`,
       amount: course.price,
       callback_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/payments/qpay/callback`
+    }
+    // Only include invoice_code if you have a configured code in QPay backoffice
+    if (process.env.QPAY_INVOICE_CODE) {
+      qpayPayload.invoice_code = process.env.QPAY_INVOICE_CODE
     }
 
     if (process.env.QPAY_MCC_CODE) {

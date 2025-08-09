@@ -39,15 +39,17 @@ export async function POST(request: NextRequest) {
     console.log('Created order:', order._id)
 
     // Check if Byl environment variables are set
-    if (!process.env.BYL_API_URL || !process.env.BYL_ACCESS_TOKEN) {
+    if (!process.env.BYL_ACCESS_TOKEN || !process.env.BYL_PROJECT_ID) {
       console.log('Byl credentials not found, using test mode')
       console.log('Environment check:', {
         BYL_API_URL: process.env.BYL_API_URL,
-        BYL_ACCESS_TOKEN: process.env.BYL_ACCESS_TOKEN ? 'SET' : 'NOT SET'
+        BYL_ACCESS_TOKEN: process.env.BYL_ACCESS_TOKEN ? 'SET' : 'NOT SET',
+        BYL_PROJECT_ID: process.env.BYL_PROJECT_ID ? 'SET' : 'NOT SET'
       })
       
       // Test mode - create a mock payment with a proper QR code image
-      const testQrCode = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TEST_PAYMENT_' + order._id
+      const testPayload = JSON.stringify({ gw: 'byl-test', orderId: String(order._id), ts: Date.now() })
+      const testQrCode = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(testPayload)}&cb=${Date.now()}`
       
       return NextResponse.json({
         orderId: order._id,
@@ -58,16 +60,23 @@ export async function POST(request: NextRequest) {
 
     console.log('Using real Byl API with credentials')
 
-    // Byl API integration - without merchant code
+    // Byl API integration via token + project id
+    // Normalize BYL base to origin to avoid '/v2' or other paths in env
+    const bylOrigin = (() => {
+      try {
+        return new URL(process.env.BYL_API_URL || 'https://byl.mn').origin
+      } catch {
+        return 'https://byl.mn'
+      }
+    })()
+    const bylEndpoint = `${bylOrigin}/api/v1/projects/${process.env.BYL_PROJECT_ID}/invoices`
     const bylPayload = {
-      invoice_code: `COURSE_${order._id}`,
-      sender_invoice_no: order._id.toString(),
-      invoice_description: `${course.title} хичээлийн төлбөр`,
       amount: course.price,
-      callback_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/payments/byl/callback`
+      description: `${course.title} - Order ${order._id}`,
+      auto_advance: true
     }
 
-    console.log('Byl API URL:', process.env.BYL_API_URL)
+    console.log('Byl endpoint:', bylEndpoint)
     console.log('Byl payload:', bylPayload)
 
     // Try to call Byl API with timeout
@@ -75,10 +84,11 @@ export async function POST(request: NextRequest) {
     const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
     try {
-      const bylResponse = await fetch(`${process.env.BYL_API_URL}/v2/invoice`, {
+      const bylResponse = await fetch(bylEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
           'Authorization': `Bearer ${process.env.BYL_ACCESS_TOKEN}`
         },
         body: JSON.stringify(bylPayload),
@@ -96,21 +106,28 @@ export async function POST(request: NextRequest) {
         throw new Error(`Byl API error: ${bylData.message || bylData.error || 'Unknown error'}`)
       }
 
-      // Check if we got the expected data
-      if (!bylData.qr_image && !bylData.qrImage) {
-        console.error('No QR image in Byl response:', bylData)
-        throw new Error('Byl API did not return QR image')
+      // Extract invoice data
+      const invoiceId = bylData?.data?.id || bylData?.id
+      const invoiceUrl = bylData?.data?.url || bylData?.url
+      if (!invoiceId || !invoiceUrl) {
+        console.error('Unexpected Byl response (no invoice id):', bylData)
+        throw new Error('Byl API did not return expected invoice data')
       }
 
       // Update order with Byl invoice ID
       await Order.findByIdAndUpdate(order._id, {
-        bylInvoiceId: bylData.invoice_id || bylData.invoiceId
+        bylInvoiceId: String(invoiceId)
       })
+
+      // Use BYL-provided secure url for payment
+      const payUrl = String(invoiceUrl)
+      // Provide a QR image via a public QR generator for the pay URL
+      const qrImage = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(payUrl)}&cb=${Date.now()}`
 
       return NextResponse.json({
         orderId: order._id,
-        bylUrl: bylData.qr_text || bylData.qrText,
-        qrImage: bylData.qr_image || bylData.qrImage
+        bylUrl: payUrl,
+        qrImage
       })
 
     } catch (fetchError) {

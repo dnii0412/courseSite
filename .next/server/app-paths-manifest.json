@@ -1,8 +1,8 @@
 {
-  "/courses/page": "app/courses/page.js",
-  "/api/auth/me/route": "app/api/auth/me/route.js",
-  "/learn/[courseId]/page": "app/learn/[courseId]/page.js",
-  "/api/enrollments/check/[courseId]/route": "app/api/enrollments/check/[courseId]/route.js",
-  "/learn/[courseId]/[lessonId]/page": "app/learn/[courseId]/[lessonId]/page.js",
-  "/api/courses/[id]/route": "app/api/courses/[id]/route.js"
+  "/courses/[id]/page": "app/courses/[id]/page.js",
+  "/api/payments/status/[orderId]/route": "app/api/payments/status/[orderId]/route.js",
+  "/api/payments/cancel/[orderId]/route": "app/api/payments/cancel/[orderId]/route.js",
+  "/admin/payments/page": "app/admin/payments/page.js",
+  "/api/payments/route": "app/api/payments/route.js",
+  "/api/auth/me/route": "app/api/auth/me/route.js"
 }
