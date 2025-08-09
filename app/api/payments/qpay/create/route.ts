@@ -51,13 +51,17 @@ export async function POST(request: NextRequest) {
     }
 
     // QPay API integration
-    const qpayPayload = {
+    const qpayPayload: any = {
       invoice_code: `COURSE_${order._id}`,
       sender_invoice_no: order._id.toString(),
       invoice_receiver_code: process.env.QPAY_MERCHANT_CODE,
       invoice_description: `${course.title} хичээлийн төлбөр`,
       amount: course.price,
       callback_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/payments/qpay/callback`
+    }
+
+    if (process.env.QPAY_MCC_CODE) {
+      qpayPayload.mcc_code = process.env.QPAY_MCC_CODE
     }
 
     console.log('QPay API URL:', process.env.QPAY_API_URL)

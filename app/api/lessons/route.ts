@@ -6,15 +6,30 @@ import { Course } from '@/lib/models/course'
 export async function POST(request: NextRequest) {
   try {
     await connectDB()
-    const { title, duration, courseId } = await request.json()
-    if (!title || !duration || !courseId) {
+    const { title, duration, courseId, videoUrl, description, preview } = await request.json()
+    if (!title || !duration || !courseId || !videoUrl) {
       return NextResponse.json({ error: 'Талбар дутуу' }, { status: 400 })
     }
 
-    const lesson = await Lesson.create({ title, duration, course: courseId, order: Date.now(), videoUrl: 'https://example.com/video.mp4', description: '' })
+    const course = await Course.findById(courseId)
+    if (!course) {
+      return NextResponse.json({ error: 'Хичээл олдсонгүй' }, { status: 404 })
+    }
+
+    const lesson = await Lesson.create({ 
+      title, 
+      duration, 
+      course: courseId, 
+      order: Date.now(), 
+      videoUrl, 
+      description: (typeof description === 'string' && description.trim().length > 0) ? description : 'Тайлбаргүй',
+      preview: Boolean(preview)
+    })
     await Course.findByIdAndUpdate(courseId, { $push: { lessons: lesson._id } })
     return NextResponse.json(lesson, { status: 201 })
   } catch (error) {
-    return NextResponse.json({ error: 'Хичээл үүсгэхэд алдаа' }, { status: 500 })
+    console.error('Create lesson error:', error)
+    const message = error instanceof Error ? error.message : 'Хичээл үүсгэхэд алдаа'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

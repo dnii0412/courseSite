@@ -35,12 +35,23 @@ export function QuizModal({ lessonId, quiz }: QuizModalProps) {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [score, setScore] = useState(0)
   const [timeLeft, setTimeLeft] = useState(0)
+  const questions = quiz?.questions || []
 
   useEffect(() => {
     if (quiz?.timeLimit) {
       setTimeLeft(quiz.timeLimit * 60) // Convert to seconds
     }
   }, [quiz])
+
+  // Clamp current question index when question list changes
+  useEffect(() => {
+    if (questions.length === 0) {
+      setCurrentQuestion(0)
+    } else if (currentQuestion > questions.length - 1) {
+      setCurrentQuestion(questions.length - 1)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questions.length])
 
   useEffect(() => {
     if (timeLeft > 0 && isOpen && !isSubmitted) {
@@ -66,23 +77,23 @@ export function QuizModal({ lessonId, quiz }: QuizModalProps) {
   }
 
   const handleSubmit = () => {
-    if (!quiz) return
+    if (!quiz || questions.length === 0) return
 
     let correctAnswers = 0
-    quiz.questions.forEach(question => {
+    questions.forEach(question => {
       const userAnswer = answers[question.id]
       if (userAnswer === question.correctAnswer) {
         correctAnswers++
       }
     })
 
-    const finalScore = Math.round((correctAnswers / quiz.questions.length) * 100)
+    const finalScore = Math.round((correctAnswers / questions.length) * 100)
     setScore(finalScore)
     setIsSubmitted(true)
   }
 
   const handleNext = () => {
-    if (currentQuestion < (quiz?.questions.length || 0) - 1) {
+    if (currentQuestion < (questions.length || 0) - 1) {
       setCurrentQuestion(prev => prev + 1)
     }
   }
@@ -111,9 +122,10 @@ export function QuizModal({ lessonId, quiz }: QuizModalProps) {
     return 'Дахин оролдоно уу'
   }
 
-  if (!quiz) return null
+  if (!quiz || questions.length === 0) return null
 
-  const currentQ = quiz.questions[currentQuestion]
+  const safeIndex = Math.min(currentQuestion, questions.length - 1)
+  const currentQ = questions[safeIndex]
 
   return (
     <>
@@ -143,16 +155,16 @@ export function QuizModal({ lessonId, quiz }: QuizModalProps) {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">
-                  Асуулт {currentQuestion + 1} / {quiz.questions.length}
+                  Асуулт {safeIndex + 1} / {questions.length}
                 </span>
                 <div className="flex space-x-2">
-                  {quiz.questions.map((_, index) => (
+                  {questions.map((_, index) => (
                     <div
                       key={index}
                       className={`w-3 h-3 rounded-full ${
-                        index === currentQuestion
+                        index === safeIndex
                           ? 'bg-blue-500'
-                          : answers[quiz.questions[index].id] !== undefined
+                          : answers[questions[index].id] !== undefined
                           ? 'bg-green-500'
                           : 'bg-gray-300'
                       }`}
@@ -169,12 +181,12 @@ export function QuizModal({ lessonId, quiz }: QuizModalProps) {
                 </CardHeader>
                 <CardContent>
                   <RadioGroup
-                    value={answers[currentQ.id]?.toString() || ''}
+                    value={answers[currentQ.id] !== undefined ? String(answers[currentQ.id]) : ''}
                     onValueChange={(value) => 
                       handleAnswerSelect(currentQ.id, parseInt(value))
                     }
                   >
-                    {currentQ.options.map((option, index) => (
+                    {currentQ.options?.map((option, index) => (
                       <div key={index} className="flex items-center space-x-2">
                         <RadioGroupItem value={index.toString()} id={`${currentQ.id}-${index}`} />
                         <Label htmlFor={`${currentQ.id}-${index}`} className="cursor-pointer">
@@ -195,8 +207,8 @@ export function QuizModal({ lessonId, quiz }: QuizModalProps) {
                   Өмнөх
                 </Button>
 
-                {currentQuestion === quiz.questions.length - 1 ? (
-                  <Button onClick={handleSubmit} disabled={Object.keys(answers).length < quiz.questions.length}>
+                {safeIndex === questions.length - 1 ? (
+                  <Button onClick={handleSubmit} disabled={Object.keys(answers).length < questions.length}>
                     Дуусгах
                   </Button>
                 ) : (
@@ -217,7 +229,7 @@ export function QuizModal({ lessonId, quiz }: QuizModalProps) {
               </div>
 
               <div className="space-y-4">
-                {quiz.questions.map((question, index) => {
+                {questions.map((question, index) => {
                   const userAnswer = answers[question.id]
                   const isCorrect = userAnswer === question.correctAnswer
                   

@@ -17,6 +17,10 @@ export function CourseLessons({ course, onChanged }: { course: any, onChanged: (
   const [lessons, setLessons] = useState<Lesson[]>([])
   const [title, setTitle] = useState('')
   const [duration, setDuration] = useState<number | ''>('')
+  const [videoUrl, setVideoUrl] = useState('')
+  const [preview, setPreview] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -32,23 +36,37 @@ export function CourseLessons({ course, onChanged }: { course: any, onChanged: (
   }, [course?._id])
 
   const handleAdd = async () => {
-    if (!course?._id || !title || !duration) return
-    const res = await fetch(`/api/lessons`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, duration: Number(duration), courseId: course._id })
-    })
-    if (res.ok) {
+    setError(null)
+    if (!course?._id || !title || !duration || !videoUrl) {
+      setError('Бүх талбарыг бөглөнө үү')
+      return
+    }
+    setSubmitting(true)
+    try {
+      const res = await fetch(`/api/lessons`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, duration: Number(duration), courseId: course._id, videoUrl, preview })
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(data?.error || 'Хичээл үүсгэхэд алдаа')
+        return
+      }
       setTitle('')
       setDuration('')
+      setVideoUrl('')
+      setPreview(false)
       onChanged()
       // reload lessons
       const r = await fetch(`/api/courses/${course._id}`)
       if (r.ok) {
-        const data = await r.json()
-        const c = data.course || data
+        const data2 = await r.json()
+        const c = data2.course || data2
         setLessons(c.lessons || [])
       }
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -56,6 +74,9 @@ export function CourseLessons({ course, onChanged }: { course: any, onChanged: (
     <Card>
       <CardContent className="pt-4">
         <div className="space-y-3">
+          {error && (
+            <div className="text-sm text-red-600">{error}</div>
+          )}
           {lessons.map((l, idx) => (
             <div key={l._id || idx} className="flex items-center justify-between p-2 border rounded">
               <div>
@@ -65,18 +86,28 @@ export function CourseLessons({ course, onChanged }: { course: any, onChanged: (
             </div>
           ))}
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-6 gap-2">
             <div className="col-span-2">
               <Label htmlFor="new-lesson-title">Шинэ хичээлийн гарчиг</Label>
-              <Input id="new-lesson-title" value={title} onChange={e => setTitle(e.target.value)} />
+              <Input id="new-lesson-title" value={title} onChange={e => setTitle(e.target.value)} required />
             </div>
             <div>
               <Label htmlFor="new-lesson-duration">Минут</Label>
-              <Input id="new-lesson-duration" type="number" value={duration} onChange={e => setDuration(e.target.value ? Number(e.target.value) : '')} />
+              <Input id="new-lesson-duration" type="number" min={1} value={duration} onChange={e => setDuration(e.target.value ? Number(e.target.value) : '')} required />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="new-lesson-video">Видео линк</Label>
+              <Input id="new-lesson-video" value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://..." required />
+            </div>
+            <div className="flex items-end">
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={preview} onChange={e => setPreview(e.target.checked)} />
+                Үнэгүй үзэх
+              </label>
             </div>
           </div>
           <div className="flex justify-end">
-            <Button type="button" onClick={handleAdd}>Хичээл нэмэх</Button>
+            <Button type="button" onClick={handleAdd} disabled={submitting}>{submitting ? 'Нэмэж байна...' : 'Хичээл нэмэх'}</Button>
           </div>
         </div>
       </CardContent>

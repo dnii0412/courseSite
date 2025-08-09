@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, Edit, Trash2, Search, Eye, BookOpen } from 'lucide-react'
-import { CourseLessons } from '@/components/admin/course-lessons'
 import { AdminCourseDetailsInline } from '@/components/admin/course-details-inline'
 import { Switch } from '@/components/ui/switch'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
@@ -301,10 +300,7 @@ export function CourseManagement() {
                 />
               </div>
               {/* Lessons section */}
-              <div className="grid gap-2">
-                <Label>Хичээлүүд</Label>
-                <CourseLessons course={selectedCourse} onChanged={() => fetchCourses()} />
-              </div>
+              {/* Lessons section removed from edit dialog; managed inline under each course */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="edit-instructor">Багш (нэр)</Label>
