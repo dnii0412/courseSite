@@ -1,4 +1,4 @@
-// File: /Users/bayarbayasgalanulambayar/Documents/Customers webs/mongolian-training-center/app/courses/page.tsx
+// File: /Users/dnii/Documents/courseSite/app/courses/page.tsx
 import * as entry from '../../../../app/courses/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
