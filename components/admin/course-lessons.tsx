@@ -46,8 +46,21 @@ export function CourseLessons({ course, onChanged }: { course: any, onChanged: (
 
   const handleAdd = async () => {
     setError(null)
-    const finalVideoUrl = bunnyId
-      ? (process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID ? `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID}/${bunnyId}?autoplay=false` : `bunny:${bunnyId}`)
+    // Accept Bunny full URL or raw ID and normalize to embed URL or bunny:ID
+    const extractedId = (() => {
+      const input = (bunnyId || '').trim()
+      if (!input) return ''
+      // Prefer /play/ when both patterns exist in the pasted value
+      const mPlay = input.match(/\/play\/[^/]+\/([^/?#]+)/)
+      if (mPlay?.[1]) return mPlay[1]
+      const m = input.match(/\/embed\/[^/]+\/([^/?#]+)/)
+      if (m?.[1]) return m[1]
+      const m2 = input.match(/^bunny:([^/?#]+)/)
+      if (m2?.[1]) return m2[1]
+      return input
+    })()
+    const finalVideoUrl = extractedId
+      ? (process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID ? `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID}/${extractedId}?autoplay=false` : `bunny:${extractedId}`)
       : ''
 
     if (!course?._id || !title || !duration || !finalVideoUrl) {
@@ -121,6 +134,9 @@ export function CourseLessons({ course, onChanged }: { course: any, onChanged: (
                     <div>
                       <div className="font-medium">{idx + 1}. {l.title}</div>
                       <div className="text-xs text-gray-500">{l.duration} минут</div>
+                      {!!l.videoUrl && (
+                        <div className="text-xs text-gray-500 break-all mt-1">Видео: {l.videoUrl}</div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -131,8 +147,19 @@ export function CourseLessons({ course, onChanged }: { course: any, onChanged: (
                         size="sm"
                         onClick={async () => {
                           if (!l._id) return
-                          const finalVideoUrl = editBunnyId
-                            ? (process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID ? `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID}/${editBunnyId}?autoplay=false` : `bunny:${editBunnyId}`)
+                          const extractedId = (() => {
+                            const input = (editBunnyId || '').trim()
+                            if (!input) return ''
+                            const mPlay = input.match(/\/play\/[^/]+\/([^/?#]+)/)
+                            if (mPlay?.[1]) return mPlay[1]
+                            const m = input.match(/\/embed\/[^/]+\/([^/?#]+)/)
+                            if (m?.[1]) return m[1]
+                            const m2 = input.match(/^bunny:([^/?#]+)/)
+                            if (m2?.[1]) return m2[1]
+                            return input
+                          })()
+                          const finalVideoUrl = extractedId
+                            ? (process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID ? `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID}/${extractedId}?autoplay=false` : `bunny:${extractedId}`)
                             : ''
                           if (!editTitle || !editDuration || !finalVideoUrl) {
                             setError('Бүх талбарыг бөглөнө үү')
@@ -172,8 +199,8 @@ export function CourseLessons({ course, onChanged }: { course: any, onChanged: (
                         setEditTitle(l.title)
                         setEditDuration(l.duration)
                         setEditPreview(!!l.preview)
-                        // try to infer previous bunny id from stored videoUrl
-                        const m = (l.videoUrl || '').match(/\/embed\/[^/]+\/([^/?#]+)/) || (l.videoUrl || '').match(/^bunny:([^/?#]+)/)
+                        // try to infer previous bunny id from stored videoUrl (supports embed/play/bunny:)
+                        const m = (l.videoUrl || '').match(/\/play\/[^/]+\/([^/?#]+)/) || (l.videoUrl || '').match(/\/embed\/[^/]+\/([^/?#]+)/) || (l.videoUrl || '').match(/^bunny:([^/?#]+)/)
                         setEditBunnyId(m?.[1] || '')
                       }}>Засах</Button>
                       <Button size="sm" variant="destructive" onClick={async () => {
@@ -211,7 +238,7 @@ export function CourseLessons({ course, onChanged }: { course: any, onChanged: (
             </div>
             <div className="col-span-2">
               <Label htmlFor="new-lesson-bunny">Bunny видео ID</Label>
-              <Input id="new-lesson-bunny" value={bunnyId} onChange={e => setBunnyId(e.target.value)} placeholder="VIDEO_ID" />
+              <Input id="new-lesson-bunny" value={bunnyId} onChange={e => setBunnyId(e.target.value)} placeholder="VIDEO_ID эсвэл Bunny URL" />
             </div>
             <div className="flex items-end">
               <label className="flex items-center gap-2 text-sm">

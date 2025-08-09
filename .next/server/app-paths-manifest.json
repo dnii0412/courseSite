@@ -1,10 +1,12 @@
 {
-  "/learn/[courseId]/[lessonId]/page": "app/learn/[courseId]/[lessonId]/page.js",
-  "/admin/page": "app/admin/page.js",
-  "/admin/payments/page": "app/admin/payments/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/admin/courses/page": "app/admin/courses/page.js",
-  "/admin/settings/page": "app/admin/settings/page.js",
-  "/learn/[courseId]/page": "app/learn/[courseId]/page.js",
+  "/learn/[courseId]/[lessonId]/page": "app/learn/[courseId]/[lessonId]/page.js",
+  "/api/courses/route": "app/api/courses/route.js",
+  "/api/auth/me/route": "app/api/auth/me/route.js",
   "/api/courses/[id]/route": "app/api/courses/[id]/route.js",
+  "/api/lessons/[id]/route": "app/api/lessons/[id]/route.js",
+  "/api/lessons/route": "app/api/lessons/route.js",
+  "/api/bunny/sign/route": "app/api/bunny/sign/route.js",
   "/api/enrollments/check/[courseId]/route": "app/api/enrollments/check/[courseId]/route.js"
 }

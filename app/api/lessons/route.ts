@@ -16,12 +16,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Хичээл олдсонгүй' }, { status: 404 })
     }
 
+    // Normalize Bunny inputs: accept raw ID, bunny:ID, or full play/embed URL
+    const libraryId = process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID
+    let normalizedVideoUrl = String(videoUrl).trim()
+    // Prefer extracting from /play/ over /embed/ when both exist
+    const idFromUrl = normalizedVideoUrl.match(/\/play\/[^/]+\/([^/?#]+)/)?.[1]
+      || normalizedVideoUrl.match(/\/embed\/[^/]+\/([^/?#]+)/)?.[1]
+      || normalizedVideoUrl.match(/^bunny:([^/?#]+)/)?.[1]
+    if (idFromUrl) {
+      normalizedVideoUrl = libraryId
+        ? `https://iframe.mediadelivery.net/embed/${libraryId}/${idFromUrl}?autoplay=false`
+        : `bunny:${idFromUrl}`
+    } else if (!/^https?:\/\//i.test(normalizedVideoUrl)) {
+      // treat plain string as ID
+      normalizedVideoUrl = libraryId
+        ? `https://iframe.mediadelivery.net/embed/${libraryId}/${normalizedVideoUrl}?autoplay=false`
+        : `bunny:${normalizedVideoUrl}`
+    }
+
     const lesson = await Lesson.create({ 
       title, 
       duration, 
       course: courseId, 
       order: Date.now(), 
-      videoUrl, 
+      videoUrl: normalizedVideoUrl,
+      sourceVideoUrl: String(videoUrl),
       description: (typeof description === 'string' && description.trim().length > 0) ? description : 'Тайлбаргүй',
       preview: Boolean(preview)
     })
