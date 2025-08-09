@@ -106,14 +106,15 @@ export async function GET(
 
     // Ensure enrollment exists when order is completed (idempotent safety)
     if (order.status === 'completed') {
-      const existing = await Enrollment.findOne({ user: user.userId, course: order.course })
+      const courseId = (order.course as any)?._id || order.course
+      const existing = await Enrollment.findOne({ user: user.userId, course: courseId })
       if (!existing) {
-        await Enrollment.create({ user: user.userId, course: order.course, enrolledAt: new Date(), progress: 0 })
-        await User.findByIdAndUpdate(user.userId, { $addToSet: { enrolledCourses: order.course } })
-        await Course.findByIdAndUpdate(order.course, { $inc: { studentsCount: 1 } })
+        await Enrollment.create({ user: user.userId, course: courseId, enrolledAt: new Date(), progress: 0 })
+        await User.findByIdAndUpdate(user.userId, { $addToSet: { enrolledCourses: courseId } })
+        await Course.findByIdAndUpdate(courseId, { $inc: { studentsCount: 1 } })
       } else {
         // still mirror on user for safety
-        await User.findByIdAndUpdate(user.userId, { $addToSet: { enrolledCourses: order.course } })
+        await User.findByIdAndUpdate(user.userId, { $addToSet: { enrolledCourses: courseId } })
       }
     }
 

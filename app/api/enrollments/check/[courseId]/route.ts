@@ -23,9 +23,15 @@ export async function GET(
     const testMode = process.env.NEXT_PUBLIC_TEST_MODE === 'true'
 
     if (testMode) {
-      // In test mode rely solely on user's enrolledCourses
+      // In test mode rely solely on user's enrolledCourses (support populated objects)
       const userDoc = (await User.findById(user.userId).select('enrolledCourses').lean()) as any
-      const isInUserDoc = userDoc?.enrolledCourses?.some((c: any) => c?.toString() === courseId)
+      const isInUserDoc = (userDoc?.enrolledCourses || []).some((c: any) => {
+        if (!c) return false
+        if (typeof c === 'object') {
+          return (c._id?.toString?.() || c?.toString?.()) === courseId
+        }
+        return c?.toString?.() === courseId
+      })
       return NextResponse.json(
         isInUserDoc
           ? { enrolled: true, enrollment: { _id: null, progress: 0, completedLessons: [], enrolledAt: null } }
@@ -43,7 +49,13 @@ export async function GET(
     if (!enrollment) {
       // Fallback to user.enrolledCourses to support test mode purchases without Enrollment doc
       const userDoc = (await User.findById(user.userId).select('enrolledCourses').lean()) as any
-      const isInUserDoc = userDoc?.enrolledCourses?.some((c: any) => c?.toString() === courseId)
+      const isInUserDoc = (userDoc?.enrolledCourses || []).some((c: any) => {
+        if (!c) return false
+        if (typeof c === 'object') {
+          return (c._id?.toString?.() || c?.toString?.()) === courseId
+        }
+        return c?.toString?.() === courseId
+      })
       if (isInUserDoc) {
         return NextResponse.json({
           enrolled: true,
