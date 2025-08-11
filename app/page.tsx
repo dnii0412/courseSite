@@ -5,6 +5,8 @@ import { BookOpen, Users, TrendingUp, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
+
+import { MediaGrid } from '@/components/media/media-grid'
 import { connectDB } from '@/lib/mongodb'
 import { User } from '@/lib/models/user'
 import { Course } from '@/lib/models/course'
@@ -131,6 +133,22 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Media Grid Section */}
+      <section className="py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-[#1B3C53] mb-4">
+            Featured Content
+          </h2>
+          <p className="text-gray-700">
+            Explore our curated media collection
+          </p>
+        </div>
+
+        <div className="h-[90vh]">
+          <MediaGrid slug="home-hero" />
+        </div>
+      </section>
+
       {/* Statistics Section */}
       <section className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
@@ -244,6 +262,8 @@ export default async function HomePage() {
           </CardContent>
         </Card>
       </section>
+
+
 
 
 
