@@ -1,77 +1,8 @@
-import NextAuth, { NextAuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import { connectDB } from './mongodb';
-import { User } from './models/user';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
 
-export const authOptions: NextAuthOptions = {
-  providers: [
-    CredentialsProvider({
-      name: 'credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' }
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
-
-        try {
-          await connectDB();
-          const user = await User.findOne({ email: credentials.email });
-
-          if (!user) {
-            return null;
-          }
-
-          const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
-
-          if (!isPasswordValid) {
-            return null;
-          }
-
-          return {
-            id: user._id.toString(),
-            email: user.email,
-            role: user.role,
-            name: user.name
-          };
-        } catch (error) {
-          console.error('Auth error:', error);
-          return null;
-        }
-      }
-    })
-  ],
-  session: {
-    strategy: 'jwt'
-  },
-  callbacks: {
-    async jwt({ token, user }: any) {
-      if (user) {
-        token.role = user.role;
-      }
-      return token;
-    },
-    async session({ session, token }: any) {
-      if (token) {
-        session.user.role = token.role;
-      }
-      return session;
-    }
-  },
-  pages: {
-    signIn: '/auth/login'
-  }
-};
-
-export default NextAuth(authOptions);
-
-// Legacy functions for backward compatibility
+// JWT helpers used by API routes and server components
 export async function verifyToken(request: NextRequest) {
   try {
     const token = request.cookies.get('token')?.value;
