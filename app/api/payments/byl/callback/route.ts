@@ -16,6 +16,8 @@ export async function POST(request: NextRequest) {
     const secret = process.env.BYL_WEBHOOK_SECRET || ''
     if (secret) {
       const providedSig =
+        request.headers.get('Byl-Signature') ||
+        request.headers.get('byl-signature') ||
         request.headers.get('x-byl-signature') ||
         request.headers.get('x-signature') ||
         request.headers.get('x-webhook-signature') ||

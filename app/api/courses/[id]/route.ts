@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { Course } from '@/lib/models/course'
+import '@/lib/models/lesson'
 import { User } from '@/lib/models/user'
+import mongoose from 'mongoose'
 
 export async function GET(
   request: NextRequest,
@@ -9,10 +11,14 @@ export async function GET(
 ) {
   try {
     await connectDB()
-    
+
+    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Буруу ID' }, { status: 400 })
+    }
+
     const course = await Course.findById(params.id)
-      .populate('instructor', 'name')
       .populate('lessons')
+      .lean()
 
     if (!course) {
       return NextResponse.json(
@@ -32,7 +38,7 @@ export async function GET(
   } catch (error) {
     console.error('Get course error:', error)
     return NextResponse.json(
-      { error: 'Серверийн алдаа' },
+      { error: 'Серверийн алдаа', details: process.env.NODE_ENV !== 'production' ? String((error as any)?.message || error) : undefined },
       { status: 500 }
     )
   }

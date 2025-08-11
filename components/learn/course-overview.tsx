@@ -60,7 +60,8 @@ export function CourseOverview({ courseId }: CourseOverviewProps) {
         const courseData = await courseResponse.json()
 
         if (courseResponse.ok) {
-          setCourse(courseData)
+          // API may return { course, enrollments } or the course directly
+          setCourse(courseData.course || courseData)
         } else {
           throw new Error('Course not found')
         }

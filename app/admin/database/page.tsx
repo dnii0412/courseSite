@@ -1,3 +1,4 @@
+"use client"
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -8,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useEffect, useState } from 'react'
 import { 
   Database, 
   Server, 
@@ -148,6 +150,24 @@ const getStatusIcon = (status: string) => {
 }
 
 export default function AdminDatabasePage() {
+  // Live infra stats
+  const [live, setLive] = useState<any>(null)
+  useEffect(() => {
+    let mounted = true
+    const load = async () => {
+      try {
+        const r = await fetch('/api/admin/infra', { cache: 'no-store' })
+        const j = await r.json()
+        if (mounted) setLive(j)
+      } catch {}
+    }
+    load()
+    const id = setInterval(load, 10000)
+    return () => {
+      mounted = false
+      clearInterval(id)
+    }
+  }, [])
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
@@ -169,63 +189,61 @@ export default function AdminDatabasePage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Нийт хэмжээ
+                    MongoDB Collections
                   </CardTitle>
                   <Database className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{databaseStats.totalSize}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Ашигласан: {databaseStats.usedSize}
-                  </p>
+                  <div className="text-sm text-muted-foreground">
+                    {live?.mongo?.stats?.db || '—'} • {live?.mongo?.collections?.length ?? 0} collections
+                    {live?.lastUpdated && <span className="ml-2">• {new Date(live.lastUpdated).toLocaleTimeString()}</span>}
+                  </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Холболт
+                    Bunny Videos
                   </CardTitle>
                   <Server className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {databaseStats.connections}/{databaseStats.maxConnections}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Идэвхтэй холболтууд
-                  </p>
+                  <div className="text-2xl font-bold">{live?.bunny?.videosCount ?? 0}</div>
+                  <p className="text-xs text-muted-foreground">Library: {live?.bunny?.libraryId || '—'}</p>
+                  {live?.bunny?.totalSizeBytes != null && (
+                    <p className="text-xs text-muted-foreground">Total size: {live.bunny.totalSizeBytes} bytes</p>
+                  )}
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Ажиллах хугацаа
+                    Mongo Stats
                   </CardTitle>
                   <Activity className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{databaseStats.uptime}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Сүүлийн 30 хоног
-                  </p>
+                  <div className="text-xs text-muted-foreground break-words">
+                    {live?.mongo?.stats ? JSON.stringify(live.mongo.stats) : '—'}
+                  </div>
+                  {live?.mongo?.connections && (
+                    <div className="text-xs text-muted-foreground mt-2">Connections: {JSON.stringify(live.mongo.connections)}</div>
+                  )}
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Төлөв
+                    Webhook / Errors
                   </CardTitle>
                   <Shield className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center space-x-2">
-                    {getStatusBadge(databaseStats.status)}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Бүх систем хэвийн
+                  <p className="text-xs text-muted-foreground break-words">
+                    {live?.mongo?.error || live?.bunny?.error || 'OK'}
                   </p>
                 </CardContent>
               </Card>
@@ -253,7 +271,7 @@ export default function AdminDatabasePage() {
               </CardContent>
             </Card>
 
-            {/* Collections */}
+            {/* Collections (live) */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -266,14 +284,14 @@ export default function AdminDatabasePage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {collections.map((collection) => (
+                  {(live?.mongo?.collections || []).map((collection: any) => (
                     <div key={collection.name} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center space-x-4">
                         <HardDrive className="h-5 w-5 text-blue-600" />
                         <div>
                           <p className="font-medium">{collection.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {collection.documents} баримт • {collection.size}
+                            {collection.count ?? '—'} баримт • {collection.storageSize ?? '—'} bytes
                           </p>
                         </div>
                       </div>

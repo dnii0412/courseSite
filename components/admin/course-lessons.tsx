@@ -1,11 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import * as tus from 'tus-js-client'
+import { startBunnyUpload } from '@/lib/bunny/uploader'
+import { Progress } from '@/components/ui/progress'
 
 interface Lesson {
   _id?: string
@@ -20,7 +22,8 @@ export function CourseLessons({ course, onChanged }: { course: any, onChanged: (
   const [duration, setDuration] = useState<number | ''>('')
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
-  const fileInputRef = useState<HTMLInputElement | null>(null)[0]
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -60,33 +63,8 @@ export function CourseLessons({ course, onChanged }: { course: any, onChanged: (
     setUploading(true)
     setUploadProgress(0)
     try {
-      const r = await fetch('/api/bunny/create-upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title }),
-      })
-      if (!r.ok) throw new Error('Failed to init Bunny upload')
-      const { libraryId, videoId, authorizationSignature, authorizationExpire, tusEndpoint } = await r.json()
-
-      await new Promise<void>((resolve, reject) => {
-        const upload = new tus.Upload(file, {
-          endpoint: tusEndpoint,
-          retryDelays: [0, 3000, 5000, 10000, 20000, 60000],
-          headers: {
-            AuthorizationSignature: authorizationSignature,
-            AuthorizationExpire: authorizationExpire,
-            LibraryId: String(libraryId),
-            VideoId: videoId,
-          },
-          metadata: { filetype: file.type, title },
-          onError: (e) => reject(e),
-          onProgress: (sent, total) => setUploadProgress(Math.round((sent / total) * 100)),
-          onSuccess: () => resolve(),
-        })
-        upload.findPreviousUploads().then((prev) => {
-          if (prev.length) upload.resumeFromPreviousUpload(prev[0])
-          upload.start()
-        })
+      const videoId = await startBunnyUpload(file, title, {
+        onProgress: (p) => setUploadProgress(p),
       })
 
       // Save lesson pointing at bunny:VIDEO_ID
@@ -136,8 +114,42 @@ export function CourseLessons({ course, onChanged }: { course: any, onChanged: (
               <Input id="new-lesson-duration" type="number" value={duration} onChange={e => setDuration(e.target.value ? Number(e.target.value) : '')} />
             </div>
           </div>
-          <div className="flex justify-end">
-            <Button type="button" onClick={handleAdd}>Хичээл нэмэх</Button>
+          <div className="grid grid-cols-3 gap-2 items-end">
+            <div className="col-span-2">
+              <Label htmlFor="new-lesson-video">Видео файл (Bunny)</Label>
+              <input
+                id="new-lesson-video"
+                ref={fileInputRef}
+                type="file"
+                accept="video/*"
+                className="hidden"
+                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+              />
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                  Файл сонгох
+                </Button>
+                <span className="text-sm text-gray-600 truncate max-w-[240px]">
+                  {selectedFile ? selectedFile.name : 'Файл сонгогдоогүй'}
+                </span>
+              </div>
+              {uploading && (
+                <div className="mt-2">
+                  <Progress value={uploadProgress} />
+                  <div className="text-xs text-gray-600 mt-1">{uploadProgress}%</div>
+                </div>
+              )}
+            </div>
+            <div className="space-x-2 flex justify-end">
+              <Button type="button" variant="outline" onClick={handleAdd} disabled={!title || !duration}>Хичээл нэмэх</Button>
+              <Button
+                type="button"
+                onClick={() => selectedFile && handleUpload(selectedFile)}
+                disabled={uploading || !selectedFile || !title || !duration}
+              >
+                {uploading ? 'Байршуулж байна...' : 'Видео байршуулах + нэмэх'}
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>

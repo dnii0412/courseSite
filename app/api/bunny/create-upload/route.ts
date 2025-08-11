@@ -1,9 +1,15 @@
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 
 export async function POST(request: NextRequest) {
   try {
     const { title } = await request.json()
+
+    if (!title || typeof title !== 'string') {
+      return NextResponse.json({ error: 'Missing title' }, { status: 400 })
+    }
 
     const LIBRARY_ID_STR = process.env.BUNNY_LIBRARY_ID || process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID
     const API_KEY = process.env.BUNNY_STREAM_API_KEY
@@ -61,8 +67,11 @@ export async function POST(request: NextRequest) {
       authorizationExpire: expires,
       tusEndpoint: 'https://video.bunnycdn.com/tusupload',
     })
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to create Bunny upload session' }, { status: 500 })
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: 'Route crashed', details: String(error?.message || error) },
+      { status: 500 }
+    )
   }
 }
 
