@@ -13,19 +13,21 @@ import {
   Eye,
   Grid3X3,
   Move,
-  ResizeHorizontal,
+  GripHorizontal as ResizeHorizontal,
   Settings,
   Plus,
   Trash2,
   Copy,
   RotateCcw
 } from 'lucide-react';
-import { IMedia, ILayout, ILayoutItem } from '@/lib/models/layout';
-import { cloudinaryUtils } from '@/lib/utils/cloudinary';
+import { ILayout, ILayoutItem } from '@/lib/models/layout';
+import { IMedia } from '@/lib/models/media';
 
 interface LayoutEditorProps {
   slug: string;
   onSave?: (layout: ILayout) => void;
+  selectedMedia?: IMedia | null;
+  onSelectedMediaConsumed?: () => void;
 }
 
 interface GridCell {
@@ -35,7 +37,7 @@ interface GridCell {
   itemId?: string;
 }
 
-export const LayoutEditor = ({ slug, onSave }: LayoutEditorProps) => {
+export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsumed }: LayoutEditorProps) => {
   const [layout, setLayout] = useState<ILayout | null>(null);
   const [items, setItems] = useState<ILayoutItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<ILayoutItem | null>(null);
@@ -44,6 +46,8 @@ export const LayoutEditor = ({ slug, onSave }: LayoutEditorProps) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [mediaList, setMediaList] = useState<IMedia[]>([]);
+  const [mediaMap, setMediaMap] = useState<Map<string, IMedia>>(new Map());
   const { toast } = useToast();
 
   // Initialize 6x4 grid
@@ -61,6 +65,34 @@ export const LayoutEditor = ({ slug, onSave }: LayoutEditorProps) => {
   useEffect(() => {
     fetchLayout();
   }, [slug]);
+
+  // Load media library to render item previews
+  useEffect(() => {
+    const loadMedia = async () => {
+      try {
+        const res = await fetch('/api/media', { cache: 'no-store' });
+        if (res.ok) {
+          const json = await res.json();
+          const list = (json.data || []) as IMedia[];
+          setMediaList(list);
+          setMediaMap(new Map(list.map((m) => [String(m._id), m])));
+        }
+      } catch (_) {
+        // ignore
+      }
+    };
+    loadMedia();
+  }, []);
+
+  // Auto-add selected media when provided from the media library
+  useEffect(() => {
+    if (selectedMedia?._id) {
+      addItem(selectedMedia);
+      onSelectedMediaConsumed?.();
+      toast({ title: 'Added to layout', description: selectedMedia.alt });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMedia?._id]);
 
   const fetchLayout = async () => {
     try {
@@ -128,15 +160,14 @@ export const LayoutEditor = ({ slug, onSave }: LayoutEditorProps) => {
       startRow: 1,
       colSpan: 1,
       rowSpan: 1,
-      alt: media.alt,
       ariaLabel: media.alt
     };
 
     // Find first available position
     const position = findAvailablePosition(1, 1);
     if (position) {
-      newItem.startCol = position.col;
-      newItem.startRow = position.row;
+      newItem.startCol = position.col as any;
+      newItem.startRow = position.row as any;
     }
 
     const newItems = [...items, newItem];
@@ -198,8 +229,8 @@ export const LayoutEditor = ({ slug, onSave }: LayoutEditorProps) => {
     const newItem: ILayoutItem = {
       ...item,
       id: `item_${Date.now()}`,
-      startCol: Math.min(item.startCol + 1, 6),
-      startRow: Math.min(item.startRow + 1, 4)
+      startCol: Math.min(item.startCol + 1, 6) as any,
+      startRow: Math.min(item.startRow + 1, 4) as any
     };
 
     // Adjust position if it would overflow
@@ -334,7 +365,7 @@ export const LayoutEditor = ({ slug, onSave }: LayoutEditorProps) => {
       return;
     }
 
-    updateItem(itemId, { startCol: col, startRow: row });
+    updateItem(itemId, { startCol: col as 1|2|3|4|5|6, startRow: row as 1|2|3|4 });
   };
 
   if (loading) {
@@ -371,6 +402,16 @@ export const LayoutEditor = ({ slug, onSave }: LayoutEditorProps) => {
           >
             <Eye className="w-4 h-4 mr-2" />
             Preview
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => selectedMedia && addItem(selectedMedia)}
+            disabled={!selectedMedia}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Selected Media
           </Button>
 
           <Button
@@ -424,6 +465,40 @@ export const LayoutEditor = ({ slug, onSave }: LayoutEditorProps) => {
                 gridTemplateColumns: 'repeat(6, 1fr)',
                 gridTemplateRows: 'repeat(4, 1fr)',
               }}
+              onDragOver={(e) => {
+                e.preventDefault();
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const itemId = e.dataTransfer.getData('text/plain');
+                if (!itemId) return;
+                const container = e.currentTarget as HTMLDivElement;
+                const rect = container.getBoundingClientRect();
+                const relX = e.clientX - rect.left;
+                const relY = e.clientY - rect.top;
+                const col = Math.max(1, Math.min(6, Math.floor((relX / rect.width) * 6) + 1));
+                const row = Math.max(1, Math.min(4, Math.floor((relY / rect.height) * 4) + 1));
+
+                const item = items.find(i => i.id === itemId);
+                if (!item) return;
+                // Bounds check
+                if (col + item.colSpan - 1 > 6 || row + item.rowSpan - 1 > 4) return;
+
+                // Conflict check
+                let conflict = false;
+                for (let r = row; r < row + item.rowSpan; r++) {
+                  for (let c = col; c < col + item.colSpan; c++) {
+                    const cell = gridCells[r]?.[c];
+                    if (cell?.occupied && cell.itemId !== itemId) {
+                      conflict = true; break;
+                    }
+                  }
+                  if (conflict) break;
+                }
+                if (!conflict) {
+    updateItem(itemId, { startCol: col as 1|2|3|4|5|6, startRow: row as 1|2|3|4 });
+                }
+              }}
             >
               {items.map((item) => (
                 <GridItem
@@ -434,7 +509,7 @@ export const LayoutEditor = ({ slug, onSave }: LayoutEditorProps) => {
                   onUpdate={updateItem}
                   onDelete={deleteItem}
                   onDuplicate={duplicateItem}
-                  onDrop={handleItemDrop}
+                  media={mediaMap.get(String(item.mediaId))}
                 />
               ))}
             </div>
@@ -615,7 +690,7 @@ interface GridItemProps {
   onUpdate: (itemId: string, updates: Partial<ILayoutItem>) => void;
   onDelete: (itemId: string) => void;
   onDuplicate: (itemId: string) => void;
-  onDrop: (col: number, row: number, itemId: string) => void;
+  media?: IMedia;
 }
 
 const GridItem = ({
@@ -625,7 +700,7 @@ const GridItem = ({
   onUpdate,
   onDelete,
   onDuplicate,
-  onDrop
+  media,
 }: GridItemProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -672,11 +747,21 @@ const GridItem = ({
       onDragEnd={handleDragEnd}
     >
       {/* Item Content */}
-      <div className="w-full h-full bg-gradient-to-br from-[#456882] to-[#1B3C53] rounded flex items-center justify-center text-white text-sm font-medium">
-        <div className="text-center">
-          <div className="text-lg mb-1">📷</div>
-          <div className="text-xs">{item.colSpan}×{item.rowSpan}</div>
-        </div>
+      <div className="w-full h-full rounded overflow-hidden">
+        {media ? (
+          media.type === 'image' ? (
+            <img src={media.url} alt={media.alt} className="w-full h-full object-cover" />
+          ) : (
+            <video src={media.url} poster={media.posterUrl} className="w-full h-full object-cover" autoPlay loop muted playsInline />
+          )
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-[#456882] to-[#1B3C53] rounded flex items-center justify-center text-white text-sm font-medium">
+            <div className="text-center">
+              <div className="text-lg mb-1">📷</div>
+              <div className="text-xs">{item.colSpan}×{item.rowSpan}</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Selection Overlay */}

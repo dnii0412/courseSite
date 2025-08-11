@@ -12,7 +12,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { MediaLibrary } from '@/components/admin/media-library';
 import { LayoutEditor } from '@/components/admin/layout-editor';
-import { IMedia, ILayout } from '@/lib/models/layout';
+import { ILayout } from '@/lib/models/layout';
+import { IMedia } from '@/lib/models/media';
 import { Plus, Save, Eye, Settings } from 'lucide-react';
 
 export default function AdminMediaGridPage() {
@@ -163,6 +164,8 @@ export default function AdminMediaGridPage() {
           <LayoutEditor
             slug={layoutSlug}
             onSave={handleLayoutSave}
+            selectedMedia={selectedMedia as any}
+            onSelectedMediaConsumed={() => setSelectedMedia(null)}
           />
         </TabsContent>
 
