@@ -3,7 +3,6 @@ import { CourseCard } from '@/components/courses/course-card'
 import { redirect } from 'next/navigation'
 import { getUserFromCookies } from '@/lib/auth'
 import { connectDB } from '@/lib/mongodb'
-import { Enrollment } from '@/lib/models/enrollment'
 import { User } from '@/lib/models/user'
 import { Course } from '@/lib/models/course'
 
@@ -27,20 +26,8 @@ export default async function LearnPage() {
   }
 
   await connectDB()
-  // Load from Enrollment (prod) and from user's enrolledCourses (test or mirror)
-  const [enrollments, userDoc] = await Promise.all([
-    Enrollment.find({ user: currentUser.userId })
-      .populate('course')
-      .lean(),
-    User.findById(currentUser.userId).select('enrolledCourses').lean() as any
-  ])
-
-  const enrollmentCourseIds = enrollments
-    .map((e: any) => e.course?._id?.toString())
-    .filter(Boolean) as string[]
-  const userCourseIds = (userDoc?.enrolledCourses || []).map((id: any) => id.toString()) as string[]
-
-  const allCourseIds = Array.from(new Set([...enrollmentCourseIds, ...userCourseIds]))
+  const userDoc = (await User.findById(currentUser.userId).select('enrolledCourses').lean()) as any
+  const allCourseIds = (userDoc?.enrolledCourses || []).map((id: any) => id.toString()) as string[]
 
   let courses: Course[] = [] as any
   if (allCourseIds.length > 0) {

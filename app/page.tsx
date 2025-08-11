@@ -8,7 +8,7 @@ import { Footer } from '@/components/layout/footer'
 import { connectDB } from '@/lib/mongodb'
 import { User } from '@/lib/models/user'
 import { Course } from '@/lib/models/course'
-import { Enrollment } from '@/lib/models/enrollment'
+// Enrollment model removed
 
 async function getStats() {
   try {
@@ -17,12 +17,14 @@ async function getStats() {
     const totalStudents = await User.countDocuments()
     const totalCourses = await Course.countDocuments()
 
-    // Get enrollments and calculate completion rate
-    const enrollments = await Enrollment.find()
-    const totalEnrollments = enrollments.length
-    const completedEnrollments = enrollments.filter(e => e.completedLessons && e.completedLessons.length > 0).length
-
-    const completionRate = totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0
+    // Derive total enrollments from users' enrolledCourses
+    const totalEnrollmentsAgg = await User.aggregate([
+      { $project: { count: { $size: { $ifNull: ['$enrolledCourses', []] } } } },
+      { $group: { _id: null, total: { $sum: '$count' } } },
+    ])
+    const totalEnrollments = totalEnrollmentsAgg?.[0]?.total || 0
+    const completedEnrollments = 0
+    const completionRate = 0
 
     return {
       totalStudents,
@@ -47,20 +49,20 @@ async function getPopularCourses() {
   try {
     await connectDB()
 
-    // Get courses with enrollment counts
-    const courses = await Course.find().limit(5)
-    const popularCourses = []
-
-    for (const course of courses) {
-      const enrollmentCount = await Enrollment.countDocuments({ courseId: course._id })
-      popularCourses.push({
-        name: course.title,
-        enrollments: enrollmentCount
-      })
-    }
-
-    // Sort by enrollment count and return top 5
-    return popularCourses.sort((a, b) => b.enrollments - a.enrollments).slice(0, 5)
+    // Get top 5 courses by number of users enrolled
+    const courses = await Course.find().limit(20).select('_id title')
+    const popularCoursesAgg = await User.aggregate([
+      { $unwind: '$enrolledCourses' },
+      { $group: { _id: '$enrolledCourses', enrollments: { $sum: 1 } } },
+      { $sort: { enrollments: -1 } },
+      { $limit: 5 },
+    ])
+    const map = new Map<string, number>(popularCoursesAgg.map((x: any) => [String(x._id), x.enrollments]))
+    const popularCourses = courses
+      .map((c: any) => ({ name: c.title, enrollments: map.get(String(c._id)) || 0 }))
+      .sort((a, b) => b.enrollments - a.enrollments)
+      .slice(0, 5)
+    return popularCourses
   } catch (error) {
     console.error('Error fetching popular courses:', error)
     return []

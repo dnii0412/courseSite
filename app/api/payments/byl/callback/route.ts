@@ -1,15 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { Order } from '@/lib/models/order'
-import { Enrollment } from '@/lib/models/enrollment'
 import { Course } from '@/lib/models/course'
 import { User } from '@/lib/models/user'
+import crypto from 'crypto'
 
 export async function POST(request: NextRequest) {
   try {
     await connectDB()
-    
-    const { invoice_id, payment_status } = await request.json()
+
+    // Read raw body for signature verification
+    const raw = await request.text()
+
+    // Verify webhook signature if secret is configured
+    const secret = process.env.BYL_WEBHOOK_SECRET || ''
+    if (secret) {
+      const providedSig =
+        request.headers.get('x-byl-signature') ||
+        request.headers.get('x-signature') ||
+        request.headers.get('x-webhook-signature') ||
+        ''
+      const expectedSig = crypto.createHmac('sha256', secret).update(raw).digest('hex')
+      if (!providedSig || providedSig !== expectedSig) {
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+      }
+    }
+
+    const parsed = JSON.parse(raw || '{}')
+    // Accept both legacy shape { invoice_id, payment_status } and BYL webhook shape { type, data.object }
+    const invoice_id = parsed?.invoice_id ?? parsed?.data?.object?.id ?? parsed?.data?.id
+    const statusStr = parsed?.payment_status ?? parsed?.data?.object?.status ?? parsed?.status
+    const eventType = parsed?.type ?? ''
+    const isPaid = String(statusStr || '').toLowerCase() === 'paid' || /invoice\.paid/i.test(eventType)
 
     // Find order by Byl invoice ID
     const order = await Order.findOne({ bylInvoiceId: invoice_id })
@@ -20,22 +42,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (payment_status === 'PAID') {
+    if (isPaid) {
       // Update order status
       await Order.findByIdAndUpdate(order._id, {
         status: 'completed',
         paidAt: new Date()
       })
 
-      // Create enrollment for production callbacks (keeps detailed progress)
-      await Enrollment.create({
-        user: order.user,
-        course: order.course,
-        enrolledAt: new Date(),
-        progress: 0
-      })
-
-      // Also mirror access on the user document
+      // Mirror access on the user document
       await User.findByIdAndUpdate(order.user, {
         $addToSet: { enrolledCourses: order.course }
       })

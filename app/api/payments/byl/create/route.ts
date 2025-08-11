@@ -38,96 +38,58 @@ export async function POST(request: NextRequest) {
 
     console.log('Created order:', order._id)
 
-    // Check if Byl environment variables are set
-    if (!process.env.BYL_API_URL || !process.env.BYL_ACCESS_TOKEN) {
-      console.log('Byl credentials not found, using test mode')
-      console.log('Environment check:', {
-        BYL_API_URL: process.env.BYL_API_URL,
-        BYL_ACCESS_TOKEN: process.env.BYL_ACCESS_TOKEN ? 'SET' : 'NOT SET'
-      })
-      
-      // Test mode - create a mock payment with a proper QR code image
-      const testQrCode = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TEST_PAYMENT_' + order._id
-      
-      return NextResponse.json({
-        orderId: order._id,
-        bylUrl: 'https://test.byl.mn/pay',
-        qrImage: testQrCode
-      })
+    // Require BYL creds
+    const projectId = String(process.env.BYL_PROJECT_ID || '').trim()
+    if (!process.env.BYL_ACCESS_TOKEN || !projectId) {
+      console.log('BYL creds missing; returning simple test redirect URL')
+      return NextResponse.json({ orderId: order._id, url: 'https://byl.mn', fallback: true })
     }
 
-    console.log('Using real Byl API with credentials')
-
-    // Byl API integration - without merchant code
-    const bylPayload = {
-      invoice_code: `COURSE_${order._id}`,
-      sender_invoice_no: order._id.toString(),
-      invoice_description: `${course.title} хичээлийн төлбөр`,
-      amount: course.price,
-      callback_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/payments/byl/callback`
+    // BYL v1 Invoices API per docs (force official host to avoid misconfig)
+    const bylBaseEnv = (process.env.BYL_API_URL || '').replace(/\/$/, '')
+    // Normalize to host root; strip any trailing /api/v1 to avoid duplications like /api/v1/api/v1
+    const normalizedHost = bylBaseEnv && bylBaseEnv.startsWith('https://byl.mn')
+      ? bylBaseEnv.replace(/\/api\/v1$/i, '')
+      : 'https://byl.mn'
+    const createUrl = `${normalizedHost}/api/v1/projects/${projectId}/invoices`
+    const payload = {
+      amount: Number(course.price),
+      description: `${course.title} хичээлийн төлбөр`,
+      auto_advance: true,
     }
 
-    console.log('Byl API URL:', process.env.BYL_API_URL)
-    console.log('Byl payload:', bylPayload)
-
-    // Try to call Byl API with timeout
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000)
 
     try {
-      const bylResponse = await fetch(`${process.env.BYL_API_URL}/v2/invoice`, {
+      const res = await fetch(createUrl, {
         method: 'POST',
         headers: {
+          Accept: 'application/json',
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.BYL_ACCESS_TOKEN}`
+          Authorization: `Bearer ${process.env.BYL_ACCESS_TOKEN}`,
         },
-        body: JSON.stringify(bylPayload),
-        signal: controller.signal
+        body: JSON.stringify(payload),
+        signal: controller.signal,
       })
-
       clearTimeout(timeoutId)
-
-      const bylData = await bylResponse.json()
-      console.log('Byl response status:', bylResponse.status)
-      console.log('Byl response data:', bylData)
-
-      if (!bylResponse.ok) {
-        console.error('Byl API error:', bylData)
-        throw new Error(`Byl API error: ${bylData.message || bylData.error || 'Unknown error'}`)
+      const text = await res.text()
+      let data: any = {}
+      try { data = JSON.parse(text) } catch { data = { raw: text } }
+      if (!res.ok) {
+        console.error('BYL create non-200:', res.status, data)
+        return NextResponse.json({ error: data?.message || data?.error || `BYL create failed (${res.status})` }, { status: 502 })
       }
+      const inv = data?.data || data
+      if (!inv?.id || !inv?.url) throw new Error('BYL missing invoice id or url')
 
-      // Check if we got the expected data
-      if (!bylData.qr_image && !bylData.qrImage) {
-        console.error('No QR image in Byl response:', bylData)
-        throw new Error('Byl API did not return QR image')
-      }
-
-      // Update order with Byl invoice ID
-      await Order.findByIdAndUpdate(order._id, {
-        bylInvoiceId: bylData.invoice_id || bylData.invoiceId
-      })
-
-      return NextResponse.json({
-        orderId: order._id,
-        bylUrl: bylData.qr_text || bylData.qrText,
-        qrImage: bylData.qr_image || bylData.qrImage
-      })
-
-    } catch (fetchError) {
+      await Order.findByIdAndUpdate(order._id, { bylInvoiceId: String(inv.id) })
+      return NextResponse.json({ orderId: order._id, url: String(inv.url) })
+    } catch (e) {
       clearTimeout(timeoutId)
-      console.error('Byl API fetch error:', fetchError)
-      
-      // If Byl API fails, fall back to test mode
-      console.log('Byl API failed, falling back to test mode')
-      
-      const testQrCode = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TEST_PAYMENT_' + order._id
-      
-      return NextResponse.json({
-        orderId: order._id,
-        bylUrl: 'https://test.byl.mn/pay',
-        qrImage: testQrCode,
-        fallback: true
-      })
+      console.error('BYL v1 create error:', e)
+      const msg = e instanceof Error ? e.message : 'Unknown error'
+      return NextResponse.json({ error: `Byl API алдаа: ${msg}` }, { status: 500 })
     }
 
   } catch (error) {
