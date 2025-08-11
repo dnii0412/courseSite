@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
+// @ts-ignore
 import jwt from 'jsonwebtoken'
+// @ts-ignore
 import { connectDB } from '@/lib/mongodb'
 import { User } from '@/lib/models/user'
 
@@ -14,7 +16,7 @@ export async function POST(request: NextRequest) {
     const existingUser = await User.findOne({ email })
     if (existingUser) {
       return NextResponse.json(
-        { error: 'Энэ имэйл хаягаар бүртгэгдсэн хэрэглэгч байна' },
+        { error: 'Энэ имэйл хаягаар `б`үртгэгдсэн хэрэглэгч байна' },
         { status: 400 }
       )
     }
