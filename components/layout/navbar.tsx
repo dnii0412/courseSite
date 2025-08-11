@@ -17,19 +17,19 @@ export function Navbar() {
   const { user, logout } = useAuth()
 
   return (
-    <nav className="bg-white shadow-sm border-b">
+    <nav className="bg-[#F9F3EF] shadow-sm border-b border-[#D2C1B6]">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="text-xl font-bold text-blue-600">
-            Сургалтын төв
+          <Link href="/" className="text-xl font-bold text-[#1B3C53]">
+            New Era
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/courses" className="text-gray-700 hover:text-blue-600">
+            <Link href="/courses" className="text-[#1B3C53] hover:text-[#456882]">
               Хичээлүүд
             </Link>
-            
+
             {user ? (
               <>
                 <DropdownMenu>
@@ -60,10 +60,10 @@ export function Navbar() {
               </>
             ) : (
               <div className="flex items-center space-x-4">
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" asChild className="text-[#1B3C53] hover:text-[#456882] hover:bg-[#F9F3EF]">
                   <Link href="/auth/login">Нэвтрэх</Link>
                 </Button>
-                <Button asChild>
+                <Button asChild className="bg-[#456882] hover:bg-[#1B3C53] text-white">
                   <Link href="/auth/register">Бүртгүүлэх</Link>
                 </Button>
               </div>
@@ -75,7 +75,7 @@ export function Navbar() {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="max-w-[140px]">
+                  <Button variant="ghost" size="sm" className="max-w-[140px] text-[#1B3C53] hover:text-[#456882] hover:bg-[#F9F3EF]">
                     <User className="w-4 h-4 mr-2" />
                     <span className="truncate">{user.name || user.email || 'Хэрэглэгч'}</span>
                   </Button>
@@ -99,7 +99,7 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant="ghost" size="sm" asChild className="text-[#1B3C53] hover:text-[#456882] hover:bg-[#F9F3EF]">
                 <Link href="/auth/login">Нэвтрэх</Link>
               </Button>
             )}
@@ -108,6 +108,7 @@ export function Navbar() {
               variant="ghost"
               size="sm"
               onClick={() => setIsOpen(!isOpen)}
+              className="text-[#1B3C53] hover:text-[#456882] hover:bg-[#F9F3EF]"
             >
               {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
@@ -118,31 +119,31 @@ export function Navbar() {
         {isOpen && (
           <div className="md:hidden py-4 border-t">
             <div className="flex flex-col space-y-4">
-              <Link href="/courses" className="text-gray-700 hover:text-blue-600">
+              <Link href="/courses" className="text-[#1B3C53] hover:text-[#456882]">
                 Хичээлүүд
               </Link>
-              
+
               {user ? (
                 <>
-                  <Link href="/profile" className="text-gray-700 hover:text-blue-600">
+                  <Link href="/profile" className="text-[#1B3C53] hover:text-[#456882]">
                     Профайл
                   </Link>
                   {user.role === 'admin' && (
-                    <Link href="/admin" className="text-gray-700 hover:text-blue-600">
+                    <Link href="/admin" className="text-[#1B3C53] hover:text-[#456882]">
                       Админ самбар
                     </Link>
                   )}
-                  <Button variant="ghost" onClick={logout} className="justify-start">
+                  <Button variant="ghost" onClick={logout} className="justify-start text-[#1B3C53] hover:text-[#456882] hover:bg-[#F9F3EF]">
                     <LogOut className="w-4 h-4 mr-2" />
                     Гарах
                   </Button>
                 </>
               ) : (
                 <>
-                  <Link href="/auth/login" className="text-gray-700 hover:text-blue-600">
+                  <Link href="/auth/login" className="text-[#1B3C53] hover:text-[#456882]">
                     Нэвтрэх
                   </Link>
-                  <Link href="/auth/register" className="text-gray-700 hover:text-blue-600">
+                  <Link href="/auth/register" className="text-[#1B3C53] hover:text-[#456882]">
                     Бүртгүүлэх
                   </Link>
                 </>

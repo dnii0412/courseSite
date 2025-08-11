@@ -1,39 +1,88 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { BookOpen, Play, Users, Award, TrendingUp, CreditCard, BarChart3 } from 'lucide-react'
+import { BookOpen, Users, TrendingUp, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
+import { connectDB } from '@/lib/mongodb'
+import { User } from '@/lib/models/user'
+import { Course } from '@/lib/models/course'
+import { Enrollment } from '@/lib/models/enrollment'
 
-const reportData = {
-  totalRevenue: 15420000,
-  totalStudents: 1234,
-  totalCourses: 56,
-  completionRate: 89,
-  monthlyGrowth: 12,
-  popularCourses: [
-    { name: 'React.js сургалт', enrollments: 234, revenue: 35100000 },
-    { name: 'Node.js сургалт', enrollments: 189, revenue: 28350000 },
-    { name: 'Python сургалт', enrollments: 156, revenue: 23400000 },
-    { name: 'JavaScript сургалт', enrollments: 145, revenue: 21750000 },
-    { name: 'TypeScript сургалт', enrollments: 123, revenue: 18450000 }
-  ]
+async function getStats() {
+  try {
+    await connectDB()
+
+    const totalStudents = await User.countDocuments()
+    const totalCourses = await Course.countDocuments()
+
+    // Get enrollments and calculate completion rate
+    const enrollments = await Enrollment.find()
+    const totalEnrollments = enrollments.length
+    const completedEnrollments = enrollments.filter(e => e.completedLessons && e.completedLessons.length > 0).length
+
+    const completionRate = totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0
+
+    return {
+      totalStudents,
+      totalCourses,
+      totalEnrollments,
+      completedEnrollments,
+      completionRate
+    }
+  } catch (error) {
+    console.error('Error fetching stats:', error)
+    return {
+      totalStudents: 0,
+      totalCourses: 0,
+      totalEnrollments: 0,
+      completedEnrollments: 0,
+      completionRate: 0
+    }
+  }
 }
 
-export default function HomePage() {
+async function getPopularCourses() {
+  try {
+    await connectDB()
+
+    // Get courses with enrollment counts
+    const courses = await Course.find().limit(5)
+    const popularCourses = []
+
+    for (const course of courses) {
+      const enrollmentCount = await Enrollment.countDocuments({ courseId: course._id })
+      popularCourses.push({
+        name: course.title,
+        enrollments: enrollmentCount
+      })
+    }
+
+    // Sort by enrollment count and return top 5
+    return popularCourses.sort((a, b) => b.enrollments - a.enrollments).slice(0, 5)
+  } catch (error) {
+    console.error('Error fetching popular courses:', error)
+    return []
+  }
+}
+
+export default async function HomePage() {
+  const stats = await getStats()
+  const popularCourses = await getPopularCourses()
+
   return (
     <div className="min-h-screen bg-[#F9F3EF]">
       <Navbar />
 
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[600px]">
+        <div className="grid lg:grid-cols-2 gap-6 items-center min-h-[600px]">
           {/* Left Side - Text Content */}
-          <div className="space-y-8">
+          <div className="space-y-8 lg:ml-8">
             <div className="space-y-6">
               <h1 className="text-5xl lg:text-6xl font-bold text-[#1B3C53] leading-tight">
-                New Era Academy
+                New Era
               </h1>
               <p className="text-xl text-gray-700 leading-relaxed">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
@@ -86,77 +135,57 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-[#1B3C53] mb-4">
-            Манай сургалтын төвийн статистик
+            New Era статистик
           </h2>
-          <p className="text-gray-700">
-            Олон мянган сурагч манай платформ дээр суралцаж байна
-          </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-16">
-          <Card className="bg-[#F9F3EF] border-[#D2C1B6]">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-16">
+          <Card className="bg-[#F9F3EF] border-[#D2C1B6] hover:bg-[#1B3C53] hover:text-white transition-colors duration-300 group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-[#1B3C53]">
-                Нийт орлого
-              </CardTitle>
-              <CreditCard className="h-4 w-4 text-[#456882]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-[#1B3C53]">
-                ₮{reportData.totalRevenue.toLocaleString()}
-              </div>
-              <p className="text-xs text-[#456882]">
-                +{reportData.monthlyGrowth}% өнгөрсөн сартай харьцуулахад
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[#F9F3EF] border-[#D2C1B6]">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-[#1B3C53]">
+              <CardTitle className="text-sm font-medium text-[#1B3C53] group-hover:text-white">
                 Нийт сурагч
               </CardTitle>
-              <Users className="h-4 w-4 text-[#456882]" />
+              <Users className="h-4 w-4 text-[#456882] group-hover:text-white" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-[#1B3C53]">
-                {reportData.totalStudents.toLocaleString()}
+              <div className="text-2xl font-bold text-[#1B3C53] group-hover:text-white">
+                {stats.totalStudents.toLocaleString()}
               </div>
-              <p className="text-xs text-[#456882]">
-                +{reportData.monthlyGrowth}% өнгөрсөн сартай харьцуулахад
+              <p className="text-xs text-[#456882] group-hover:text-white">
+                Бүртгэлтэй сурагчид
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#F9F3EF] border-[#D2C1B6]">
+          <Card className="bg-[#F9F3EF] border-[#D2C1B6] hover:bg-[#1B3C53] hover:text-white transition-colors duration-300 group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-[#1B3C53]">
+              <CardTitle className="text-sm font-medium text-[#1B3C53] group-hover:text-white">
                 Нийт сургалт
               </CardTitle>
-              <BookOpen className="h-4 w-4 text-[#456882]" />
+              <BookOpen className="h-4 w-4 text-[#456882] group-hover:text-white" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-[#1B3C53]">
-                {reportData.totalCourses}
+              <div className="text-2xl font-bold text-[#1B3C53] group-hover:text-white">
+                {stats.totalCourses}
               </div>
-              <p className="text-xs text-[#456882]">
+              <p className="text-xs text-[#456882] group-hover:text-white">
                 Идэвхтэй сургалтууд
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#F9F3EF] border-[#D2C1B6]">
+          <Card className="bg-[#F9F3EF] border-[#D2C1B6] hover:bg-[#1B3C53] hover:text-white transition-colors duration-300 group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-[#1B3C53]">
+              <CardTitle className="text-sm font-medium text-[#1B3C53] group-hover:text-white">
                 Дуусгах түвшин
               </CardTitle>
-              <TrendingUp className="h-4 w-4 text-[#456882]" />
+              <TrendingUp className="h-4 w-4 text-[#456882] group-hover:text-white" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-[#1B3C53]">
-                {reportData.completionRate}%
+              <div className="text-2xl font-bold text-[#1B3C53] group-hover:text-white">
+                {stats.completionRate}%
               </div>
-              <p className="text-xs text-[#456882]">
+              <p className="text-xs text-[#456882] group-hover:text-white">
                 Дундаж дуусгах түвшин
               </p>
             </CardContent>
@@ -190,35 +219,24 @@ export default function HomePage() {
                     <SelectItem value="90">90 хоног</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" className="border-[#D2C1B6] text-[#1B3C53] hover:bg-[#456882] hover:text-white">
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  График
-                </Button>
+
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {reportData.popularCourses.map((course, index) => (
-                <div key={course.name} className="flex items-center justify-between p-4 border border-[#EAD8B1] rounded-lg bg-white">
+              {popularCourses.map((course: any, index: number) => (
+                <div key={course.name} className="flex items-center justify-between p-4 border border-[#D2C1B6] rounded-lg bg-white hover:bg-[#1B3C53] hover:text-white transition-colors duration-300">
                   <div className="flex items-center space-x-4">
-                    <div className="w-8 h-8 bg-[#001F3F] rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="w-8 h-8 bg-[#456882] rounded-full flex items-center justify-center text-white font-bold">
                       {index + 1}
                     </div>
                     <div>
-                      <p className="font-medium text-[#001F3F]">{course.name}</p>
-                      <p className="text-sm text-[#3A6D8C]">
+                      <p className="font-medium text-[#1B3C53]">{course.name}</p>
+                      <p className="text-sm text-[#456882]">
                         {course.enrollments} элсэлт
                       </p>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-[#001F3F]">
-                      ₮{course.revenue.toLocaleString()}
-                    </p>
-                    <p className="text-sm text-[#3A6D8C]">
-                      Орлого
-                    </p>
                   </div>
                 </div>
               ))}
@@ -227,64 +245,7 @@ export default function HomePage() {
         </Card>
       </section>
 
-      {/* Features */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-[#1B3C53] mb-4">
-            Яагаад манай платформыг сонгох вэ?
-          </h2>
-        </div>
 
-        <div className="grid md:grid-cols-4 gap-8">
-          <Card className="text-center bg-[#F9F3EF] border-[#D2C1B6]">
-            <CardHeader>
-              <BookOpen className="w-12 h-12 mx-auto text-[#456882]" />
-              <CardTitle className="text-[#1B3C53]">Олон төрлийн хичээл</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-[#456882]">
-                Технологи, бизнес, урлаг гэх мэт олон салбарын хичээлүүд
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center bg-[#F9F3EF] border-[#D2C1B6]">
-            <CardHeader>
-              <Play className="w-12 h-12 mx-auto text-[#456882]" />
-              <CardTitle className="text-[#1B3C53]">Видео хичээл</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-[#456882]">
-                Өндөр чанартай видео хичээлүүдийг хүссэн цагтаа үзээрэй
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center bg-[#F9F3EF] border-[#D2C1B6]">
-            <CardHeader>
-              <Users className="w-12 h-12 mx-auto text-[#456882]" />
-              <CardTitle className="text-[#1B3C53]">Мэргэжлийн багш нар</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-[#456882]">
-                Туршлагатай, мэргэжлийн багш нараас суралцаарай
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center bg-[#F9F3EF] border-[#D2C1B6]">
-            <CardHeader>
-              <Award className="w-12 h-12 mx-auto text-[#456882]" />
-              <CardTitle className="text-[#1B3C53]">Гэрчилгээ</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-[#456882]">
-                Хичээлээ дуусгасны дараа гэрчилгээ авах боломжтой
-              </CardDescription>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
 
       <Footer />
     </div>

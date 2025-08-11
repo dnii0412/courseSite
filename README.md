@@ -1,4 +1,4 @@
-# Сургалтын төв - Mongolian Training Center
+# New Era - Online Learning Platform
 
 Монгол хэл дээрх онлайн сургалтын платформ. Next.js, TypeScript, MongoDB, Cloudinary болон QPay ашиглан хөгжүүлсэн.
 

@@ -7,7 +7,7 @@ import { Toaster } from '@/components/ui/toaster'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Сургалтын төв - Training Center',
+  title: 'New Era - Online Learning Platform',
   description: 'Онлайн сургалтын платформ',
   generator: 'v0.dev',
   icons: {

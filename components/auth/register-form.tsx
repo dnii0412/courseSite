@@ -20,7 +20,7 @@ export function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (password !== confirmPassword) {
       toast({
         title: 'Алдаа',
@@ -53,7 +53,7 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Нэр</Label>
+        <Label htmlFor="name" className="text-[#1B3C53] font-medium">Нэр</Label>
         <Input
           id="name"
           type="text"
@@ -61,11 +61,12 @@ export function RegisterForm() {
           onChange={(e) => setName(e.target.value)}
           required
           placeholder="Таны нэр"
+          className="border-[#D2C1B6] focus:border-[#456882] focus:ring-[#456882] text-[#1B3C53] placeholder:text-[#456882]/60"
         />
       </div>
-      
+
       <div className="space-y-2">
-        <Label htmlFor="email">И-мэйл хаяг</Label>
+        <Label htmlFor="email" className="text-[#1B3C53] font-medium">И-мэйл хаяг</Label>
         <Input
           id="email"
           type="email"
@@ -73,11 +74,12 @@ export function RegisterForm() {
           onChange={(e) => setEmail(e.target.value)}
           required
           placeholder="your@email.com"
+          className="border-[#D2C1B6] focus:border-[#456882] focus:ring-[#456882] text-[#1B3C53] placeholder:text-[#456882]/60"
         />
       </div>
-      
+
       <div className="space-y-2">
-        <Label htmlFor="password">Нууц үг</Label>
+        <Label htmlFor="password" className="text-[#1B3C53] font-medium">Нууц үг</Label>
         <Input
           id="password"
           type="password"
@@ -85,11 +87,12 @@ export function RegisterForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
           placeholder="••••••••"
+          className="border-[#D2C1B6] focus:border-[#456882] focus:ring-[#456882] text-[#1B3C53] placeholder:text-[#456882]/60"
         />
       </div>
-      
+
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Нууц үг давтах</Label>
+        <Label htmlFor="confirmPassword" className="text-[#1B3C53] font-medium">Нууц үг давтах</Label>
         <Input
           id="confirmPassword"
           type="password"
@@ -97,10 +100,11 @@ export function RegisterForm() {
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
           placeholder="••••••••"
+          className="border-[#D2C1B6] focus:border-[#456882] focus:ring-[#456882] text-[#1B3C53] placeholder:text-[#456882]/60"
         />
       </div>
-      
-      <Button type="submit" className="w-full" disabled={isLoading}>
+
+      <Button type="submit" className="w-full bg-[#456882] hover:bg-[#1B3C53] text-white transition-colors" disabled={isLoading}>
         {isLoading ? 'Бүртгүүлж байна...' : 'Бүртгүүлэх'}
       </Button>
     </form>

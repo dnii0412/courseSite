@@ -13,7 +13,7 @@ export default function AdminSettingsPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
         <AdminSidebar />
-        
+
         <div className="flex-1 p-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -37,18 +37,18 @@ export default function AdminSettingsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="siteName">Сайтын нэр</Label>
-                    <Input id="siteName" defaultValue="Монгол сургалтын төв" />
+                    <Input id="siteName" defaultValue="New Era" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="siteUrl">Сайтын хаяг</Label>
-                    <Input id="siteUrl" defaultValue="https://mongolian-training-center.com" />
+                    <Input id="siteUrl" defaultValue="https://newera.com" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Тайлбар</Label>
-                  <Textarea 
-                    id="description" 
-                    defaultValue="Монгол хэл дээрх онлайн сургалтын платформ"
+                  <Textarea
+                    id="description"
+                    defaultValue="New Era - Онлайн сургалтын платформ"
                     rows={3}
                   />
                 </div>

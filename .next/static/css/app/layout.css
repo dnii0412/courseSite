@@ -1363,9 +1363,6 @@ video {
 .gap-1\.5 {
   gap: 0.375rem;
 }
-.gap-12 {
-  gap: 3rem;
-}
 .gap-2 {
   gap: 0.5rem;
 }
@@ -1555,10 +1552,6 @@ video {
   --tw-border-opacity: 1;
   border-color: rgb(210 193 182 / var(--tw-border-opacity, 1));
 }
-.border-\[\#EAD8B1\] {
-  --tw-border-opacity: 1;
-  border-color: rgb(234 216 177 / var(--tw-border-opacity, 1));
-}
 .border-\[--color-border\] {
   border-color: var(--color-border);
 }
@@ -1612,15 +1605,14 @@ video {
 .border-transparent {
   border-color: transparent;
 }
+.border-\[\#D2C53\] {
+  border-color: #D2C53;
+}
 .border-l-transparent {
   border-left-color: transparent;
 }
 .border-t-transparent {
   border-top-color: transparent;
-}
-.bg-\[\#001F3F\] {
-  --tw-bg-opacity: 1;
-  background-color: rgb(0 31 63 / var(--tw-bg-opacity, 1));
 }
 .bg-\[\#1B3C53\] {
   --tw-bg-opacity: 1;
@@ -2041,17 +2033,9 @@ video {
 .tracking-widest {
   letter-spacing: 0.1em;
 }
-.text-\[\#001F3F\] {
-  --tw-text-opacity: 1;
-  color: rgb(0 31 63 / var(--tw-text-opacity, 1));
-}
 .text-\[\#1B3C53\] {
   --tw-text-opacity: 1;
   color: rgb(27 60 83 / var(--tw-text-opacity, 1));
-}
-.text-\[\#3A6D8C\] {
-  --tw-text-opacity: 1;
-  color: rgb(58 109 140 / var(--tw-text-opacity, 1));
 }
 .text-\[\#456882\] {
   --tw-text-opacity: 1;
@@ -2353,6 +2337,9 @@ video {
 .duration-200 {
   transition-duration: 200ms;
 }
+.duration-300 {
+  transition-duration: 300ms;
+}
 .ease-in-out {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -2399,6 +2386,9 @@ video {
 }
 .duration-200 {
   animation-duration: 200ms;
+}
+.duration-300 {
+  animation-duration: 300ms;
 }
 .delay-1000 {
   animation-delay: 1000ms;
@@ -2468,7 +2458,7 @@ video {
 .gradient-button:hover {
   background: #1B3C53;
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(69, 104, 130, 0.3);
+  box-shadow: 0 10px 25px rgba(27, 60, 83, 0.3);
 }
 
 .gradient-outline-button {
@@ -2479,11 +2469,11 @@ video {
 }
 
 .gradient-outline-button:hover {
-  background: #D2C1B6;
-  color: #1B3C53;
-  border-color: #D2C1B6;
+  background: #1B3C53;
+  color: white;
+  border-color: #1B3C53;
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(69, 104, 130, 0.3);
+  box-shadow: 0 10px 25px rgba(27, 60, 83, 0.3);
 }
 
 .file\:border-0::file-selector-button {
@@ -2509,6 +2499,10 @@ video {
 
 .placeholder\:text-muted-foreground::placeholder {
   color: hsl(var(--muted-foreground));
+}
+
+.placeholder\:text-\[\#456882\]\/60::placeholder {
+  color: rgb(69 104 130 / 0.6);
 }
 
 .after\:absolute::after {
@@ -2562,6 +2556,11 @@ video {
   border-bottom-right-radius: calc(var(--radius) - 2px);
 }
 
+.hover\:bg-\[\#1B3C53\]:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(27 60 83 / var(--tw-bg-opacity, 1));
+}
+
 .hover\:bg-\[\#456882\]:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(69 104 130 / var(--tw-bg-opacity, 1));
@@ -2612,6 +2611,11 @@ video {
   background-color: rgb(255 255 255 / 0.2);
 }
 
+.hover\:bg-\[\#F9F3EF\]:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(249 243 239 / var(--tw-bg-opacity, 1));
+}
+
 .hover\:text-accent-foreground:hover {
   color: hsl(var(--accent-foreground));
 }
@@ -2637,6 +2641,11 @@ video {
 .hover\:text-white:hover {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+
+.hover\:text-\[\#456882\]:hover {
+  --tw-text-opacity: 1;
+  color: rgb(69 104 130 / var(--tw-text-opacity, 1));
 }
 
 .hover\:underline:hover {
@@ -2665,6 +2674,11 @@ video {
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
+.focus\:border-\[\#456882\]:focus {
+  --tw-border-opacity: 1;
+  border-color: rgb(69 104 130 / var(--tw-border-opacity, 1));
+}
+
 .focus\:bg-accent:focus {
   background-color: hsl(var(--accent));
 }
@@ -2690,6 +2704,11 @@ video {
 
 .focus\:ring-ring:focus {
   --tw-ring-color: hsl(var(--ring));
+}
+
+.focus\:ring-\[\#456882\]:focus {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(69 104 130 / var(--tw-ring-opacity, 1));
 }
 
 .focus\:ring-offset-2:focus {
@@ -2743,6 +2762,11 @@ video {
 
 .group\/menu-item:focus-within .group-focus-within\/menu-item\:opacity-100 {
   opacity: 1;
+}
+
+.group:hover .group-hover\:text-white {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
 }
 
 .group\/menu-item:hover .group-hover\/menu-item\:opacity-100 {
@@ -3647,6 +3671,10 @@ video {
 
   .lg\:col-span-2 {
     grid-column: span 2 / span 2;
+  }
+
+  .lg\:ml-8 {
+    margin-left: 2rem;
   }
 
   .lg\:grid-cols-2 {

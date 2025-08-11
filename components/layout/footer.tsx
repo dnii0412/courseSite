@@ -6,12 +6,12 @@ export function Footer() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-semibold mb-4">Сургалтын төв</h3>
+            <h3 className="text-lg font-semibold mb-4">New Era</h3>
             <p className="text-gray-400">
               Онлайн сургалтын тэргүүлэгч платформ
             </p>
           </div>
-          
+
           <div>
             <h4 className="font-semibold mb-4">Хичээлүүд</h4>
             <ul className="space-y-2 text-gray-400">
@@ -20,7 +20,7 @@ export function Footer() {
               <li><Link href="/courses?category=business" className="hover:text-white">Бизнес</Link></li>
             </ul>
           </div>
-          
+
           <div>
             <h4 className="font-semibold mb-4">Тусламж</h4>
             <ul className="space-y-2 text-gray-400">
@@ -29,7 +29,7 @@ export function Footer() {
               <li><Link href="/faq" className="hover:text-white">Түгээмэл асуулт</Link></li>
             </ul>
           </div>
-          
+
           <div>
             <h4 className="font-semibold mb-4">Холбоо барих</h4>
             <ul className="space-y-2 text-gray-400">
@@ -39,9 +39,9 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        
+
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; 2024 Сургалтын төв. Бүх эрх хуулиар хамгаалагдсан.</p>
+          <p>&copy; 2024 New Era. Бүх эрх хуулиар хамгаалагдсан.</p>
         </div>
       </div>
     </footer>
