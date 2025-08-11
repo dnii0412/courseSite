@@ -376,14 +376,39 @@ export default function AdminDatabasePage() {
                   </div>
                   
                   <div className="flex space-x-2">
-                    <Button variant="outline">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        window.location.href = '/api/admin/backup/export'
+                      }}
+                    >
                       <Download className="w-4 h-4 mr-2" />
                       Нөөц хувилбар татах
                     </Button>
-                    <Button variant="outline">
-                      <Upload className="w-4 h-4 mr-2" />
-                      Нөөц хувилбар сэргээх
-                    </Button>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="file"
+                        accept="application/json"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          const text = await file.text()
+                          await fetch('/api/admin/backup/import', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: text,
+                          })
+                          alert('Нөөцөөс сэргээв')
+                        }}
+                      />
+                      <Button asChild variant="outline">
+                        <span className="cursor-pointer">
+                          <Upload className="w-4 h-4 mr-2" />
+                          Нөөц хувилбар сэргээх
+                        </span>
+                      </Button>
+                    </label>
                   </div>
                 </div>
               </CardContent>
