@@ -1,40 +1,37 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 
-const userSchema = new mongoose.Schema({
+export interface IUser {
+  _id: string;
+  name: string;
+  email: string;
+  password: string;
+  role: 'USER' | 'ADMIN';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const userSchema = new mongoose.Schema<IUser>({
   name: {
     type: String,
-    required: true,
-    trim: true
+    required: true
   },
   email: {
     type: String,
     required: true,
     unique: true,
-    lowercase: true,
-    trim: true
+    lowercase: true
   },
   password: {
     type: String,
-    required: true,
-    minlength: 6
+    required: true
   },
   role: {
     type: String,
-    enum: ['student', 'instructor', 'admin'],
-    default: 'student'
-  },
-  avatar: {
-    type: String,
-    default: ''
-  },
-  enrolledCourses: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Course'
-  }],
-  createdAt: {
-    type: Date,
-    default: Date.now
+    enum: ['USER', 'ADMIN'],
+    default: 'USER'
   }
-})
+}, {
+  timestamps: true
+});
 
-export const User = mongoose.models.User || mongoose.model('User', userSchema)
+export const User = mongoose.models.User || mongoose.model<IUser>('User', userSchema);
