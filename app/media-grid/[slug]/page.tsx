@@ -1,5 +1,4 @@
 import { MediaGrid } from '@/components/media/media-grid';
-import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 
 // Force dynamic rendering to avoid build-time database calls

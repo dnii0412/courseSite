@@ -3,14 +3,16 @@ import { connectDB } from '@/lib/mongodb'
 import { User } from '@/lib/models/user'
 import bcrypt from 'bcryptjs'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     await connectDB()
     const users = await User.find()
-      .populate('enrolledCourses', 'title')
       .sort({ createdAt: -1 })
-    return NextResponse.json(users)
+      .select('name email role createdAt updatedAt')
+      .lean()
+    return NextResponse.json({ success: true, data: users })
   } catch (error) {
+    console.error('GET /api/users error:', error)
     return NextResponse.json({ error: 'Серверийн алдаа' }, { status: 500 })
   }
 }
@@ -30,9 +32,14 @@ export async function POST(request: NextRequest) {
     }
 
     const hashed = await bcrypt.hash(password, 12)
-    const user = await User.create({ name, email, password: hashed, role: role || 'student' })
-    return NextResponse.json(user)
+    // Normalize role to match schema ('USER' | 'ADMIN')
+    const normalized = String(role || '').toUpperCase()
+    const roleForSchema = normalized === 'ADMIN' ? 'ADMIN' : 'USER'
+
+    const user = await User.create({ name, email, password: hashed, role: roleForSchema })
+    return NextResponse.json({ success: true, data: { id: user._id, name: user.name, email: user.email, role: user.role } })
   } catch (error) {
+    console.error('POST /api/users error:', error)
     return NextResponse.json({ error: 'Хэрэглэгч үүсгэхэд алдаа гарлаа' }, { status: 500 })
   }
 }

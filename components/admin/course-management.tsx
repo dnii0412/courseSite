@@ -64,7 +64,8 @@ export function CourseManagement() {
       const res = await fetch('/api/courses?all=true')
       if (!res.ok) throw new Error('Алдаа гарлаа')
       const data = await res.json()
-      setCourses(data)
+      const list = Array.isArray(data) ? data : (data?.data ?? [])
+      setCourses(list as any)
     } catch (err: any) {
       setError(err.message || 'Алдаа гарлаа')
     } finally {

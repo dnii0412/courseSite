@@ -1,11 +1,9 @@
 import { MediaGrid } from '@/components/media/media-grid';
-import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 
 export default function ExamplesPage() {
   return (
     <div className="min-h-screen bg-[#F9F3EF]">
-      <Navbar />
       
       <main className="py-8">
         <div className="container mx-auto px-4">

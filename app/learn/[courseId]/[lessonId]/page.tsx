@@ -1,4 +1,3 @@
-import { Navbar } from '@/components/layout/navbar'
 import { VideoPlayer } from '@/components/video/video-player'
 import { LessonSidebar } from '@/components/learn/lesson-sidebar'
 import { QuizModal } from '@/components/quiz/quiz-modal'
@@ -38,7 +37,7 @@ export default async function LearnPage({ params }: LearnPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      <Navbar />
+
       
       <div className="flex">
         <div className="flex-1">

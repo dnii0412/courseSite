@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 
 type MediaItem = {

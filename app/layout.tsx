@@ -4,6 +4,10 @@ import './globals.css'
 import { AuthProvider } from '@/components/providers/auth-provider'
 import { Toaster } from '@/components/ui/toaster'
 
+import Navbar from '@/components/Navbar'
+import { MotionConfig } from 'framer-motion'
+import SessionProviderClient from '@/components/providers/session-provider'
+
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -35,10 +39,14 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/favicon.svg" />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
-          {children}
-          <Toaster />
-        </AuthProvider>
+        <SessionProviderClient>
+          <AuthProvider>
+            <MotionConfig reducedMotion="user">
+              {children}
+              <Toaster />
+            </MotionConfig>
+          </AuthProvider>
+        </SessionProviderClient>
       </body>
     </html>
   )

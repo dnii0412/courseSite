@@ -1,10 +1,10 @@
-import { Navbar } from '@/components/layout/navbar'
 import { CourseCard } from '@/components/courses/course-card'
 import { redirect } from 'next/navigation'
 import { getUserFromCookies } from '@/lib/auth'
 import { connectDB } from '@/lib/mongodb'
 import { User } from '@/lib/models/user'
 import { Course } from '@/lib/models/course'
+import Navbar from '@/components/Navbar'
 
 interface Course {
   _id: string

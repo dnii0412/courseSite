@@ -1,63 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
-// @ts-ignore
-import jwt from 'jsonwebtoken'
-// @ts-ignore
-import { connectDB } from '@/lib/mongodb'
-import { User } from '@/lib/models/user'
+import { hashPassword } from '@/lib/password'
+import { findUserByEmail, createUser } from '@/lib/users'
 
 export async function POST(request: NextRequest) {
   try {
-    await connectDB()
-    
     const { name, email, password } = await request.json()
 
     // Check if user exists
-    const existingUser = await User.findOne({ email })
+    const existingUser = await findUserByEmail(email)
     if (existingUser) {
       return NextResponse.json(
-        { error: 'Энэ имэйл хаягаар `б`үртгэгдсэн хэрэглэгч байна' },
+        { error: 'Энэ имэйлээр бүртгэл аль хэдийн байна' },
         { status: 400 }
       )
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12)
-
-    // Create user
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role: 'student'
-    })
-
-    // Create JWT token
-    const token = jwt.sign(
-      { userId: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
-    )
-
-    const response = NextResponse.json({
-      message: 'Амжилттай бүртгэгдлээ',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
-    })
-
-    // Set HTTP-only cookie
-    response.cookies.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
-    })
-
-    return response
+    const passwordHash = await hashPassword(password)
+    await createUser({ name, email, passwordHash, role: 'USER' })
+    return NextResponse.json({ message: 'Амжилттай бүртгэгдлээ' })
   } catch (error) {
     console.error('Register error:', error)
     return NextResponse.json(

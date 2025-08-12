@@ -1,4 +1,3 @@
-import { Navbar } from '@/components/layout/navbar'
 import { CourseOverview } from '@/components/learn/course-overview'
 import { getCourseById } from '@/lib/api/courses'
 import { notFound, redirect } from 'next/navigation'

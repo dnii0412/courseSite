@@ -1,8 +1,8 @@
-import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 import { CourseDetails } from '@/components/courses/course-details'
 import { getCourseById } from '@/lib/api/courses'
 import { notFound } from 'next/navigation'
+import Navbar from '@/components/Navbar'
 
 interface CoursePageProps {
   params: {

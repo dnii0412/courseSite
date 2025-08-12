@@ -58,8 +58,9 @@ export default function AdminUsersPage() {
       try {
         const res = await fetch('/api/users')
         if (!res.ok) throw new Error('Алдаа гарлаа')
-        const data = await res.json()
-        setUsers(data)
+        const json = await res.json()
+        const list = Array.isArray(json) ? json : (json?.data ?? [])
+        setUsers(list)
       } catch (err: any) {
         setError(err.message || 'Алдаа гарлаа')
       } finally {
@@ -89,8 +90,9 @@ export default function AdminUsersPage() {
       // Refresh users list
       const res2 = await fetch('/api/users')
       if (res2.ok) {
-        const data = await res2.json()
-        setUsers(data)
+        const json = await res2.json()
+        const list = Array.isArray(json) ? json : (json?.data ?? [])
+        setUsers(list)
       }
     } catch (err: any) {
       alert(err.message || 'Хэрэглэгч засахэд алдаа гарлаа')
@@ -113,8 +115,9 @@ export default function AdminUsersPage() {
       // Refresh users list
       const res2 = await fetch('/api/users')
       if (res2.ok) {
-        const data = await res2.json()
-        setUsers(data)
+        const json = await res2.json()
+        const list = Array.isArray(json) ? json : (json?.data ?? [])
+        setUsers(list)
       }
     } catch (err: any) {
       alert(err.message || 'Хэрэглэгч устгахад алдаа гарлаа')
@@ -138,7 +141,10 @@ export default function AdminUsersPage() {
                 setShowCreateDialog(false)
                 if (created) {
                   const res = await fetch('/api/users')
-                  if (res.ok) setUsers(await res.json())
+                  if (res.ok) {
+                    const json = await res.json()
+                    setUsers(Array.isArray(json) ? json : (json?.data ?? []))
+                  }
                 }
               }} />
             </DialogContent>
