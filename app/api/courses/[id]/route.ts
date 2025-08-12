@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { Course } from '@/lib/models/course'
-import { Enrollment } from '@/lib/models/enrollment'
+import '@/lib/models/lesson'
 import { User } from '@/lib/models/user'
+import mongoose from 'mongoose'
 
 export async function GET(
   request: NextRequest,
@@ -10,10 +11,14 @@ export async function GET(
 ) {
   try {
     await connectDB()
-    
+
+    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+      return NextResponse.json({ error: 'Буруу ID' }, { status: 400 })
+    }
+
     const course = await Course.findById(params.id)
-      .populate('instructor', 'name')
       .populate('lessons')
+      .lean()
 
     if (!course) {
       return NextResponse.json(
@@ -22,39 +27,18 @@ export async function GET(
       )
     }
 
-    // Fetch enrolled users for this course (both sources)
-    const enrollmentDocs = await Enrollment.find({ course: params.id })
-      .populate('user', 'name email')
-      .select('user enrolledAt')
-      .lean()
-
-    // Include users who have this course in their user.enrolledCourses (test or admin assign)
+    // Users who have this course in their profile
     const userDocs = await User.find({ enrolledCourses: params.id })
       .select('name email _id')
       .lean()
 
-    // Merge by userId to avoid duplicates
-    const mergedMap = new Map<string, any>()
-    for (const e of enrollmentDocs) {
-      const u: any = e.user
-      if (u?._id) {
-        mergedMap.set(String(u._id), { user: { _id: u._id, name: u.name, email: u.email }, enrolledAt: e.enrolledAt })
-      }
-    }
-    for (const u of userDocs) {
-      const key = String(u._id)
-      if (!mergedMap.has(key)) {
-        mergedMap.set(key, { user: { _id: u._id, name: u.name, email: u.email } })
-      }
-    }
-
-    const enrollments = Array.from(mergedMap.values())
+    const enrollments = userDocs.map((u: any) => ({ user: { _id: u._id, name: u.name, email: u.email } }))
 
     return NextResponse.json({ course, enrollments })
   } catch (error) {
     console.error('Get course error:', error)
     return NextResponse.json(
-      { error: 'Серверийн алдаа' },
+      { error: 'Серверийн алдаа', details: process.env.NODE_ENV !== 'production' ? String((error as any)?.message || error) : undefined },
       { status: 500 }
     )
   }

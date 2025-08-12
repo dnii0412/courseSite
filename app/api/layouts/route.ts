@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Layout } from '@/lib/models/layout';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { verifyToken } from '@/lib/auth';
 
 // GET - List all layouts (admin) or get published layout by slug (public)
 export async function GET(request: NextRequest) {
@@ -38,8 +37,9 @@ export async function GET(request: NextRequest) {
     }
     
     // List all layouts (admin only)
-    const session = await getServerSession(authOptions);
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    const decoded = await verifyToken(request as any);
+    const role = String((decoded as any)?.role || '').toUpperCase();
+    if (!decoded || role !== 'ADMIN') {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -61,9 +61,9 @@ export async function GET(request: NextRequest) {
 // POST - Create new layout
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    const decoded = await verifyToken(request as any);
+    const role = String((decoded as any)?.role || '').toUpperCase();
+    if (!decoded || role !== 'ADMIN') {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -115,9 +115,9 @@ export async function POST(request: NextRequest) {
 // PATCH - Update layout
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    const decoded = await verifyToken(request as any);
+    const role = String((decoded as any)?.role || '').toUpperCase();
+    if (!decoded || role !== 'ADMIN') {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }

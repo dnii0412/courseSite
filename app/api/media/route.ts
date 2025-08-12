@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Media } from '@/lib/models/media';
 import { cloudinaryUtils } from '@/lib/utils/cloudinary';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { verifyToken } from '@/lib/auth';
 
 // GET - List all media
 export async function GET() {
@@ -25,9 +24,20 @@ export async function GET() {
 // POST - Upload new media
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    const allowPublic = (process.env.ALLOW_PUBLIC_UPLOADS === 'true') && process.env.NODE_ENV !== 'production'
+    let isAuthorized = false
+    if (allowPublic) {
+      isAuthorized = true
+    } else {
+      const decoded = await verifyToken(request);
+      const role = String((decoded as any)?.role || '').toUpperCase();
+      const allowNonAdmin = process.env.ALLOW_NON_ADMIN_UPLOADS === 'true';
+      if (decoded && (role === 'ADMIN' || allowNonAdmin)) {
+        isAuthorized = true
+      }
+    }
+
+    if (!isAuthorized) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -39,8 +49,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { type, cloudinaryPublicId, url, posterUrl, alt, width, height } = body;
 
-    // Validate required fields
-    if (!type || !cloudinaryPublicId || !url || !alt || !width || !height) {
+    // Validate required fields (allow 0 for width/height)
+    const widthMissing = width === undefined || width === null
+    const heightMissing = height === undefined || height === null
+    if (!type || !cloudinaryPublicId || !url || !alt || widthMissing || heightMissing) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
@@ -82,9 +94,9 @@ export async function POST(request: NextRequest) {
 // DELETE - Delete media
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    const decoded = await verifyToken(request);
+    const role = String((decoded as any)?.role || '').toUpperCase();
+    if (!decoded || role !== 'ADMIN') {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }

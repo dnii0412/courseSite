@@ -111,9 +111,10 @@ export function QuizModal({ lessonId, quiz }: QuizModalProps) {
     return 'Дахин оролдоно уу'
   }
 
-  if (!quiz) return null
+  if (!quiz || !Array.isArray(quiz.questions) || quiz.questions.length === 0) return null
 
-  const currentQ = quiz.questions[currentQuestion]
+  const safeIndex = Math.min(currentQuestion, Math.max(quiz.questions.length - 1, 0))
+  const currentQ = quiz.questions[safeIndex]
 
   return (
     <>
@@ -152,7 +153,7 @@ export function QuizModal({ lessonId, quiz }: QuizModalProps) {
                       className={`w-3 h-3 rounded-full ${
                         index === currentQuestion
                           ? 'bg-blue-500'
-                          : answers[quiz.questions[index].id] !== undefined
+                           : answers[quiz.questions[index]?.id || ''] !== undefined
                           ? 'bg-green-500'
                           : 'bg-gray-300'
                       }`}
@@ -169,12 +170,12 @@ export function QuizModal({ lessonId, quiz }: QuizModalProps) {
                 </CardHeader>
                 <CardContent>
                   <RadioGroup
-                    value={answers[currentQ.id]?.toString() || ''}
+                   value={currentQ?.id && answers[currentQ.id] !== undefined ? String(answers[currentQ.id]) : ''}
                     onValueChange={(value) => 
-                      handleAnswerSelect(currentQ.id, parseInt(value))
+                       currentQ?.id && handleAnswerSelect(currentQ.id, parseInt(value))
                     }
                   >
-                    {currentQ.options.map((option, index) => (
+                     {(currentQ?.options || []).map((option, index) => (
                       <div key={index} className="flex items-center space-x-2">
                         <RadioGroupItem value={index.toString()} id={`${currentQ.id}-${index}`} />
                         <Label htmlFor={`${currentQ.id}-${index}`} className="cursor-pointer">

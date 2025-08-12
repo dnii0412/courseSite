@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { Order } from '@/lib/models/order'
-import { Enrollment } from '@/lib/models/enrollment'
 import { Course } from '@/lib/models/course'
 import { User } from '@/lib/models/user'
 
@@ -27,15 +26,7 @@ export async function POST(request: NextRequest) {
         paidAt: new Date()
       })
 
-      // Create enrollment for production callbacks (keeps detailed progress)
-      await Enrollment.create({
-        user: order.user,
-        course: order.course,
-        enrolledAt: new Date(),
-        progress: 0
-      })
-
-      // Also mirror access on the user document
+      // Mirror access on the user document
       await User.findByIdAndUpdate(order.user, {
         $addToSet: { enrolledCourses: order.course }
       })

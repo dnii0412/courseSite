@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Grid3X3, List, Trash2, Eye, Video, Image } from 'lucide-react';
-import { IMedia } from '@/lib/models/layout';
+import { IMedia } from '@/lib/models/media';
 
 // Client-side utility function for Cloudinary URLs
 const getThumbnailUrl = (publicId: string, width: number = 200, height: number = 200) => {
@@ -87,27 +87,78 @@ export const MediaLibrary = ({ onMediaSelect, selectedMedia }: MediaLibraryProps
   };
 
   const uploadFile = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
+    // 1) Get short-lived signature from backend
+    const sigRes = await fetch('/api/cloudinary/sign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folder: 'media-grid' }),
+      credentials: 'include',
+    })
+    if (!sigRes.ok) {
+      throw new Error('Failed to get upload signature')
+    }
+    const sigJson = await sigRes.json()
+    const { timestamp, signature, apiKey, cloudName, folder, uploadPreset } = sigJson.data
 
-    const response = await fetch('/api/media/upload', {
+    // 2) Direct upload to Cloudinary (auto resource type for image/video)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('api_key', String(apiKey))
+    formData.append('timestamp', String(timestamp))
+    formData.append('signature', String(signature))
+    formData.append('folder', String(folder))
+    if (uploadPreset) formData.append('upload_preset', String(uploadPreset))
+
+    const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
       method: 'POST',
       body: formData,
-    });
+    })
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text()
+      throw new Error(`Cloudinary upload failed: ${errText}`)
+    }
+    const uploaded = await uploadRes.json()
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Upload failed');
+    const publicId: string = uploaded.public_id
+    const secureUrl: string = uploaded.secure_url
+    const width: number = uploaded.width || 0
+    const height: number = uploaded.height || 0
+    const resourceType: string = uploaded.resource_type
+
+    // 3) Persist in our DB
+    const type: 'image' | 'video' = resourceType === 'video' ? 'video' : 'image'
+
+    const posterUrl = type === 'video'
+      ? `https://res.cloudinary.com/${cloudName}/video/upload/f_jpg,w_${width || 400},h_${height || 300},c_fill,so_0/${publicId}`
+      : undefined
+
+    const saveRes = await fetch('/api/media', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type,
+        cloudinaryPublicId: publicId,
+        url: secureUrl,
+        posterUrl,
+        alt: file.name.replace(/\.[^/.]+$/, ''),
+        width,
+        height,
+      }),
+      credentials: 'include',
+    })
+
+    if (!saveRes.ok) {
+      const errorData = await saveRes.json().catch(() => ({}))
+      throw new Error(errorData.error || 'Failed to save media')
     }
 
-    const result = await response.json();
-
+    const result = await saveRes.json()
     if (!result.success) {
-      throw new Error(result.error || 'Upload failed');
+      throw new Error(result.error || 'Upload failed')
     }
 
-    return result.data;
-  };
+    return result.data
+  }
 
   const deleteMedia = async (mediaId: string, cloudinaryPublicId: string) => {
     if (!confirm('Are you sure you want to delete this media?')) return;
