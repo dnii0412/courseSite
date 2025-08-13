@@ -18,7 +18,7 @@ export function AdminCourseDetailsInline({ courseId, onChanged }: { courseId: st
   const [enrollments, setEnrollments] = useState<EnrollmentItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'enrollments' | 'lessons'>('enrollments')
+  const [activeTab, setActiveTab] = useState<'enrollments' | 'lessons'>('lessons')
   const [search, setSearch] = useState('')
 
   const load = async () => {
