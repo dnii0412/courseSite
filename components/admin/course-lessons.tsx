@@ -92,8 +92,8 @@ export function CourseLessons({ course, onChanged, variant = 'default' }: { cour
   }
 
   return (
-    <Card>
-      <CardContent className="pt-4">
+    <Card className={variant === 'compact' ? 'border-0 bg-transparent shadow-none' : undefined}>
+      <CardContent className={variant === 'compact' ? 'pt-0 px-0' : 'pt-4'}>
         <div className={variant === 'compact' ? 'rounded-xl overflow-hidden bg-white divide-y divide-sand-100' : 'space-y-3'}>
           {lessons.map((l, idx) => (
             <div key={l._id || idx} className={variant === 'compact' ? 'flex items-center justify-between px-3 py-3 hover:bg-sand-50 transition-colors' : 'flex items-center justify-between p-2 border rounded'}>
