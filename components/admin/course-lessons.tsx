@@ -131,12 +131,12 @@ export function CourseLessons({ course, onChanged, variant = 'default' }: { cour
 
           <div className="grid grid-cols-3 gap-2 mt-4">
             <div className="col-span-2">
-              <Label htmlFor="new-lesson-title">Шинэ хичээлийн гарчиг</Label>
-              <Input id="new-lesson-title" value={title} onChange={e => setTitle(e.target.value)} />
+              <Label htmlFor="new-lesson-title" className="sr-only">Шинэ хичээлийн гарчиг</Label>
+              <Input id="new-lesson-title" placeholder="Шинэ хичээлийн гарчиг" value={title} onChange={e => setTitle(e.target.value)} />
             </div>
             <div>
-              <Label htmlFor="new-lesson-duration">Минут</Label>
-              <Input id="new-lesson-duration" type="number" value={duration} onChange={e => setDuration(e.target.value ? Number(e.target.value) : '')} />
+              <Label htmlFor="new-lesson-duration" className="sr-only">Минут</Label>
+              <Input id="new-lesson-duration" type="number" placeholder="Минут" value={duration} onChange={e => setDuration(e.target.value ? Number(e.target.value) : '')} />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2 items-end">
