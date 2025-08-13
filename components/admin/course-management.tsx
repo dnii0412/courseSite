@@ -447,7 +447,7 @@ export function CourseManagement() {
                         </div>
                       </div>
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden">
+                    <CollapsibleContent className="data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden">
                       <AdminCourseDetailsInline courseId={cid} onChanged={fetchCourses} />
                     </CollapsibleContent>
                   </div>
