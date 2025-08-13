@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/components/providers/auth-provider'
 import { Toaster } from '@/components/ui/toaster'
+import { ThemeProvider } from '@/components/theme-provider'
 
 import Navbar from '@/components/Navbar'
 import { MotionConfig } from 'framer-motion'
@@ -32,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="mn">
+    <html lang="mn" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
@@ -40,12 +41,14 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <SessionProviderClient>
-          <AuthProvider>
-            <MotionConfig reducedMotion="user">
-              {children}
-              <Toaster />
-            </MotionConfig>
-          </AuthProvider>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+            <AuthProvider>
+              <MotionConfig reducedMotion="user">
+                {children}
+                <Toaster />
+              </MotionConfig>
+            </AuthProvider>
+          </ThemeProvider>
         </SessionProviderClient>
       </body>
     </html>

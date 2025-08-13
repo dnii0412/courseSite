@@ -3,6 +3,7 @@ import { getCourseById } from '@/lib/api/courses'
 import { notFound, redirect } from 'next/navigation'
 import { getUserFromCookies } from '@/lib/auth'
 import { hasCourseAccess } from '@/lib/utils/access'
+import Navbar from '@/components/Navbar'
 
 interface CourseLearnPageProps {
   params: {

@@ -55,7 +55,7 @@ export default function AdminMediaGridPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 bg-sand-50">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[#1B3C53] mb-2">Media Grid Management</h1>
@@ -63,7 +63,7 @@ export default function AdminMediaGridPage() {
       </div>
 
       {/* Layout Slug Selector */}
-      <Card className="mb-6 border-[#D2C1B6] bg-[#F9F3EF]">
+      <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-[#1B3C53]">Current Layout</CardTitle>
         </CardHeader>
@@ -103,7 +103,7 @@ export default function AdminMediaGridPage() {
 
       {/* Create New Layout Modal */}
       {showCreateLayout && (
-        <Card className="mb-6 border-[#D2C1B6] bg-[#F9F3EF]">
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-[#1B3C53]">Create New Layout</CardTitle>
           </CardHeader>
@@ -147,10 +147,10 @@ export default function AdminMediaGridPage() {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="library">Media Library</TabsTrigger>
-          <TabsTrigger value="editor">Layout Editor</TabsTrigger>
-          <TabsTrigger value="layouts">Layouts</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-sand-100 rounded-xl p-1">
+          <TabsTrigger value="library" className="rounded-lg data-[state=active]:bg-white data-[state=active]:border data-[state=active]:border-sand-200">Media Library</TabsTrigger>
+          <TabsTrigger value="editor" className="rounded-lg data-[state=active]:bg-white data-[state=active]:border data-[state=active]:border-sand-200">Layout Editor</TabsTrigger>
+          <TabsTrigger value="layouts" className="rounded-lg data-[state=active]:bg-white data-[state=active]:border data-[state=active]:border-sand-200">Layouts</TabsTrigger>
         </TabsList>
 
         <TabsContent value="library" className="space-y-6">

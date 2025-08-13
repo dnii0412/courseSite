@@ -50,17 +50,38 @@ const menuItems = [
   }
 ]
 
-export function AdminSidebar() {
+import { useAuth } from '@/hooks/use-auth'
+
+export function AdminSidebar({ collapsed = false, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
   const pathname = usePathname()
+  const { user, logout } = useAuth()
 
   return (
-    <div className="w-64 bg-white shadow-sm border-r min-h-screen">
-      <div className="p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-8">
-          Админ самбар
-        </h2>
+    <div className={`${collapsed ? 'w-[72px]' : 'w-64'} bg-white border-r border-sand-200 min-h-screen flex flex-col`}> 
+      <div className={`p-4 ${collapsed ? 'px-3' : ''} border-b border-sand-200`}> 
+        {collapsed ? (
+          <div className="h-8 w-8 rounded-lg bg-[#1B3C53]" aria-label="Brand" />
+        ) : (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-[#1B3C53]" />
+              <span className="text-sm font-semibold text-[#1B3C53]">Админ</span>
+            </div>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F9F3EF] text-[#1B3C53] border">Admin</span>
+          </div>
+        )}
+      </div>
 
-        <nav className="space-y-2">
+        {!collapsed && (
+          <div className="p-3 border-b border-sand-200">
+            <input
+              className="w-full px-3 py-2 text-sm rounded-xl border border-sand-200 bg-white placeholder:text-ink-500"
+              placeholder="Хайх"
+            />
+          </div>
+        )}
+
+        <nav className="p-2 space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
@@ -69,18 +90,35 @@ export function AdminSidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isActive
-                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                onClick={onNavigate}
+                className={`group flex items-center ${collapsed ? 'justify-center' : ''} px-3 py-2 text-sm font-medium rounded-xl transition-colors border-l-2 ${isActive
+                    ? 'bg-sand-100 text-ink-900 border-sand-200'
+                    : 'text-ink-700 hover:bg-sand-50 hover:text-ink-900 border-transparent'
                   }`}
               >
-                <Icon className="w-5 h-5 mr-3" />
-                {item.title}
+                <Icon className={`w-5 h-5 ${collapsed ? '' : 'mr-3'} shrink-0`} />
+                {!collapsed && <span className="truncate">{item.title}</span>}
               </Link>
             )
           })}
         </nav>
-      </div>
+        {/* Profile footer */}
+        <div className="mt-auto p-3 border-t border-sand-200">
+          {collapsed ? (
+            <button onClick={logout} className="w-full flex items-center justify-center p-2 rounded-md hover:bg-gray-50 text-sm text-gray-700">
+              Гарах
+            </button>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-full bg-gray-200" />
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium text-gray-900 truncate">{user?.name || 'Админ'}</div>
+                <div className="text-xs text-gray-500 truncate">{user?.email || ''}</div>
+              </div>
+              <button onClick={logout} className="text-xs text-[#1B3C53] hover:underline">Гарах</button>
+            </div>
+          )}
+        </div>
     </div>
   )
 }

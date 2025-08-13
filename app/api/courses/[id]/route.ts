@@ -27,8 +27,14 @@ export async function GET(
       )
     }
 
-    // Users who have this course in their profile
-    const userDocs = await User.find({ enrolledCourses: params.id })
+    // Users who have this course in their profile (support both ObjectId and legacy string values)
+    const courseObjectId = new mongoose.Types.ObjectId(params.id)
+    const userDocs = await User.find({
+      $or: [
+        { enrolledCourses: params.id },
+        { enrolledCourses: courseObjectId },
+      ],
+    })
       .select('name email _id')
       .lean()
 

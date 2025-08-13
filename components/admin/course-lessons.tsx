@@ -101,6 +101,31 @@ export function CourseLessons({ course, onChanged }: { course: any, onChanged: (
                 <div className="font-medium">{idx + 1}. {l.title}</div>
                 <div className="text-xs text-gray-500">{l.duration} минут</div>
               </div>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={async () => {
+                  const titleNew = prompt('Шинэ гарчиг', l.title) || l.title
+                  const durationNew = Number(prompt('Минут', String(l.duration)) || l.duration)
+                  const res = await fetch(`/api/lessons/${l._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: titleNew, duration: durationNew }) })
+                  if (res.ok) {
+                    onChanged()
+                    const r = await fetch(`/api/courses/${course._id}`)
+                    if (r.ok) {
+                      const data = await r.json()
+                      const c = data.course || data
+                      setLessons(c.lessons || [])
+                    }
+                  }
+                }}>Засах</Button>
+                <Button size="sm" variant="destructive" onClick={async () => {
+                  if (!l._id) return
+                  if (!confirm('Хичээлийг устгах уу?')) return
+                  const res = await fetch(`/api/lessons/${l._id}`, { method: 'DELETE' })
+                  if (res.ok) {
+                    onChanged()
+                    setLessons(prev => prev.filter(x => x._id !== l._id))
+                  }
+                }}>Устгах</Button>
+              </div>
             </div>
           ))}
 

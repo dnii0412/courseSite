@@ -12,6 +12,29 @@ module.exports = {
     },
     extend: {
       colors: {
+        sand: {
+          25: '#FBF5EF',
+          50: '#F7EFE7',
+          100: '#EFE4D9',
+          200: '#E6DBCF',
+        },
+        surface: {
+          DEFAULT: '#FFFFFF',
+          mute: '#FAFAFA',
+        },
+        ink: {
+          900: '#0E2430',
+          700: '#243B4A',
+          500: '#667488',
+        },
+        status: {
+          success: '#1EA97C',
+          successBg: '#E8F7F1',
+          warning: '#C28313',
+          warningBg: '#FFF6E6',
+          danger: '#C2392A',
+          dangerBg: '#FFEDEB',
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -50,6 +73,8 @@ module.exports = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: '14px',
+        '2xl': '16px',
       },
       keyframes: {
         "accordion-down": {

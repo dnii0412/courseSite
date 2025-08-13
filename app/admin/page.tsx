@@ -1,29 +1,14 @@
-import { AdminSidebar } from '@/components/admin/admin-sidebar'
-import { AdminStats } from '@/components/admin/admin-stats'
-import { RecentEnrollments } from '@/components/admin/recent-enrollments'
+import { AdminTopbar } from '@/components/admin/topbar'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
+import AdminDashboard from '@/components/admin/dashboard'
 
 export default function AdminPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        <AdminSidebar />
-        
-        <div className="flex-1 p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Админ самбар
-            </h1>
-            <p className="text-gray-600">
-              Системийн ерөнхий мэдээлэл
-            </p>
-          </div>
-
-          <div className="grid gap-8">
-            <AdminStats />
-            <RecentEnrollments />
-          </div>
-        </div>
-      </div>
+    <div className="mx-auto max-w-7xl px-2 md:px-6 grid gap-6 md:gap-8">
+      <AdminTopbar title="Админ самбар" actions={<ThemeToggle />}>
+        <div className="text-sm text-gray-600">Ерөнхий тойм</div>
+      </AdminTopbar>
+      <AdminDashboard />
     </div>
   )
 }

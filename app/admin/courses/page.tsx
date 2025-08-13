@@ -1,24 +1,14 @@
-import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { CourseManagement } from '@/components/admin/course-management'
+import { AdminTopbar } from '@/components/admin/topbar'
+import { FiltersBar } from '@/components/admin/filters-bar'
 
 export default function AdminCoursesPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        <AdminSidebar />
-        
-        <div className="flex-1 p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Хичээл удирдах
-            </h1>
-            <p className="text-gray-600">
-              Хичээлүүдийг нэмэх, засах, устгах
-            </p>
-          </div>
-
-          <CourseManagement />
-        </div>
+    <div className="min-h-screen bg-sand-50">
+      <AdminTopbar title="Хичээл удирдах" />
+      <FiltersBar sticky>{/* Future: category, price, status, sort */}</FiltersBar>
+      <div className="mx-auto max-w-[1200px] px-4 md:px-6 mt-4">
+        <CourseManagement />
       </div>
     </div>
   )

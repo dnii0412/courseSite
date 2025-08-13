@@ -6,6 +6,7 @@ export interface IUser {
   email: string;
   password: string;
   role: 'USER' | 'ADMIN';
+  enrolledCourses?: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,7 +30,13 @@ const userSchema = new mongoose.Schema<IUser>({
     type: String,
     enum: ['USER', 'ADMIN'],
     default: 'USER'
-  }
+  },
+  enrolledCourses: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Course'
+    }
+  ]
 }, {
   timestamps: true
 });

@@ -1,6 +1,4 @@
 'use client'
-
-import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -8,6 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Search, Download, Filter, RefreshCw, User, BookOpen, Clock, AlertTriangle } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { useEffect, useState } from 'react'
+import { AdminTopbar } from '@/components/admin/topbar'
+import { FiltersBar } from '@/components/admin/filters-bar'
 
 const getStatusBadge = (status: string, isExpired?: boolean) => {
   switch (status) {
@@ -92,30 +92,63 @@ export default function AdminPaymentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        <AdminSidebar />
-        <div className="flex-1 p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Төлбөрүүд
-            </h1>
-            <p className="text-gray-600">
-              Бүх төлбөрийн жагсаалт ба удирдлага
-            </p>
-          </div>
+    <div className="min-h-screen bg-sand-50">
+      <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-6">
+          <AdminTopbar 
+            title="Төлбөрүүд"
+            actions={(
+              <>
+                <Button variant="outline" onClick={handleUpdateExpiredPayments}>
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  Хугацаа дууссан төлбөрүүдийг шинэчлэх
+                </Button>
+                <Button variant="outline" onClick={fetchPayments}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Шинэчлэх
+                </Button>
+                <Button variant="outline">
+                  <Download className="w-4 h-4 mr-2" />
+                  Экспорт
+                </Button>
+              </>
+            )}
+          >
+            <div className="text-sm text-ink-500">Бүх төлбөрийн жагсаалт ба удирдлага</div>
+          </AdminTopbar>
+
+          <FiltersBar sticky>
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
+              <Input 
+                placeholder="Хэрэглэгч, курс хайх..." 
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <select 
+              className="border border-sand-200 rounded-xl px-3 py-2 text-sm bg-white text-ink-700"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">Бүх статус</option>
+              <option value="completed">Амжилттай</option>
+              <option value="pending">Хүлээгдэж буй</option>
+              <option value="failed">Амжилтгүй</option>
+            </select>
+          </FiltersBar>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Нийт</p>
-                    <p className="text-2xl font-bold">{stats.total}</p>
+                    <p className="text-sm font-medium text-ink-500">Нийт</p>
+                    <p className="text-2xl font-bold text-ink-900">{stats.total}</p>
                   </div>
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <User className="w-4 h-4 text-blue-600" />
+                  <div className="p-2 bg-sand-100 rounded-lg">
+                    <User className="w-4 h-4 text-ink-900" />
                   </div>
                 </div>
               </CardContent>
@@ -125,25 +158,11 @@ export default function AdminPaymentsPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Амжилттай</p>
-                    <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+                    <p className="text-sm font-medium text-ink-500">Амжилттай</p>
+                    <p className="text-2xl font-bold text-ink-900">{stats.completed}</p>
                   </div>
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <BookOpen className="w-4 h-4 text-green-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Хүлээгдэж буй</p>
-                    <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-                  </div>
-                  <div className="p-2 bg-yellow-100 rounded-lg">
-                    <Clock className="w-4 h-4 text-yellow-600" />
+                  <div className="p-2 rounded-lg" style={{background:'#E8F7F1'}}>
+                    <BookOpen className="w-4 h-4" style={{color:'#1EA97C'}} />
                   </div>
                 </div>
               </CardContent>
@@ -153,11 +172,25 @@ export default function AdminPaymentsPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Амжилтгүй</p>
-                    <p className="text-2xl font-bold text-red-600">{stats.failed}</p>
+                    <p className="text-sm font-medium text-ink-500">Хүлээгдэж буй</p>
+                    <p className="text-2xl font-bold text-ink-900">{stats.pending}</p>
                   </div>
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <AlertTriangle className="w-4 h-4 text-red-600" />
+                  <div className="p-2 rounded-lg" style={{background:'#FFF6E6'}}>
+                    <Clock className="w-4 h-4" style={{color:'#C28313'}} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-ink-500">Амжилтгүй</p>
+                    <p className="text-2xl font-bold text-ink-900">{stats.failed}</p>
+                  </div>
+                  <div className="p-2 rounded-lg" style={{background:'#FFEDEB'}}>
+                    <AlertTriangle className="w-4 h-4" style={{color:'#C2392A'}} />
                   </div>
                 </div>
               </CardContent>
@@ -186,7 +219,7 @@ export default function AdminPaymentsPage() {
               </div>
               <div className="flex items-center space-x-4">
                 <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
                   <Input 
                     placeholder="Хэрэглэгч, курс хайх..." 
                     className="pl-8"
@@ -195,7 +228,7 @@ export default function AdminPaymentsPage() {
                   />
                 </div>
                 <select 
-                  className="border rounded-md px-3 py-2 text-sm"
+                  className="border border-sand-200 rounded-xl px-3 py-2 text-sm bg-white text-ink-700"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -219,29 +252,29 @@ export default function AdminPaymentsPage() {
                     </div>
                   ) : (
                     filteredPayments.map((payment) => (
-                      <div key={payment._id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                      <div key={payment._id} className="flex items-center justify-between p-4 border border-sand-200 rounded-2xl hover:bg-sand-50">
                         <div className="flex items-center space-x-4">
                           <div className="flex-1">
                             <div className="flex items-center space-x-2">
-                              <User className="w-4 h-4 text-gray-400" />
+                              <User className="w-4 h-4 text-ink-500" />
                               <p className="text-sm font-medium leading-none">
                                 {payment.userDisplayName}
                               </p>
                               {payment.user?.email && (
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-ink-500">
                                   ({payment.user.email})
                                 </span>
                               )}
                             </div>
                             <div className="flex items-center space-x-2 mt-1">
-                              <BookOpen className="w-4 h-4 text-gray-400" />
-                              <p className="text-sm text-muted-foreground">
+                              <BookOpen className="w-4 h-4 text-ink-500" />
+                              <p className="text-sm text-ink-500">
                                 {payment.courseDisplayName}
                               </p>
                             </div>
                             <div className="flex items-center space-x-2 mt-1">
-                              <Clock className="w-4 h-4 text-gray-400" />
-                              <p className="text-xs text-gray-500">
+                              <Clock className="w-4 h-4 text-ink-500" />
+                              <p className="text-xs text-ink-500">
                                 {payment.timeSinceCreated} өмнө
                               </p>
                             </div>
@@ -252,12 +285,12 @@ export default function AdminPaymentsPage() {
                             <p className="text-sm font-medium">
                               ₮{payment.amount?.toLocaleString() || 0}
                             </p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-ink-500">
                               {payment.currency || 'MNT'}
                             </p>
                           </div>
                           {getStatusBadge(payment.status, payment.isExpired)}
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-sm text-ink-500">
                             {payment.createdAt ? formatDate(payment.createdAt) : ''}
                           </div>
                         </div>
@@ -268,7 +301,6 @@ export default function AdminPaymentsPage() {
               )}
             </CardContent>
           </Card>
-        </div>
       </div>
     </div>
   )

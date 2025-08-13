@@ -1,4 +1,3 @@
-import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,16 +9,13 @@ import { Save, Globe, Bell, Shield, CreditCard } from 'lucide-react'
 
 export default function AdminSettingsPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        <AdminSidebar />
-
-        <div className="flex-1 p-8">
+    <div className="min-h-screen bg-sand-50">
+      <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-6">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-ink-900 mb-2">
               Тохиргоо
             </h1>
-            <p className="text-gray-600">
+            <p className="text-ink-500">
               Системийн ерөнхий тохиргоонууд
             </p>
           </div>
@@ -200,7 +196,6 @@ export default function AdminSettingsPage() {
                 Тохиргоог хадгалах
               </Button>
             </div>
-          </div>
         </div>
       </div>
     </div>

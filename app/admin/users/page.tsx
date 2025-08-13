@@ -1,6 +1,4 @@
 'use client'
-
-import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -15,19 +13,10 @@ import { AddCourseDropdown } from '@/components/admin/add-course-dropdown'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
+import { AdminTopbar } from '@/components/admin/topbar'
+import { FiltersBar } from '@/components/admin/filters-bar'
 
-const getRoleBadge = (role: string) => {
-  switch (role) {
-    case 'admin':
-      return <Badge className="bg-red-100 text-red-800">Админ</Badge>
-    case 'instructor':
-      return <Badge className="bg-blue-100 text-blue-800">Багш</Badge>
-    case 'student':
-      return <Badge className="bg-green-100 text-green-800">Сурагч</Badge>
-    default:
-      return <Badge variant="secondary">{role}</Badge>
-  }
-}
+const getRoleBadge = (_role: string) => null
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -81,7 +70,7 @@ export default function AdminUsersPage() {
         body: JSON.stringify({
           name: selectedUser.name,
           email: selectedUser.email,
-          role: selectedUser.role,
+          
         }),
       })
       if (!res.ok) throw new Error('Хэрэглэгч засахэд алдаа гарлаа')
@@ -127,11 +116,8 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        <AdminSidebar />
-        <div className="flex-1 p-8">
-          {/* Create User Dialog */}
+    <div className="min-h-screen bg-sand-50">
+      {/* Create User Dialog */}
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
@@ -150,14 +136,17 @@ export default function AdminUsersPage() {
             </DialogContent>
           </Dialog>
 
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Хэрэглэгчид
-            </h1>
-            <p className="text-gray-600">
-              Системийн бүх хэрэглэгчдийн жагсаалт
-            </p>
-          </div>
+          <AdminTopbar title="Хэрэглэгчид" />
+          <FiltersBar sticky>
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
+              <Input placeholder="Хэрэглэгч хайх..." className="pl-8" />
+            </div>
+            <Button onClick={() => setShowCreateDialog(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Шинэ хэрэглэгч
+            </Button>
+          </FiltersBar>
 
           {/* Edit User Dialog */}
           <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
@@ -184,22 +173,7 @@ export default function AdminUsersPage() {
                       onChange={e => setSelectedUser({ ...selectedUser, email: e.target.value })} 
                     />
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-role">Эрх</Label>
-                    <Select 
-                      value={selectedUser.role} 
-                      onValueChange={val => setSelectedUser({ ...selectedUser, role: val })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="student">Сурагч</SelectItem>
-                        <SelectItem value="instructor">Багш</SelectItem>
-                        <SelectItem value="admin">Админ</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  
                   {/* Show user's courses */}
                   {Array.isArray(selectedUser.enrolledCourses) && selectedUser.enrolledCourses.length > 0 && (
                     <div className="grid gap-2">
@@ -248,91 +222,70 @@ export default function AdminUsersPage() {
             </AlertDialogContent>
           </AlertDialog>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Хэрэглэгчид</CardTitle>
-                <Button onClick={() => setShowCreateDialog(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Шинэ хэрэглэгч
-                </Button>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Хэрэглэгч хайх..." className="pl-8" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
+          <div className="mx-auto max-w-[1200px] px-4 md:px-6 mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Хэрэглэгчид</CardTitle>
+              </CardHeader>
+              <CardContent>
               {loading ? (
                 <div className="text-center py-8">Уншиж байна...</div>
               ) : error ? (
                 <div className="text-center text-red-500 py-8">{error}</div>
               ) : (
                 <div className="space-y-4">
-                  {users.map((user) => (
-                    <div key={user._id} className="flex items-center space-x-4 p-4 border rounded-lg">
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={user.avatar || '/placeholder-user.jpg'} alt={user.name} />
-                        <AvatarFallback>
-                          {user.name?.split(' ').map((n: string) => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      
-                      <div className="flex-1 space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {user.name}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {user.email}
-                        </p>
+                    {users.map((user) => (
+                      <div key={user._id} className="w-full p-4 border border-sand-200 rounded-2xl hover:bg-sand-50 transition-colors">
+                        <div className="grid grid-cols-[auto,1fr,auto] items-center gap-3">
+                          <Avatar className="h-9 w-9">
+                            <AvatarImage src={user.avatar || '/placeholder-user.jpg'} alt={user.name} />
+                            <AvatarFallback>
+                              {user.name?.split(' ').map((n: string) => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium leading-none text-ink-900 truncate">{user.name}</p>
+                            <p className="text-sm text-ink-500 truncate">{user.email}</p>
+                          </div>
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUser(user)
+                                setShowEditDialog(true)
+                              }}
+                              aria-label="Засах"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUser(user)
+                                setShowDeleteDialog(true)
+                              }}
+                              aria-label="Устгах"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-500">
+                          {user.status && <span>{getStatusBadge(user.status)}</span>}
+                          {Array.isArray(user.enrolledCourses) && user.enrolledCourses.length > 0 && (
+                            <span className="truncate">Курсууд: {user.enrolledCourses.map((c: any) => typeof c === 'string' ? c : c.title).join(', ')}</span>
+                          )}
+                          <span className="ml-auto text-ink-500">{user.createdAt ? formatDate(user.createdAt) : ''}</span>
+                        </div>
                       </div>
-                      
-                  <div className="flex items-center space-x-2">
-                        {getRoleBadge(user.role)}
-                        {user.status && getStatusBadge(user.status)}
-                      </div>
-                  {Array.isArray(user.enrolledCourses) && user.enrolledCourses.length > 0 && (
-                    <div className="text-xs text-gray-600">
-                      Курсууд: {user.enrolledCourses.map((c: any) => typeof c === 'string' ? c : c.title).join(', ')}
-                    </div>
-                  )}
-                      
-                      <div className="text-sm text-muted-foreground">
-                        {user.createdAt ? formatDate(user.createdAt) : ''}
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedUser(user)
-                            setShowEditDialog(true)
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedUser(user)
-                            setShowDeleteDialog(true)
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
     </div>
   )
 }

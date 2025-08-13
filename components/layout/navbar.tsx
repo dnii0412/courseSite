@@ -46,11 +46,7 @@ export function Navbar() {
                     <DropdownMenuItem asChild>
                       <Link href="/learn">Миний курсууд</Link>
                     </DropdownMenuItem>
-                    {user.role === 'admin' && (
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin">Админ самбар</Link>
-                      </DropdownMenuItem>
-                    )}
+                    
                     <DropdownMenuItem onClick={logout}>
                       <LogOut className="w-4 h-4 mr-2" />
                       Гарах
@@ -87,11 +83,7 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link href="/learn">Миний курсууд</Link>
                   </DropdownMenuItem>
-                  {user.role === 'admin' && (
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin">Админ самбар</Link>
-                    </DropdownMenuItem>
-                  )}
+                  
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="w-4 h-4 mr-2" />
                     Гарах
@@ -128,11 +120,7 @@ export function Navbar() {
                   <Link href="/profile" className="text-[#1B3C53] hover:text-[#456882]">
                     Профайл
                   </Link>
-                  {user.role === 'admin' && (
-                    <Link href="/admin" className="text-[#1B3C53] hover:text-[#456882]">
-                      Админ самбар
-                    </Link>
-                  )}
+                  
                   <Button variant="ghost" onClick={logout} className="justify-start text-[#1B3C53] hover:text-[#456882] hover:bg-[#F9F3EF]">
                     <LogOut className="w-4 h-4 mr-2" />
                     Гарах

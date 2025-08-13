@@ -20,7 +20,9 @@ export function AddCourseDropdown({ userId, onAdded }: { userId: string; onAdded
       try {
         const res = await fetch('/api/courses?all=true')
         if (res.ok) {
-          setCourses(await res.json())
+          const json = await res.json()
+          const list = Array.isArray(json) ? json : (json?.data ?? [])
+          setCourses(list)
         }
       } catch {}
     }
