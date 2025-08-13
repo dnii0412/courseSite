@@ -107,7 +107,7 @@ export function AdminCourseDetailsInline({ courseId, onChanged }: { courseId: st
 
           <TabsContent value="lessons">
             {/* CourseLessons refetches lessons itself; pass minimal course object */}
-            <CourseLessons course={{ _id: courseId }} onChanged={() => { onChanged(); load() }} />
+            <CourseLessons course={{ _id: courseId }} onChanged={() => { onChanged(); load() }} variant="compact" />
           </TabsContent>
         </Tabs>
       </CardContent>

@@ -16,7 +16,7 @@ interface Lesson {
   preview?: boolean
 }
 
-export function CourseLessons({ course, onChanged }: { course: any, onChanged: () => void }) {
+export function CourseLessons({ course, onChanged, variant = 'default' }: { course: any, onChanged: () => void, variant?: 'default' | 'compact' }) {
   const [lessons, setLessons] = useState<Lesson[]>([])
   const [title, setTitle] = useState('')
   const [duration, setDuration] = useState<number | ''>('')
@@ -94,9 +94,9 @@ export function CourseLessons({ course, onChanged }: { course: any, onChanged: (
   return (
     <Card>
       <CardContent className="pt-4">
-        <div className="space-y-3">
+        <div className={variant === 'compact' ? 'rounded-xl overflow-hidden bg-white divide-y divide-sand-100' : 'space-y-3'}>
           {lessons.map((l, idx) => (
-            <div key={l._id || idx} className="flex items-center justify-between p-2 border rounded">
+            <div key={l._id || idx} className={variant === 'compact' ? 'flex items-center justify-between px-3 py-3 hover:bg-sand-50 transition-colors' : 'flex items-center justify-between p-2 border rounded'}>
               <div>
                 <div className="font-medium">{idx + 1}. {l.title}</div>
                 <div className="text-xs text-gray-500">{l.duration} минут</div>
@@ -129,7 +129,7 @@ export function CourseLessons({ course, onChanged }: { course: any, onChanged: (
             </div>
           ))}
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2 mt-4">
             <div className="col-span-2">
               <Label htmlFor="new-lesson-title">Шинэ хичээлийн гарчиг</Label>
               <Input id="new-lesson-title" value={title} onChange={e => setTitle(e.target.value)} />
