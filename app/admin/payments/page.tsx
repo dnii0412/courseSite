@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input'
 import { Search, Download, Filter, RefreshCw, User, BookOpen, Clock, AlertTriangle } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { useEffect, useState } from 'react'
-import { AdminTopbar } from '@/components/admin/topbar'
 import { FiltersBar } from '@/components/admin/filters-bar'
 
 const getStatusBadge = (status: string, isExpired?: boolean) => {
@@ -94,27 +93,6 @@ export default function AdminPaymentsPage() {
   return (
     <div className="min-h-screen bg-sand-50">
       <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-6">
-          <AdminTopbar 
-            title="Төлбөрүүд"
-            actions={(
-              <>
-                <Button variant="outline" onClick={handleUpdateExpiredPayments}>
-                  <AlertTriangle className="w-4 h-4 mr-2" />
-                  Хугацаа дууссан төлбөрүүдийг шинэчлэх
-                </Button>
-                <Button variant="outline" onClick={fetchPayments}>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Шинэчлэх
-                </Button>
-                <Button variant="outline">
-                  <Download className="w-4 h-4 mr-2" />
-                  Экспорт
-                </Button>
-              </>
-            )}
-          >
-            <div className="text-sm text-ink-500">Бүх төлбөрийн жагсаалт ба удирдлага</div>
-          </AdminTopbar>
 
           <FiltersBar sticky>
             <div className="relative flex-1 max-w-sm">

@@ -13,7 +13,6 @@ import { AddCourseDropdown } from '@/components/admin/add-course-dropdown'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
-import { AdminTopbar } from '@/components/admin/topbar'
 import { FiltersBar } from '@/components/admin/filters-bar'
 
 const getRoleBadge = (_role: string) => null
@@ -136,7 +135,6 @@ export default function AdminUsersPage() {
             </DialogContent>
           </Dialog>
 
-          <AdminTopbar title="Хэрэглэгчид" />
           <FiltersBar sticky>
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
