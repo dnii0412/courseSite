@@ -60,11 +60,11 @@ export function AdminCourseDetailsInline({ courseId, onChanged }: { courseId: st
       <CardContent className="pt-0">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-4">
           <TabsList className="bg-sand-100 rounded-xl p-1">
-            <TabsTrigger value="enrollments" className="rounded-lg data-[state=active]:bg-white data-[state=active]:border data-[state=active]:border-sand-200">
-              Худалдан авсан
-            </TabsTrigger>
             <TabsTrigger value="lessons" className="rounded-lg data-[state=active]:bg-white data-[state=active]:border data-[state=active]:border-sand-200">
               Хичээлүүд
+            </TabsTrigger>
+            <TabsTrigger value="enrollments" className="rounded-lg data-[state=active]:bg-white data-[state=active]:border data-[state=active]:border-sand-200">
+              Худалдан авсан
             </TabsTrigger>
           </TabsList>
 

@@ -9,11 +9,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Edit, Trash2, Search, Eye, BookOpen } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, Eye, BookOpen, ChevronDown } from 'lucide-react'
 import { CourseLessons } from '@/components/admin/course-lessons'
 import { AdminCourseDetailsInline } from '@/components/admin/course-details-inline'
 import { Switch } from '@/components/ui/switch'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 
 interface Course {
   _id?: string
@@ -408,76 +409,49 @@ export function CourseManagement() {
                 const cid = String(course._id || course.id)
                 const expanded = !!expandedIds[cid]
                 return (
-                <div key={cid} className="p-4 border border-sand-200 rounded-2xl">
-                  <div 
-                    className="flex items-center justify-between cursor-pointer select-none"
-                    onClick={() => setExpandedIds(prev => ({ ...prev, [cid]: !prev[cid] }))}
-                    role="button"
-                    aria-expanded={expanded}
-                  >
-                    <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-sand-100 rounded-xl flex items-center justify-center">
-                      <BookOpen className="w-6 h-6 text-ink-900" />
-                    </div>
-                      <div className="flex-1">
-                      <h3 className="font-medium text-ink-900">{course.title}</h3>
-                      <p className="text-sm text-ink-500 line-clamp-1">
-                        {course.description}
-                      </p>
-                      <div className="flex items-center space-x-4 mt-2">
-                        <span className="text-sm text-ink-500">
-                          Багш: {typeof course.instructor === 'string' ? course.instructor : course.instructor?.name}
-                        </span>
-                        <span className="text-sm text-ink-500">
-                          {Array.isArray(course.lessons) ? course.lessons.length : course.lessons || 0} хичээл
-                        </span>
-                        <span className="text-sm text-ink-500">
-                          {course.studentsCount || course.students || 0} сурагч
-                        </span>
+                <Collapsible key={cid} open={expanded} onOpenChange={(open) => setExpandedIds(prev => ({ ...prev, [cid]: open }))}>
+                  <div className="p-4 border border-sand-200 rounded-2xl">
+                    <CollapsibleTrigger asChild>
+                      <div 
+                        className="flex items-center justify-between cursor-pointer select-none"
+                        role="button"
+                        aria-expanded={expanded}
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-sand-100 rounded-xl flex items-center justify-center">
+                            <BookOpen className="w-6 h-6 text-ink-900" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-medium text-ink-900">{course.title}</h3>
+                            <p className="text-sm text-ink-500 line-clamp-1">{course.description}</p>
+                            <div className="flex items-center space-x-4 mt-2">
+                              <span className="text-sm text-ink-500">Багш: {typeof course.instructor === 'string' ? course.instructor : course.instructor?.name}</span>
+                              <span className="text-sm text-ink-500">{Array.isArray(course.lessons) ? course.lessons.length : course.lessons || 0} хичээл</span>
+                              <span className="text-sm text-ink-500">{course.studentsCount || course.students || 0} сурагч</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-4" onClick={(e) => e.stopPropagation()}>
+                          <div className="text-right">
+                            <p className="font-medium">₮{course.price?.toLocaleString?.() ?? course.price}</p>
+                            <p className="text-sm text-ink-500">{course.category}</p>
+                          </div>
+                          {course.status && (
+                            <Badge className={`bg-${course.status === 'active' ? 'green' : course.status === 'draft' ? 'yellow' : 'gray'}-100 text-${course.status === 'active' ? 'green' : course.status === 'draft' ? 'yellow' : 'gray'}-800`}>
+                              {course.status === 'active' ? 'Идэвхтэй' : course.status === 'draft' ? 'Ноорог' : 'Архивласан'}
+                            </Badge>
+                          )}
+                          <Button variant="ghost" size="sm" aria-label="Expand">
+                            <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                    </div>
-                    <div className="flex items-center space-x-4" onClick={(e) => e.stopPropagation()}>
-                      <div className="text-right">
-                        <p className="font-medium">₮{course.price?.toLocaleString?.() ?? course.price}</p>
-                        <p className="text-sm text-ink-500">
-                          {course.category}
-                        </p>
-                      </div>
-                      {course.status && (
-                        <Badge className={`bg-${course.status === 'active' ? 'green' : course.status === 'draft' ? 'yellow' : 'gray'}-100 text-${course.status === 'active' ? 'green' : course.status === 'draft' ? 'yellow' : 'gray'}-800`}>
-                          {course.status === 'active' ? 'Идэвхтэй' : course.status === 'draft' ? 'Ноорог' : 'Архивласан'}
-                        </Badge>
-                      )}
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedCourse(course)
-                            setShowEditDialog(true)
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedCourse(course)
-                            setShowDeleteDialog(true)
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden">
+                      <AdminCourseDetailsInline courseId={cid} onChanged={fetchCourses} />
+                    </CollapsibleContent>
                   </div>
-                  {/* Inline details */}
-                  {expanded && (
-                    <AdminCourseDetailsInline courseId={cid} onChanged={fetchCourses} />
-                  )}
-                </div>
+                </Collapsible>
               )})}
             </div>
           )}
