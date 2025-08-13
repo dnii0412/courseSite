@@ -50,14 +50,14 @@ export function AdminCourseDetailsInline({ courseId, onChanged }: { courseId: st
   }, [enrollments, search])
 
   return (
-    <Card className="mt-4">
-      <CardHeader className="pb-2">
+    <Card className="mt-2 border-t border-sand-200 border-x-0 border-b-0 rounded-none shadow-none bg-transparent">
+      <CardHeader className="pb-2 px-0">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm">Дэлгэрэнгүй</CardTitle>
           <div className="text-xs text-ink-500">Худалдан авсан: {enrollments.length}</div>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 px-0">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-4">
           <TabsList className="bg-sand-100 rounded-xl p-1">
             <TabsTrigger value="lessons" className="rounded-lg data-[state=active]:bg-white data-[state=active]:border data-[state=active]:border-sand-200">
@@ -84,9 +84,9 @@ export function AdminCourseDetailsInline({ courseId, onChanged }: { courseId: st
             ) : filteredEnrollments.length === 0 ? (
               <div className="text-sm text-ink-500">Одоогоор хэрэглэгч байхгүй</div>
             ) : (
-              <div className="space-y-2">
+              <div className="divide-y divide-sand-100 rounded-xl overflow-hidden bg-white">
                 {filteredEnrollments.map((e, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 border border-sand-200 rounded-xl hover:bg-sand-50">
+                  <div key={idx} className="flex items-center justify-between px-3 py-3 hover:bg-sand-50 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-full bg-sand-100 flex items-center justify-center text-xs text-ink-700">
                         {(e.user?.name || 'Н').slice(0,1)}
