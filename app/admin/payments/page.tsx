@@ -94,27 +94,7 @@ export default function AdminPaymentsPage() {
     <div className="min-h-screen bg-sand-50">
       <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-6">
 
-          <div className="mb-4 flex items-center gap-3">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
-              <Input 
-                placeholder="Хэрэглэгч, курс хайх..." 
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <select 
-              className="border border-sand-200 rounded-xl px-3 py-2 text-sm bg-white text-ink-700"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">Бүх статус</option>
-              <option value="completed">Амжилттай</option>
-              <option value="pending">Хүлээгдэж буй</option>
-              <option value="failed">Амжилтгүй</option>
-            </select>
-          </div>
+          
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
@@ -173,18 +153,29 @@ export default function AdminPaymentsPage() {
                 </div>
               </CardContent>
             </Card>
-            
-            
           </div>
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Төлбөрүүд</CardTitle>
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" onClick={handleUpdateExpiredPayments}>
-                    <AlertTriangle className="w-4 h-4 mr-2" />
-                    Хугацаа дууссан төлбөрүүдийг шинэчлэх
-                  </Button>
+
+          <div className="mb-4 flex items-center gap-3">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
+              <Input 
+                placeholder="Хэрэглэгч, курс хайх..." 
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <select 
+              className="border border-sand-200 rounded-xl px-3 py-2 text-sm bg-white text-ink-700"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">Бүх статус</option>
+              <option value="completed">Амжилттай</option>
+              <option value="pending">Хүлээгдэж буй</option>
+              <option value="failed">Амжилтгүй</option>
+            </select>
+            <div className="flex items-center space-x-2">
                   <Button variant="outline" onClick={fetchPayments}>
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Шинэчлэх
@@ -194,6 +185,13 @@ export default function AdminPaymentsPage() {
                     Экспорт
                   </Button>
                 </div>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Төлбөрүүд</CardTitle>
+                
               </div>
               <div className="flex items-center space-x-4">
                 <div className="relative flex-1 max-w-sm">

@@ -142,7 +142,7 @@ export default function AdminUsersPage() {
             </div>
             <Button onClick={() => setShowCreateDialog(true)}>
               <Plus className="w-4 h-4" />
-              <span className="sr-only">Шинэ хэрэглэгч</span>
+              Шинэ хэрэглэгч
             </Button>
           </div>
 

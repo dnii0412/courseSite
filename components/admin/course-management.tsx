@@ -408,7 +408,7 @@ export function CourseManagement() {
                 const cid = String(course._id || course.id)
                 const expanded = !!expandedIds[cid]
                 return (
-                <div key={cid} className="p-4 border rounded-lg">
+                <div key={cid} className="p-4 border border-sand-200 rounded-2xl">
                   <div 
                     className="flex items-center justify-between cursor-pointer select-none"
                     onClick={() => setExpandedIds(prev => ({ ...prev, [cid]: !prev[cid] }))}
@@ -416,22 +416,22 @@ export function CourseManagement() {
                     aria-expanded={expanded}
                   >
                     <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <BookOpen className="w-6 h-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-sand-100 rounded-xl flex items-center justify-center">
+                      <BookOpen className="w-6 h-6 text-ink-900" />
                     </div>
                       <div className="flex-1">
-                      <h3 className="font-medium">{course.title}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-1">
+                      <h3 className="font-medium text-ink-900">{course.title}</h3>
+                      <p className="text-sm text-ink-500 line-clamp-1">
                         {course.description}
                       </p>
                       <div className="flex items-center space-x-4 mt-2">
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-ink-500">
                           Багш: {typeof course.instructor === 'string' ? course.instructor : course.instructor?.name}
                         </span>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-ink-500">
                           {Array.isArray(course.lessons) ? course.lessons.length : course.lessons || 0} хичээл
                         </span>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-ink-500">
                           {course.studentsCount || course.students || 0} сурагч
                         </span>
                       </div>
@@ -440,7 +440,7 @@ export function CourseManagement() {
                     <div className="flex items-center space-x-4" onClick={(e) => e.stopPropagation()}>
                       <div className="text-right">
                         <p className="font-medium">₮{course.price?.toLocaleString?.() ?? course.price}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-ink-500">
                           {course.category}
                         </p>
                       </div>
