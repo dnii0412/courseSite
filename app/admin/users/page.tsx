@@ -13,7 +13,7 @@ import { AddCourseDropdown } from '@/components/admin/add-course-dropdown'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
-import { FiltersBar } from '@/components/admin/filters-bar'
+// removed FiltersBar per request
 
 const getRoleBadge = (_role: string) => null
 
@@ -135,16 +135,16 @@ export default function AdminUsersPage() {
             </DialogContent>
           </Dialog>
 
-          <FiltersBar sticky>
+          <div className="mx-auto max-w-[1200px] px-4 md:px-6 mt-4 flex items-center gap-3">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
               <Input placeholder="Хэрэглэгч хайх..." className="pl-8" />
             </div>
             <Button onClick={() => setShowCreateDialog(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Шинэ хэрэглэгч
+              <Plus className="w-4 h-4" />
+              <span className="sr-only">Шинэ хэрэглэгч</span>
             </Button>
-          </FiltersBar>
+          </div>
 
           {/* Edit User Dialog */}
           <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>

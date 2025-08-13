@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Search, Download, Filter, RefreshCw, User, BookOpen, Clock, AlertTriangle } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { useEffect, useState } from 'react'
-import { FiltersBar } from '@/components/admin/filters-bar'
+// removed FiltersBar per request
 
 const getStatusBadge = (status: string, isExpired?: boolean) => {
   switch (status) {
@@ -94,7 +94,7 @@ export default function AdminPaymentsPage() {
     <div className="min-h-screen bg-sand-50">
       <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-6">
 
-          <FiltersBar sticky>
+          <div className="mb-4 flex items-center gap-3">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
               <Input 
@@ -114,7 +114,7 @@ export default function AdminPaymentsPage() {
               <option value="pending">Хүлээгдэж буй</option>
               <option value="failed">Амжилтгүй</option>
             </select>
-          </FiltersBar>
+          </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
