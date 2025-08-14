@@ -105,7 +105,8 @@ const authOptions = {
       console.log('JWT callback - Account:', account)
 
       if (user) {
-        token.role = user.role
+        token.role = user.role || 'USER'
+        token.id = user.id
         if (account?.provider) {
           token.oauthProvider = account.provider
           token.oauthId = account.providerAccountId
@@ -119,7 +120,7 @@ const authOptions = {
       console.log('Session callback - Token:', token)
 
       if (token) {
-        session.user.id = token.sub!
+        session.user.id = token.id || token.sub!
         session.user.role = token.role as string
         // Add OAuth info to session if available
         if (token.oauthProvider) {
@@ -130,7 +131,7 @@ const authOptions = {
       }
       return session
     },
-    async signIn({ user, account, profile }: { user: any; account: any; profile: any }) {
+    async signIn({ user, account, profile }: { user: any; account: any; profile?: any }) {
       console.log('SignIn callback - User:', user)
       console.log('SignIn callback - Account:', account)
       console.log('SignIn callback - Profile:', profile)
