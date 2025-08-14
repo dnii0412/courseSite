@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import mongoose from 'mongoose'
-import { EJSON } from 'bson'
+import { EJSON } from 'mongodb'
 
 export async function GET(_req: NextRequest) {
   try {

@@ -4,21 +4,21 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
-import { z } from 'zod'
+import zod from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { scorePassword } from '@/lib/password'
 import { SocialButton } from '@/components/ui/SocialButton'
 import { PasswordInput } from '@/components/ui/PasswordInput'
 
-const schema = z.object({
-  name: z.string().min(2, 'Нэр хамгийн багадаа 2 тэмдэгт').max(50),
-  email: z.string().email('Имэйл буруу байна'),
-  password: z
+const schema = zod.object({
+  name: zod.string().min(2, 'Нэр хамгийн багадаа 2 тэмдэгт').max(50),
+  email: zod.string().email('Имэйл буруу байна'),
+  password: zod
     .string()
     .min(8, 'Нууц үг хамгийн багадаа 8 тэмдэгт байх ёстой'),
-  confirmPassword: z.string(),
-  terms: z.literal(true, { errorMap: () => ({ message: 'Үйлчилгээний нөхцөлтэй санал нэгдэнэ үү' }) }),
-}).refine((data) => data.password === data.confirmPassword, {
+  confirmPassword: zod.string(),
+  terms: zod.boolean().refine(val => val === true, { message: 'Үйлчилгээний нөхцөлтэй санал нэгдэнэ үү' }),
+}).refine((data: any) => data.password === data.confirmPassword, {
   message: 'Нууц үгүүд таарахгүй байна',
   path: ['confirmPassword'],
 })
@@ -27,17 +27,42 @@ export default function RegisterPage() {
   const router = useRouter()
   const [apiError, setApiError] = useState('')
   const [attemptedSubmit, setAttemptedSubmit] = useState(false)
-  const { register, control, handleSubmit, watch, setFocus, formState: { errors, isSubmitting, isValid } } = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema),
+  const [hasSubmitted, setHasSubmitted] = useState(false)
+  
+  // Custom resolver that only validates when hasSubmitted is true
+  const customResolver = (values: any) => {
+    if (!hasSubmitted) {
+      return { values, errors: {} }
+    }
+    const result = schema.safeParse(values)
+    if (result.success) {
+      return { values: result.data, errors: {} }
+    }
+    const fieldErrors = result.error.flatten().fieldErrors
+    return { 
+      values, 
+      errors: {
+        name: fieldErrors.name ? { message: fieldErrors.name[0] } : undefined,
+        email: fieldErrors.email ? { message: fieldErrors.email[0] } : undefined,
+        password: fieldErrors.password ? { message: fieldErrors.password[0] } : undefined,
+        confirmPassword: fieldErrors.confirmPassword ? { message: fieldErrors.confirmPassword[0] } : undefined,
+        terms: fieldErrors.terms ? { message: fieldErrors.terms[0] } : undefined
+      }
+    }
+  }
+  
+  const { register, control, handleSubmit, watch, setFocus, formState: { errors, isSubmitting } } = useForm<zod.infer<typeof schema>>({
+    resolver: customResolver,
     mode: 'onChange',
-    defaultValues: { name: '', email: '', password: '', confirmPassword: '', terms: undefined as unknown as true },
+    defaultValues: { name: '', email: '', password: '', confirmPassword: '', terms: false },
   })
 
   const pw = watch('password') || ''
   const strength = scorePassword(pw)
   const [showPw, setShowPw] = useState(false)
 
-  async function onSubmit(values: z.infer<typeof schema>) {
+  async function onSubmit(values: zod.infer<typeof schema>) {
+    setHasSubmitted(true)
     setApiError('')
     if (strength <= 1) {
       setAttemptedSubmit(true)
@@ -106,7 +131,7 @@ export default function RegisterPage() {
             {attemptedSubmit && strength <= 1 && (
               <div className="text-sm text-red-600">Нууц үг хэт сул байна. Дараах шалгууруудаас нэмээрэй: 8-оос урт, Том үсэг, Символ, Тоо.</div>
             )}
-            <button disabled={!isValid || isSubmitting} className="w-full h-11 rounded-xl bg-sky-700 text-white hover:bg-sky-800 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300">
+            <button disabled={isSubmitting} className="w-full h-11 rounded-xl bg-sky-700 text-white hover:bg-sky-800 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300">
               {isSubmitting ? 'Бүртгүүлж байна…' : 'Бүртгүүлэх'}
             </button>
           </form>

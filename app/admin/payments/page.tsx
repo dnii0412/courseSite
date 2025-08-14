@@ -195,7 +195,7 @@ export default function AdminPaymentsPage() {
                 <CardTitle>Төлбөрүүд</CardTitle>
                 
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
                 <div className="relative flex-1 max-w-sm">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
                   <Input 

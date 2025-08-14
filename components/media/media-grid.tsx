@@ -243,7 +243,7 @@ export const MediaGrid = ({ slug }: MediaGridProps) => {
   return (
     <div className="w-full max-w-7xl mx-auto px-4">
       <div
-        className="grid gap-3 h-[90vh]"
+        className="grid gap-3 h-[600px]"
         style={{
           gridTemplateColumns: 'repeat(6, 1fr)',
           gridTemplateRows: 'repeat(4, 1fr)',

@@ -6,7 +6,6 @@ import { Toaster } from '@/components/ui/toaster'
 import { ThemeProvider } from '@/components/theme-provider'
 
 import Navbar from '@/components/Navbar'
-import { MotionConfig } from 'framer-motion'
 import SessionProviderClient from '@/components/providers/session-provider'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -43,10 +42,8 @@ export default function RootLayout({
         <SessionProviderClient>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             <AuthProvider>
-              <MotionConfig reducedMotion="user">
-                {children}
-                <Toaster />
-              </MotionConfig>
+              {children}
+              <Toaster />
             </AuthProvider>
           </ThemeProvider>
         </SessionProviderClient>

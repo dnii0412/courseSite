@@ -2,27 +2,50 @@
 
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
+import zod from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { SocialButton } from '@/components/ui/SocialButton'
 
-const schema = z.object({
-  email: z.string().email('Имэйл буруу байна'),
-  password: z.string().min(8, 'Нууц үг хамгийн багадаа 8 тэмдэгт байх ёстой'),
+const schema = zod.object({
+  email: zod.string().email('Имэйл буруу байна'),
+  password: zod.string().min(8, 'Нууц үг хамгийн багадаа 8 тэмдэгт байх ёстой'),
 })
 
 export default function LoginPage() {
   const router = useRouter()
   const [apiError, setApiError] = useState('')
-  const { register, handleSubmit, formState: { errors, isSubmitting, isValid }, setFocus } = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema),
+  const [hasSubmitted, setHasSubmitted] = useState(false)
+  
+  // Custom resolver that only validates when hasSubmitted is true
+  const customResolver = (values: any) => {
+    if (!hasSubmitted) {
+      return { values, errors: {} }
+    }
+    const result = schema.safeParse(values)
+    if (result.success) {
+      return { values: result.data, errors: {} }
+    }
+    const fieldErrors = result.error.flatten().fieldErrors
+    return { 
+      values, 
+      errors: {
+        email: fieldErrors.email ? { message: fieldErrors.email[0] } : undefined,
+        password: fieldErrors.password ? { message: fieldErrors.password[0] } : undefined
+      }
+    }
+  }
+  
+  const { register, handleSubmit, formState: { errors, isSubmitting }, setFocus } = useForm<zod.infer<typeof schema>>({
+    resolver: customResolver,
     mode: 'onChange',
+    reValidateMode: 'onChange',
   })
 
-  async function onSubmit(values: z.infer<typeof schema>) {
+  async function onSubmit(values: zod.infer<typeof schema>) {
+    setHasSubmitted(true)
     setApiError('')
     const res = await signIn('credentials', {
       email: values.email,
@@ -56,18 +79,18 @@ export default function LoginPage() {
             <div className="space-y-1">
               <label htmlFor="email" className="block text-sm font-medium text-slate-800">Имэйл</label>
               <input id="email" type="email" {...register('email')} aria-invalid={!!errors.email || undefined} aria-describedby={errors.email ? 'email-error' : undefined} className="h-11 w-full rounded-xl border border-slate-300 px-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300" />
-              {errors.email && <p id="email-error" className="text-xs text-red-600">{errors.email.message}</p>}
+              {hasSubmitted && errors.email && <p id="email-error" className="text-xs text-red-600">{errors.email.message}</p>}
             </div>
             <div className="space-y-1">
               <label htmlFor="password" className="block text-sm font-medium text-slate-800">Нууц үг</label>
               <input id="password" type="password" {...register('password')} aria-invalid={!!errors.password || undefined} aria-describedby={errors.password ? 'password-error' : undefined} className="h-11 w-full rounded-xl border border-slate-300 px-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300" />
-              {errors.password && <p id="password-error" className="text-xs text-red-600">{errors.password.message}</p>}
+              {hasSubmitted && errors.password && <p id="password-error" className="text-xs text-red-600">{errors.password.message}</p>}
             </div>
             {apiError && <div className="text-sm text-red-600">{apiError}</div>}
             <div className="flex items-center justify-between">
               <Link href="/auth/reset" className="text-sm text-sky-700 hover:underline">Нууц үг мартсан?</Link>
             </div>
-            <button disabled={!isValid || isSubmitting} className="w-full h-11 rounded-xl bg-sky-700 text-white hover:bg-sky-800 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300">
+            <button disabled={isSubmitting} className="w-full h-11 rounded-xl bg-sky-700 text-white hover:bg-sky-800 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300">
               {isSubmitting ? 'Нэвтэрч байна…' : 'Нэвтрэх'}
             </button>
           </form>
