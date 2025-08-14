@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,19 +15,38 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
-  // Redirect if already logged in
+  // Check if user is already admin and redirect
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (status === 'loading') return
+      
+      if (session?.user?.email) {
+        try {
+          const response = await fetch('/api/users/me')
+          if (response.ok) {
+            const user = await response.json()
+            if (user.role === 'ADMIN') {
+              const next = searchParams.get('next') || '/admin'
+              router.push(next)
+            }
+          }
+        } catch (error) {
+          console.error('Error checking admin status:', error)
+        }
+      }
+    }
+
+    checkAdminStatus()
+  }, [session, status, router, searchParams])
+
   if (status === 'loading') {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     )
-  }
-
-  if (session?.user) {
-    router.push('/admin')
-    return null
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,11 +63,31 @@ export default function AdminLoginPage() {
       })
 
       if (response.ok) {
-        toast({
-          title: "Амжилттай",
-          description: "Админ хэсэгт нэвтэрлээ",
-        })
-        router.push('/admin')
+        // Check if user has admin role after login
+        const userResponse = await fetch('/api/users/me')
+        if (userResponse.ok) {
+          const user = await userResponse.json()
+          if (user.role === 'ADMIN') {
+            toast({
+              title: "Амжилттай",
+              description: "Админ хэсэгт нэвтэрлээ",
+            })
+            const next = searchParams.get('next') || '/admin'
+            router.push(next)
+          } else {
+            toast({
+              title: "Алдаа",
+              description: "Та админ эрхгүй байна",
+              variant: "destructive",
+            })
+          }
+        } else {
+          toast({
+            title: "Алдаа",
+            description: "Хэрэглэгчийн мэдээлэл олдсонгүй",
+            variant: "destructive",
+          })
+        }
       } else {
         const data = await response.json()
         toast({
