@@ -36,17 +36,17 @@ export default function PublicMediaGridPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#F9F3EF]">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-[#1B3C53] mb-6">Media</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">Media</h1>
 
         {loading && <div className="text-gray-500">Loading...</div>}
         {error && <div className="text-red-600">{error}</div>}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {items.map((m) => (
-            <div key={m._id} className="relative bg-white border border-[#D2C1B6] rounded-md overflow-hidden">
+            <div key={m._id} className="relative bg-white border border-gray-200 rounded-md overflow-hidden">
               {m.type === 'video' ? (
                 <video src={m.url} poster={m.posterUrl} className="w-full h-full object-cover" controls />
               ) : (

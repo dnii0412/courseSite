@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Clock, Users, Star, Play, CheckCircle } from 'lucide-react'
 import Image from 'next/image'
 import { PaymentModal } from '@/components/payments/payment-modal'
-import { useAuth } from '@/hooks/use-auth'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 interface CourseDetailsProps {
@@ -40,7 +40,8 @@ export function CourseDetails({ course }: CourseDetailsProps) {
   const [showPayment, setShowPayment] = useState(false)
   const [isEnrolled, setIsEnrolled] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const router = useRouter()
 
   useEffect(() => {

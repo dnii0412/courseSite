@@ -417,7 +417,7 @@ export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsu
           <Button
             onClick={saveLayout}
             disabled={saving}
-            className="bg-[#1B3C53] hover:bg-[#456882]"
+            className="bg-blue-600 hover:bg-blue-700"
           >
             <Save className="w-4 h-4 mr-2" />
             {saving ? 'Saving...' : 'Save'}
@@ -773,7 +773,7 @@ const GridItem = ({
       {isSelected && (
         <>
           <div
-            className="absolute right-0 top-1/2 w-2 h-2 bg-[#1B3C53] rounded cursor-ew-resize transform -translate-y-1/2"
+            className="absolute right-0 top-1/2 w-2 h-2 bg-blue-600 rounded cursor-ew-resize transform -translate-y-1/2"
             onMouseDown={(e) => {
               e.stopPropagation();
               setIsResizing(true);
@@ -797,7 +797,7 @@ const GridItem = ({
           />
 
           <div
-            className="absolute bottom-0 left-1/2 w-2 h-2 bg-[#1B3C53] rounded cursor-ns-resize transform -translate-x-1/2"
+            className="absolute bottom-0 left-1/2 w-2 h-2 bg-blue-600 rounded cursor-ns-resize transform -translate-x-1/2"
             onMouseDown={(e) => {
               e.stopPropagation();
               setIsResizing(true);

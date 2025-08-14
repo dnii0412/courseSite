@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress'
 import { Play, Lock, CheckCircle, Clock, Users, Star } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useAuth } from '@/hooks/use-auth'
+import { useSession } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
 
 interface CourseOverviewProps {
@@ -49,7 +49,8 @@ export function CourseOverview({ courseId }: CourseOverviewProps) {
   const [course, setCourse] = useState<Course | null>(null)
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null)
   const [loading, setLoading] = useState(true)
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const { toast } = useToast()
 
   useEffect(() => {
@@ -131,7 +132,7 @@ export function CourseOverview({ courseId }: CourseOverviewProps) {
             <div className="flex-1">
               <CardTitle className="text-2xl mb-2">{course.title}</CardTitle>
               <p className="text-gray-600 mb-4">{course.description}</p>
-              
+
               <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
                 <div className="flex items-center">
                   <Clock className="w-4 h-4 mr-1" />
@@ -211,11 +212,10 @@ export function CourseOverview({ courseId }: CourseOverviewProps) {
               return (
                 <div
                   key={lesson._id}
-                  className={`flex items-center justify-between p-4 rounded-lg border ${
-                    isCompleted 
-                      ? 'bg-green-50 border-green-200' 
+                  className={`flex items-center justify-between p-4 rounded-lg border ${isCompleted
+                      ? 'bg-green-50 border-green-200'
                       : 'bg-white border-gray-200'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center space-x-3">
                     <div className="flex-shrink-0">
@@ -236,7 +236,7 @@ export function CourseOverview({ courseId }: CourseOverviewProps) {
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     {isCompleted && (
                       <Badge variant="secondary" className="bg-green-100 text-green-800">

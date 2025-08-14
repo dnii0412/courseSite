@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CreditCard, CheckCircle, XCircle, RefreshCw, ExternalLink } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { useAuth } from '@/hooks/use-auth'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 interface PaymentModalProps {
@@ -28,7 +28,8 @@ export function PaymentModal({ isOpen, onClose, onPaymentSuccess, course }: Paym
   const [orderId, setOrderId] = useState<string | null>(null)
   const [checkInterval, setCheckInterval] = useState<NodeJS.Timeout | null>(null)
   const { toast } = useToast()
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const router = useRouter()
 
   // Reset state when modal opens/closes

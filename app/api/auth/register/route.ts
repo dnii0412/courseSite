@@ -1,67 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
-// @ts-ignore
-import jwt from 'jsonwebtoken'
-// @ts-ignore
 import { connectDB } from '@/lib/mongodb'
 import { User } from '@/lib/models/user'
+import bcrypt from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
   try {
-    await connectDB()
-
     const { name, email, password } = await request.json()
 
-    // Check if user exists
-    const existingUser = await User.findOne({ email })
-    if (existingUser) {
+    // Validate input
+    if (!name || !email || !password) {
       return NextResponse.json(
-        { error: 'Энэ имэйл хаягаар `б`үртгэгдсэн хэрэглэгч байна' },
+        { error: 'Name, email, and password are required' },
         { status: 400 }
       )
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12)
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: 'Password must be at least 6 characters long' },
+        { status: 400 }
+      )
+    }
 
-    // Create user
+    await connectDB()
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() })
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'User with this email already exists' },
+        { status: 409 }
+      )
+    }
+
+    // Hash password
+    const saltRounds = 12
+    const hashedPassword = await bcrypt.hash(password, saltRounds)
+
+    // Create new user
     const user = await User.create({
       name,
-      email,
+      email: email.toLowerCase(),
       password: hashedPassword,
       role: 'USER'
     })
 
-    // Create JWT token
-    const token = jwt.sign(
-      { userId: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
-    )
+    // Return user data (without password)
+    const { password: _, ...userWithoutPassword } = user.toObject()
 
-    const response = NextResponse.json({
-      message: 'Амжилттай бүртгэгдлээ',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
-    })
-
-    // Set HTTP-only cookie
-    response.cookies.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
-    })
-
-    return response
-  } catch (error) {
-    console.error('Register error:', error)
     return NextResponse.json(
-      { error: 'Серверийн алдаа' },
+      { 
+        message: 'User created successfully',
+        user: userWithoutPassword
+      },
+      { status: 201 }
+    )
+  } catch (error) {
+    console.error('Registration error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

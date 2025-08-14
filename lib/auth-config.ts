@@ -1,15 +1,21 @@
 import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
+import FacebookProvider from 'next-auth/providers/facebook'
+import CredentialsProvider from 'next-auth/providers/credentials'
 import { MongoDBAdapter } from '@auth/mongodb-adapter'
 import { connectDB } from './mongodb'
 import { User } from './models/user'
+import bcrypt from 'bcryptjs'
 
-export const authOptions: NextAuthOptions = {
-  adapter: MongoDBAdapter(process.env.MONGODB_URI!),
-  providers: [
+// Build providers array dynamically based on available environment variables
+const providers = []
+
+// Add Google provider if configured
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       authorization: {
         params: {
           prompt: "consent",
@@ -18,7 +24,63 @@ export const authOptions: NextAuthOptions = {
         }
       }
     })
-  ],
+  )
+}
+
+// Add Facebook provider if configured
+if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
+  providers.push(
+    FacebookProvider({
+      clientId: process.env.FACEBOOK_CLIENT_ID,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+    })
+  )
+}
+
+// Always add credentials provider
+providers.push(
+  CredentialsProvider({
+    name: 'credentials',
+    credentials: {
+      email: { label: "Email", type: "email" },
+      password: { label: "Password", type: "password" }
+    },
+    async authorize(credentials) {
+      if (!credentials?.email || !credentials?.password) {
+        return null
+      }
+
+      try {
+        await connectDB()
+        const user = await User.findOne({ email: credentials.email })
+
+        if (!user || !user.password) {
+          return null
+        }
+
+        const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+
+        if (!isPasswordValid) {
+          return null
+        }
+
+        return {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          role: user.role
+        }
+      } catch (error) {
+        console.error('Credentials auth error:', error)
+        return null
+      }
+    }
+  })
+)
+
+export const authOptions: NextAuthOptions = {
+  adapter: MongoDBAdapter(process.env.MONGODB_URI!),
+  providers,
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -38,8 +100,8 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     },
-    async signIn({ user, account, profile }) {
-      if (account?.provider === 'google') {
+    async signIn({ user, account, profile, email }) {
+      if (account?.provider === 'google' || account?.provider === 'facebook') {
         try {
           await connectDB()
 
@@ -67,19 +129,25 @@ export const authOptions: NextAuthOptions = {
       return true
     },
     async redirect({ url, baseUrl }) {
-      // After successful sign in, redirect to dashboard
-      if (url.startsWith('/dashboard')) {
-        return url
+      // Handle OAuth redirects from register page
+      if (url.includes('from=register')) {
+        return `${baseUrl}/onboarding?from=register`
       }
-      // Default redirect to dashboard for successful auth
+
+      // Handle returnUrl for login flows
+      if (url.startsWith('/') && !url.startsWith('/api')) {
+        return `${baseUrl}${url}`
+      }
+
+      // Default redirect to courses for successful auth
       if (url.startsWith(baseUrl)) return url
-      else if (url.startsWith('/')) return `${baseUrl}${url}`
-      else return `${baseUrl}/dashboard`
+      else return `${baseUrl}/courses`
     }
   },
   pages: {
     signIn: '/auth/login',
     error: '/auth/error',
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
 }

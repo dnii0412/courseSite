@@ -242,7 +242,7 @@ export function OAuthRegisterForm() {
                         <div className="flex gap-3">
                             <Button
                                 type="submit"
-                                className="flex-1 bg-[#456882] hover:bg-[#1B3C53] text-white transition-colors"
+                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white transition-colors"
                                 disabled={isLoading}
                             >
                                 {isLoading ? 'Бүртгүүлж байна...' : 'Бүртгүүлэх'}

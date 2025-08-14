@@ -126,7 +126,7 @@ export default function AdminMediaGridPage() {
               <div className="flex space-x-2">
                 <Button
                   onClick={createNewLayout}
-                  className="bg-[#1B3C53] hover:bg-[#456882]"
+                  className="bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Create Layout

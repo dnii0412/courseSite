@@ -267,7 +267,7 @@ export const MediaLibrary = ({ onMediaSelect, selectedMedia }: MediaLibraryProps
             className="border-[#D2C1B6]"
           />
         </div>
-        <Badge variant="secondary" className="bg-[#456882] text-white">
+        <Badge variant="secondary" className="bg-blue-600 text-white">
           {filteredMedia.length} items
         </Badge>
       </div>

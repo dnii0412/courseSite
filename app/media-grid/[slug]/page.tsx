@@ -13,13 +13,13 @@ interface MediaGridPageProps {
 
 export default function MediaGridPage({ params }: MediaGridPageProps) {
   return (
-    <div className="min-h-screen bg-[#F9F3EF]">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       
       <main className="py-8">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-[#1B3C53] mb-4">
-            Media Grid: {params.slug}
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Media Grid
           </h1>
           <p className="text-gray-600">
             Responsive media layout

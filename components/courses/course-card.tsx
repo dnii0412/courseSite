@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Play, Clock, User, CheckCircle } from 'lucide-react'
-import { useAuth } from '@/hooks/use-auth'
+import { Play, CheckCircle } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 interface Course {
@@ -27,7 +27,8 @@ interface CourseCardProps {
 export function CourseCard({ course }: CourseCardProps) {
   const [isEnrolled, setIsEnrolled] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const router = useRouter()
 
   useEffect(() => {
@@ -65,43 +66,29 @@ export function CourseCard({ course }: CourseCardProps) {
   }
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardHeader>
+    <Card className="bg-white border-gray-200 hover:shadow-lg transition-all duration-300 hover:border-gray-300">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between mb-2">
-          <Badge variant="secondary">
+          <Badge variant="secondary" className="bg-gray-100 text-gray-700 border-gray-200">
             {course.category || 'Ерөнхий'}
           </Badge>
           {isEnrolled && (
-            <Badge variant="default" className="bg-green-500">
+            <Badge variant="default" className="bg-green-500 text-white">
               <CheckCircle className="w-3 h-3 mr-1" />
               Бүртгэлтэй
             </Badge>
           )}
         </div>
-        <div className="flex items-center text-sm text-gray-500">
-          <Clock className="w-4 h-4 mr-1" />
-          {course.duration || 0} мин
-        </div>
-        <CardTitle className="text-lg">{course.title}</CardTitle>
+        <CardTitle className="text-lg text-gray-900">{course.title}</CardTitle>
       </CardHeader>
-      
-      <CardContent>
+
+      <CardContent className="pt-0">
         <p className="text-gray-600 text-sm mb-4 line-clamp-2">
           {course.description}
         </p>
-        
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center text-sm text-gray-500">
-            <User className="w-4 h-4 mr-1" />
-            {course.instructor?.name || 'Багш'}
-          </div>
-          <div className="text-sm text-gray-500">
-            {course.lessons?.length || 0} хичээл
-          </div>
-        </div>
-        
-        <Button 
-          className="w-full" 
+
+        <Button
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white transition-colors"
           onClick={handleCourseClick}
           disabled={isLoading}
         >
