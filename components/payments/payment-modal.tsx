@@ -1,12 +1,11 @@
-"use client"
+'use client'
 
 import { useState } from 'react'
-import { useSession } from 'next-auth/react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
 
 interface PaymentModalProps {
@@ -16,27 +15,17 @@ interface PaymentModalProps {
   onSuccess?: () => void
 }
 
-export function PaymentModal({ courseId, courseTitle, price, onSuccess }: PaymentModalProps) {
-  const { data: session } = useSession()
-  const { toast } = useToast()
+export default function PaymentModal({ courseId, courseTitle, price, onSuccess }: PaymentModalProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('qpay')
   const [phoneNumber, setPhoneNumber] = useState('')
+  const [isProcessing, setIsProcessing] = useState(false)
+  const { toast } = useToast()
 
   const handlePayment = async () => {
-    if (!session?.user) {
+    if (!phoneNumber.trim()) {
       toast({
-        title: "Алдаа",
-        description: "Нэвтрэх шаардлагатай",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!phoneNumber) {
-      toast({
-        title: "Алдаа",
+        title: "Анхааруулга",
         description: "Утасны дугаар оруулна уу",
         variant: "destructive",
       })
@@ -44,8 +33,9 @@ export function PaymentModal({ courseId, courseTitle, price, onSuccess }: Paymen
     }
 
     setIsProcessing(true)
+
     try {
-      const response = await fetch('/api/payments/create', {
+      const response = await fetch('/api/payments/byl/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

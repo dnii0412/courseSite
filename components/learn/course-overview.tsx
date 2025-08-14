@@ -30,6 +30,9 @@ interface CourseOverviewProps {
   course: Course
 }
 
+export function CourseOverview({ course }: CourseOverviewProps) {
+  const { data: session } = useSession()
+  const [currentLesson, setCurrentLesson] = useState<string | null>(null)
 
   useEffect(() => {
     // Find the first incomplete lesson or set to first lesson
@@ -82,11 +85,15 @@ interface CourseOverviewProps {
                 {course.completedLessons} / {course.lessons.length} хичээл
               </span>
             </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <BookOpen className="w-4 h-4" />
-                  <span>{course.lessons.length} хичээл</span>
-                </div>
+            <Progress value={progressPercentage} className="mb-4" />
+            <div className="flex items-center justify-between text-sm text-gray-500">
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                <span>{course.totalDuration} мин</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <BookOpen className="w-4 h-4" />
+                <span>{course.lessons.length} хичээл</span>
               </div>
             </div>
           </CardContent>
@@ -120,6 +127,8 @@ interface CourseOverviewProps {
               return (
                 <div
                   key={lesson._id}
+                  className={`p-4 rounded-lg border cursor-pointer transition-colors ${isCurrentLesson ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
+                  onClick={() => !isLocked && handleLessonClick(lesson._id)}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`
@@ -146,11 +155,6 @@ interface CourseOverviewProps {
                         )}
                       </div>
                     </div>
-                  </div>
-
-                    ) : (
-                      <Play className="w-4 h-4 text-blue-600" />
-                    )}
                   </div>
                 </div>
               )

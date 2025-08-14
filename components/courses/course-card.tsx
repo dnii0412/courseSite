@@ -5,8 +5,9 @@ import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CreditCard, Play, Clock, Users, BookOpen, ArrowRight } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
+import { CreditCard } from 'lucide-react'
 
 interface CourseCardProps {
   course: {
@@ -21,10 +22,13 @@ interface CourseCardProps {
     lessonCount: number
     image?: string
     category: string
+    isEnrolled?: boolean
+    lessons?: { _id: string; title: string; duration: string }[]
   }
 }
 
 export function CourseCard({ course }: CourseCardProps) {
+
   const { data: session } = useSession()
   const [isProcessing, setIsProcessing] = useState(false)
 
@@ -105,86 +109,49 @@ export function CourseCard({ course }: CourseCardProps) {
   }
 
   return (
-    <Card className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-0 bg-white">
-      {/* Course Image */}
-      <div className="relative overflow-hidden">
-        {course.image ? (
-          <img
-            src={course.image}
-            alt={course.title}
-            className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-            <BookOpen className="w-16 h-16 text-blue-400" />
+    <Card className="h-full flex flex-col">
+      <CardContent className="flex-1 p-4">
+        <div className="space-y-4">
+          <div className="aspect-video relative overflow-hidden rounded-lg">
+            <Image
+              src={course.image || '/placeholder.jpg'}
+              alt={course.title}
+              fill
+              className="object-cover"
+            />
           </div>
-        )}
-        
-        {/* Category Badge */}
-        <div className="absolute top-3 left-3">
-          <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-gray-700 border-0 shadow-sm">
-            {course.category}
-          </Badge>
-        </div>
-        
-        {/* Level Badge */}
-        <div className="absolute top-3 right-3">
-          <Badge variant="outline" className="bg-white/90 backdrop-blur-sm border-gray-200 shadow-sm">
-            {course.level}
-          </Badge>
-        </div>
-        
-        {/* Price Overlay */}
-        <div className="absolute bottom-3 right-3">
-          <div className="bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg">
-            <span className="text-lg font-bold text-blue-600">₮{course.price.toLocaleString()}</span>
-          </div>
-        </div>
-      </div>
 
-      <CardContent className="p-5">
-        {/* Course Title */}
-        <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
-          {course.title}
-        </h3>
-        
-        {/* Course Description */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
-          {course.description}
-        </p>
-        
-        {/* Course Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Users className="w-4 h-4 text-blue-500" />
-            <span>{course.enrolledCount}</span>
+          <div className="space-y-2">
+            <h3 className="font-semibold text-lg line-clamp-2">{course.title}</h3>
+            <p className="text-sm text-gray-600 line-clamp-3">{course.description}</p>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <BookOpen className="w-4 h-4 text-green-500" />
-            <span>{course.lessonCount} хичээл</span>
+
+          <div className="flex items-center justify-between text-sm text-gray-500">
+            <span>{course.lessons?.length || 0} хичээл</span>
+            <span>{course.duration || '0 мин'}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Clock className="w-4 h-4 text-purple-500" />
-            <span>{course.duration}</span>
+
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-bold text-green-600">₮{course.price?.toLocaleString() || 0}</span>
+            {course.isEnrolled && (
+              <span className="text-sm text-blue-600 font-medium">Бүртгэгдсэн</span>
+            )}
           </div>
         </div>
       </CardContent>
 
-      <CardFooter className="p-5 pt-0">
+      <CardFooter className="p-4 pt-0">
         <div className="flex gap-2 w-full">
           {session?.user ? (
             // Show Pay Now button for registered users
             <Button
               variant="default"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 shadow-md hover:shadow-lg"
+              className="flex-1 bg-green-600 hover:bg-green-700"
               onClick={handlePayment}
               disabled={isProcessing}
             >
               {isProcessing ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Уучлаарай...</span>
-                </div>
+                'Уучлаарай...'
               ) : (
                 <>
                   <CreditCard className="w-4 h-4 mr-2" />
@@ -196,24 +163,16 @@ export function CourseCard({ course }: CourseCardProps) {
             // Show Register button for non-registered users
             <Button
               variant="outline"
-              className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
+              className="flex-1"
               onClick={handleEnroll}
               disabled={isProcessing}
             >
-              {isProcessing ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                  <span>Бүртгэж байна...</span>
-                </div>
-              ) : (
-                'Бүртгүүлэх'
-              )}
+              {isProcessing ? 'Бүртгэж байна...' : 'Бүртгүүлэх'}
             </Button>
           )}
-          
-          <Button asChild variant="ghost" size="sm" className="px-3 hover:bg-gray-100 transition-colors duration-200">
-            <Link href={`/courses/${course._id}`} className="text-gray-600 hover:text-gray-900">
-              <ArrowRight className="w-4 h-4" />
+          <Button asChild variant="outline" className="flex-1">
+            <Link href={`/courses/${course._id}`}>
+              Дэлгэрэнгүй
             </Link>
           </Button>
         </div>
