@@ -1,4 +1,6 @@
 'use client'
+
+import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -13,9 +15,20 @@ import { AddCourseDropdown } from '@/components/admin/add-course-dropdown'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
-// removed FiltersBar per request
 
-const getRoleBadge = (_role: string) => null
+
+const getRoleBadge = (role: string) => {
+  switch (role) {
+    case 'admin':
+      return <Badge className="bg-red-100 text-red-800">Админ</Badge>
+    case 'instructor':
+      return <Badge className="bg-blue-100 text-blue-800">Багш</Badge>
+    case 'student':
+      return <Badge className="bg-green-100 text-green-800">Сурагч</Badge>
+    default:
+      return <Badge variant="secondary">{role}</Badge>
+  }
+}
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -46,9 +59,8 @@ export default function AdminUsersPage() {
       try {
         const res = await fetch('/api/users')
         if (!res.ok) throw new Error('Алдаа гарлаа')
-        const json = await res.json()
-        const list = Array.isArray(json) ? json : (json?.data ?? [])
-        setUsers(list)
+        const data = await res.json()
+        setUsers(data)
       } catch (err: any) {
         setError(err.message || 'Алдаа гарлаа')
       } finally {
@@ -69,7 +81,7 @@ export default function AdminUsersPage() {
         body: JSON.stringify({
           name: selectedUser.name,
           email: selectedUser.email,
-          
+          role: selectedUser.role,
         }),
       })
       if (!res.ok) throw new Error('Хэрэглэгч засахэд алдаа гарлаа')
@@ -78,9 +90,8 @@ export default function AdminUsersPage() {
       // Refresh users list
       const res2 = await fetch('/api/users')
       if (res2.ok) {
-        const json = await res2.json()
-        const list = Array.isArray(json) ? json : (json?.data ?? [])
-        setUsers(list)
+        const data = await res2.json()
+        setUsers(data)
       }
     } catch (err: any) {
       alert(err.message || 'Хэрэглэгч засахэд алдаа гарлаа')
@@ -103,9 +114,8 @@ export default function AdminUsersPage() {
       // Refresh users list
       const res2 = await fetch('/api/users')
       if (res2.ok) {
-        const json = await res2.json()
-        const list = Array.isArray(json) ? json : (json?.data ?? [])
-        setUsers(list)
+        const data = await res2.json()
+        setUsers(data)
       }
     } catch (err: any) {
       alert(err.message || 'Хэрэглэгч устгахад алдаа гарлаа')
@@ -115,8 +125,11 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Create User Dialog */}
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex">
+        <AdminSidebar />
+        <div className="flex-1 p-8">
+          {/* Create User Dialog */}
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
@@ -126,47 +139,66 @@ export default function AdminUsersPage() {
                 setShowCreateDialog(false)
                 if (created) {
                   const res = await fetch('/api/users')
-                  if (res.ok) {
-                    const json = await res.json()
-                    setUsers(Array.isArray(json) ? json : (json?.data ?? []))
-                  }
+                  if (res.ok) setUsers(await res.json())
                 }
               }} />
             </DialogContent>
           </Dialog>
 
-          
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Хэрэглэгчид
+            </h1>
+            <p className="text-gray-600">
+              Системийн бүх хэрэглэгчдийн жагсаалт
+            </p>
+          </div>
 
           {/* Edit User Dialog */}
           <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>Хэрэглэгчийн мэдээлэл засах</DialogTitle>
+                <DialogTitle>Хэрэглэгч засах</DialogTitle>
               </DialogHeader>
               {selectedUser && (
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
                     <Label htmlFor="edit-name">Нэр</Label>
-                    <Input 
-                      id="edit-name" 
-                      value={selectedUser.name} 
-                      onChange={e => setSelectedUser({ ...selectedUser, name: e.target.value })} 
+                    <Input
+                      id="edit-name"
+                      value={selectedUser.name}
+                      onChange={e => setSelectedUser({ ...selectedUser, name: e.target.value })}
                     />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="edit-email">И-мэйл</Label>
-                    <Input 
-                      id="edit-email" 
+                    <Input
+                      id="edit-email"
                       type="email"
-                      value={selectedUser.email} 
-                      onChange={e => setSelectedUser({ ...selectedUser, email: e.target.value })} 
+                      value={selectedUser.email}
+                      onChange={e => setSelectedUser({ ...selectedUser, email: e.target.value })}
                     />
                   </div>
-                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-role">Эрх</Label>
+                    <Select
+                      value={selectedUser.role}
+                      onValueChange={val => setSelectedUser({ ...selectedUser, role: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="student">Сурагч</SelectItem>
+                        <SelectItem value="instructor">Багш</SelectItem>
+                        <SelectItem value="admin">Админ</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   {/* Show user's courses */}
                   {Array.isArray(selectedUser.enrolledCourses) && selectedUser.enrolledCourses.length > 0 && (
                     <div className="grid gap-2">
-                      <Label>Худалдан авсан хичээлүүд</Label>
+                      <Label>Худалдан авсан курсууд</Label>
                       <div className="flex flex-wrap gap-2">
                         {selectedUser.enrolledCourses.map((c: any) => (
                           <span key={typeof c === 'string' ? c : c._id} className="px-2 py-1 text-xs rounded bg-gray-100">
@@ -177,7 +209,7 @@ export default function AdminUsersPage() {
                     </div>
                   )}
                   {/* Add course from dropdown */}
-                  <AddCourseDropdown 
+                  <AddCourseDropdown
                     userId={selectedUser._id}
                     onAdded={async () => {
                       const res = await fetch(`/api/users/${selectedUser._id}`)
@@ -211,57 +243,91 @@ export default function AdminUsersPage() {
             </AlertDialogContent>
           </AlertDialog>
 
-          <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-6">
-            <div className="text-black">
-              <Card>
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-ink-900 text-lg md:text-xl font-semibold">Хэрэглэгчид</CardTitle>
-                  <div className="mt-3 flex items-center gap-3 flex-wrap">
-                    <div className="relative flex-1 max-w-sm">
-                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
-                      <Input placeholder="Хэрэглэгч хайх..." className="pl-8" />
-                    </div>
-                    <Button onClick={() => setShowCreateDialog(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Шинэ хэрэглэгч
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                {loading ? (
-                  <div className="text-center py-8">Уншиж байна...</div>
-                ) : error ? (
-                  <div className="text-center text-red-500 py-8">{error}</div>
-                ) : (
-                  <div className="space-y-4">
-                      {users.map((user) => (
-                        <div key={user._id} className="w-full p-3 border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 rounded-full text-[10px] leading-none bg-gray-100 text-gray-700">
-                                {user.name?.slice(0, 2)?.toUpperCase() || 'U'}
-                              </div>
-                              <div>
-                                <h3 className="font-medium text-black">{user.name}</h3>
-                                <p className="text-sm text-gray-600">{user.email}</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-sm font-medium text-black">{user.role}</div>
-                              <div className="text-xs text-gray-500">{user.enrolledCourses?.length || 0} хичээл</div>
-                              {user.enrolledCourses && user.enrolledCourses.length > 5 && (
-                                <span className="px-1.5 py-0.5 rounded-full text-[10px] leading-none bg-gray-100 text-gray-700">+{user.enrolledCourses.length - 5}</span>
-                              )}
-                            </div>
-                          </div>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Хэрэглэгчид</CardTitle>
+                <Button onClick={() => setShowCreateDialog(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Шинэ хэрэглэгч
+                </Button>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Хэрэглэгч хайх..." className="pl-8" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-8">Уншиж байна...</div>
+              ) : error ? (
+                <div className="text-center text-red-500 py-8">{error}</div>
+              ) : (
+                <div className="space-y-4">
+                  {users.map((user) => (
+                    <div key={user._id} className="flex items-center space-x-4 p-4 border rounded-lg">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={user.avatar || '/placeholder-user.jpg'} alt={user.name} />
+                        <AvatarFallback>
+                          {user.name?.split(' ').map((n: string) => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {user.name}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        {getRoleBadge(user.role)}
+                        {user.status && getStatusBadge(user.status)}
+                      </div>
+                      {Array.isArray(user.enrolledCourses) && user.enrolledCourses.length > 0 && (
+                        <div className="text-xs text-gray-600">
+                          Курсууд: {user.enrolledCourses.map((c: any) => typeof c === 'string' ? c : c.title).join(', ')}
                         </div>
-                      ))}
-                  </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+                      )}
+
+                      <div className="text-sm text-muted-foreground">
+                        {user.createdAt ? formatDate(user.createdAt) : ''}
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(user)
+                            setShowEditDialog(true)
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(user)
+                            setShowDeleteDialog(true)
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }

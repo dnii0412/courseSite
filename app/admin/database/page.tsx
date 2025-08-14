@@ -1,4 +1,5 @@
 "use client"
+import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -9,14 +10,14 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useEffect, useState } from 'react'
-import { 
-  Database, 
-  Server, 
-  HardDrive, 
-  Activity, 
-  Shield, 
-  RefreshCw, 
-  Download, 
+import {
+  Database,
+  Server,
+  HardDrive,
+  Activity,
+  Shield,
+  RefreshCw,
+  Download,
   Upload,
   Settings,
   AlertTriangle,
@@ -75,8 +76,48 @@ const collections = [
   }
 ]
 
-// fetched live from /api/admin/ops
-type Operation = { operation: string; status: 'success'|'running'|'warning'|'active'|'archived'|string; timestamp: string; duration: string; size?: string | null }
+const recentOperations = [
+  {
+    id: 1,
+    operation: 'Backup created',
+    status: 'success',
+    timestamp: '2024.01.15 14:30',
+    duration: '2m 15s',
+    size: '1.2 GB'
+  },
+  {
+    id: 2,
+    operation: 'Index optimization',
+    status: 'success',
+    timestamp: '2024.01.15 12:00',
+    duration: '45s',
+    size: null
+  },
+  {
+    id: 3,
+    operation: 'Data migration',
+    status: 'running',
+    timestamp: '2024.01.15 10:15',
+    duration: '15m 30s',
+    size: '800 MB'
+  },
+  {
+    id: 4,
+    operation: 'Backup verification',
+    status: 'success',
+    timestamp: '2024.01.15 08:45',
+    duration: '1m 20s',
+    size: null
+  },
+  {
+    id: 5,
+    operation: 'Security scan',
+    status: 'warning',
+    timestamp: '2024.01.15 06:30',
+    duration: '5m 10s',
+    size: null
+  }
+]
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -111,7 +152,6 @@ const getStatusIcon = (status: string) => {
 export default function AdminDatabasePage() {
   // Live infra stats
   const [live, setLive] = useState<any>(null)
-  const [ops, setOps] = useState<Operation[]>([])
   useEffect(() => {
     let mounted = true
     const load = async () => {
@@ -119,12 +159,7 @@ export default function AdminDatabasePage() {
         const r = await fetch('/api/admin/infra', { cache: 'no-store' })
         const j = await r.json()
         if (mounted) setLive(j)
-        const ro = await fetch('/api/admin/ops', { cache: 'no-store' })
-        if (ro.ok) {
-          const jo = await ro.json()
-          if (mounted) setOps(Array.isArray(jo) ? jo : [])
-        }
-      } catch {}
+      } catch { }
     }
     load()
     const id = setInterval(load, 10000)
@@ -134,13 +169,16 @@ export default function AdminDatabasePage() {
     }
   }, [])
   return (
-    <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex">
+        <AdminSidebar />
+
+        <div className="flex-1 p-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-ink-900 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Өгөгдлийн сан удирдлага
             </h1>
-            <p className="text-ink-500">
+            <p className="text-gray-600">
               MongoDB өгөгдлийн сангийн төлөв, нөөц, аюулгүй байдлын удирдлага
             </p>
           </div>
@@ -257,10 +295,10 @@ export default function AdminDatabasePage() {
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center space-x-4">
                         <div className="text-right">
-                          <p className="text-sm text-ink-500">
+                          <p className="text-sm text-muted-foreground">
                             {collection.lastModified}
                           </p>
                         </div>
@@ -279,8 +317,8 @@ export default function AdminDatabasePage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {ops.map((operation, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 border rounded-lg">
+                  {recentOperations.map((operation) => (
+                    <div key={operation.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center space-x-4">
                         {getStatusIcon(operation.status)}
                         <div>
@@ -290,13 +328,13 @@ export default function AdminDatabasePage() {
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center space-x-4">
-                        {operation.size ? (
+                        {operation.size && (
                           <div className="text-right">
                             <p className="text-sm font-medium">{operation.size}</p>
                           </div>
-                        ) : null}
+                        )}
                         {getStatusBadge(operation.status)}
                       </div>
                     </div>
@@ -321,7 +359,7 @@ export default function AdminDatabasePage() {
                     </div>
                     <Switch defaultChecked />
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>Сүүлийн нөөц хувилбар</Label>
@@ -336,7 +374,7 @@ export default function AdminDatabasePage() {
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex space-x-2">
                     <Button
                       variant="outline"
@@ -375,6 +413,7 @@ export default function AdminDatabasePage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
         </div>
       </div>
     </div>
