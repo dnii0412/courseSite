@@ -3,10 +3,25 @@ import { connectDB } from '@/lib/mongodb'
 import { User } from '@/lib/models/user'
 import '@/lib/models/course'
 import bcrypt from 'bcryptjs'
+import mongoose from 'mongoose'
 
 export async function GET(_request: NextRequest) {
   try {
     await connectDB()
+    
+    // Check if the User collection exists, if not return empty array
+    try {
+      const collections = await mongoose.connection.db?.listCollections().toArray()
+      const userCollectionExists = collections?.some(col => col.name === 'users')
+      
+      if (!userCollectionExists) {
+        console.log('User collection does not exist yet, returning empty array')
+        return NextResponse.json({ success: true, data: [] })
+      }
+    } catch (collectionError) {
+      console.log('Could not check collections, assuming they exist')
+    }
+    
     const users = await User.find({ role: { $ne: 'ADMIN' } })
       .sort({ createdAt: -1 })
       .select('name email createdAt enrolledCourses')
@@ -15,6 +30,12 @@ export async function GET(_request: NextRequest) {
     return NextResponse.json({ success: true, data: users })
   } catch (error) {
     console.error('GET /api/users error:', error)
+    
+    // If it's a collection doesn't exist error, return empty array
+    if (error instanceof Error && error.message.includes('collection')) {
+      return NextResponse.json({ success: true, data: [] })
+    }
+    
     return NextResponse.json({ error: 'Серверийн алдаа' }, { status: 500 })
   }
 }

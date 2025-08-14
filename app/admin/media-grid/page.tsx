@@ -78,58 +78,32 @@ export default function AdminMediaGridPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 bg-sand-50">
+    <div className="container mx-auto px-4 py-8 bg-white">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[#1B3C53] mb-2">Media Grid Management</h1>
-        <p className="text-gray-600">Upload media and create responsive grid layouts</p>
+        <h1 className="text-3xl font-bold text-black mb-2">Media Grid Management</h1>
+        <p className="text-black">Upload media and create responsive grid layouts</p>
       </div>
 
       {/* Combined Presets + Upload toolbar */}
-      <Card className="mb-4">
-        <CardContent className="py-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Preset chooser */}
-            <Select value={layoutSlug} onValueChange={(slug)=> setLayoutSlug(slug)}>
-              <SelectTrigger className="h-9 w-52">
-                <SelectValue placeholder={presetsLoading ? 'Loading presets...' : 'Choose preset'} />
-              </SelectTrigger>
-              <SelectContent>
-                {presets.map((p)=> (
-                  <SelectItem key={p._id} value={p.slug}>{p.slug}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="sm" onClick={()=>setShowCreateLayout(true)}>
-              <Plus className="w-4 h-4 mr-1"/> New
-            </Button>
-            <Button variant="outline" size="sm" onClick={()=>window.open(`/`, '_blank')}>
-              <Eye className="w-4 h-4 mr-1"/> View
-            </Button>
-            
-            <div className="ml-auto">
-              <Button variant="outline" size="sm" asChild>
-                <label className="inline-flex items-center gap-2 cursor-pointer">
-                  <Upload className="w-4 h-4" />
-                  <span>Upload</span>
-                  <input type="file" multiple accept="image/*,video/*" className="hidden" onChange={async (e)=>{
-                    if (e.target.files) {
-                      await libraryRef.current?.uploadFiles(e.target.files)
-                      setUploadStamp(Date.now())
-                    }
-                  }} />
-                </label>
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Button variant="outline" size="sm" asChild>
+        <label className="inline-flex items-center gap-2 cursor-pointer">
+          <Upload className="w-4 h-4" />
+          <span>Upload</span>
+          <input type="file" multiple accept="image/*,video/*" className="hidden" onChange={async (e)=>{
+            if (e.target.files) {
+              await libraryRef.current?.uploadFiles(e.target.files)
+              setUploadStamp(Date.now())
+            }
+          }} />
+        </label>
+      </Button>
 
       {/* Create New Layout Modal */}
       {showCreateLayout && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-[#1B3C53]">Create New Layout</CardTitle>
+            <CardTitle className="text-black">Create New Layout</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -140,7 +114,7 @@ export default function AdminMediaGridPage() {
                   value={newLayoutSlug}
                   onChange={(e) => setNewLayoutSlug(e.target.value)}
                   placeholder="e.g., home-hero, about-section"
-                  className="border-[#D2C1B6]"
+                  className="border-gray-300"
                 />
                 <p className="text-sm text-gray-500 mt-1">
                   Use lowercase letters, numbers, and hyphens only
@@ -150,7 +124,7 @@ export default function AdminMediaGridPage() {
               <div className="flex space-x-2">
                 <Button
                   onClick={createNewLayout}
-                  className="bg-[#1B3C53] hover:bg-[#456882]"
+                  className="bg-black hover:bg-gray-800"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Create Layout
@@ -159,7 +133,7 @@ export default function AdminMediaGridPage() {
                 <Button
                   variant="outline"
                   onClick={() => setShowCreateLayout(false)}
-                  className="border-[#D2C1B6]"
+                  className="border-gray-300"
                 >
                   Cancel
                 </Button>
@@ -182,7 +156,7 @@ export default function AdminMediaGridPage() {
             onSelectedMediaConsumed={() => setSelectedMedia(null)}
             compact
           />
-          <p className="text-xs text-ink-500">Tip: Click a media item to add it to the grid; then drag/resize.</p>
+          <p className="text-xs text-gray-500">Tip: Click a media item to add it to the grid; then drag/resize.</p>
         </div>
       </div>
     </div>

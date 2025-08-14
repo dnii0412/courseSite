@@ -115,7 +115,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-sand-50">
+    <div className="min-h-screen bg-white">
       {/* Create User Dialog */}
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogContent className="sm:max-w-[425px]">
@@ -141,7 +141,7 @@ export default function AdminUsersPage() {
           <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>Хэрэглэгч засах</DialogTitle>
+                <DialogTitle>Хэрэглэгчийн мэдээлэл засах</DialogTitle>
               </DialogHeader>
               {selectedUser && (
                 <div className="grid gap-4 py-4">
@@ -211,90 +211,56 @@ export default function AdminUsersPage() {
             </AlertDialogContent>
           </AlertDialog>
 
-          <div className="mx-auto max-w-[1200px] px-4 md:px-6 mt-4">
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-ink-900 text-lg md:text-xl font-semibold">Хэрэглэгчид</CardTitle>
-                <div className="mt-3 flex items-center gap-3 flex-wrap">
-                  <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
-                    <Input placeholder="Хэрэглэгч хайх..." className="pl-8" />
+          <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-6">
+            <div className="text-black">
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-ink-900 text-lg md:text-xl font-semibold">Хэрэглэгчид</CardTitle>
+                  <div className="mt-3 flex items-center gap-3 flex-wrap">
+                    <div className="relative flex-1 max-w-sm">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
+                      <Input placeholder="Хэрэглэгч хайх..." className="pl-8" />
+                    </div>
+                    <Button onClick={() => setShowCreateDialog(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Шинэ хэрэглэгч
+                    </Button>
                   </div>
-                  <Button onClick={() => setShowCreateDialog(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Шинэ хэрэглэгч
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-              {loading ? (
-                <div className="text-center py-8">Уншиж байна...</div>
-              ) : error ? (
-                <div className="text-center text-red-500 py-8">{error}</div>
-              ) : (
-                <div className="space-y-4">
-                    {users.map((user) => (
-                      <div key={user._id} className="w-full p-3 border border-sand-200 rounded-2xl hover:bg-sand-50 transition-colors">
-                        <div className="grid grid-cols-[auto,1fr,auto] items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={user.avatar || '/placeholder-user.jpg'} alt={user.name} />
-                            <AvatarFallback>
-                              {user.name?.split(' ').map((n: string) => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <p className="text-sm font-medium text-ink-900 truncate max-w-[200px]">{user.name}</p>
-                              {Array.isArray(user.enrolledCourses) && user.enrolledCourses.length > 0 && (
-                                <div className="flex items-center gap-1 flex-wrap">
-                                  {user.enrolledCourses.slice(0,5).map((c: any, idx: number) => (
-                                    <span key={(typeof c === 'string' ? c : c._id) || idx} className="px-1.5 py-0.5 rounded-full text-[10px] leading-none bg-sand-100 text-ink-700">
-                                      {typeof c === 'string' ? c : c.title}
-                                    </span>
-                                  ))}
-                                  {user.enrolledCourses.length > 5 && (
-                                    <span className="px-1.5 py-0.5 rounded-full text-[10px] leading-none bg-sand-100 text-ink-700">+{user.enrolledCourses.length - 5}</span>
-                                  )}
-                                </div>
+                </CardHeader>
+                <CardContent>
+                {loading ? (
+                  <div className="text-center py-8">Уншиж байна...</div>
+                ) : error ? (
+                  <div className="text-center text-red-500 py-8">{error}</div>
+                ) : (
+                  <div className="space-y-4">
+                      {users.map((user) => (
+                        <div key={user._id} className="w-full p-3 border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 rounded-full text-[10px] leading-none bg-gray-100 text-gray-700">
+                                {user.name?.slice(0, 2)?.toUpperCase() || 'U'}
+                              </div>
+                              <div>
+                                <h3 className="font-medium text-black">{user.name}</h3>
+                                <p className="text-sm text-gray-600">{user.email}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-medium text-black">{user.role}</div>
+                              <div className="text-xs text-gray-500">{user.enrolledCourses?.length || 0} хичээл</div>
+                              {user.enrolledCourses && user.enrolledCourses.length > 5 && (
+                                <span className="px-1.5 py-0.5 rounded-full text-[10px] leading-none bg-gray-100 text-gray-700">+{user.enrolledCourses.length - 5}</span>
                               )}
                             </div>
-                            <p className="text-xs text-ink-500 truncate">{user.email}</p>
-                          </div>
-                          <div className="flex items-center gap-1 sm:gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => {
-                                setSelectedUser(user)
-                                setShowEditDialog(true)
-                              }}
-                              aria-label="Засах"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => {
-                                setSelectedUser(user)
-                                setShowDeleteDialog(true)
-                              }}
-                              aria-label="Устгах"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
                           </div>
                         </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-500">
-                          {user.status && <span>{getStatusBadge(user.status)}</span>}
-                          <span className="ml-auto text-ink-500">{user.createdAt ? formatDate(user.createdAt) : ''}</span>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-                )}
-              </CardContent>
-            </Card>
+                      ))}
+                  </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
     </div>
   )

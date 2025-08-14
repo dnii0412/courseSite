@@ -80,7 +80,6 @@ export function CourseDetails({ course }: CourseDetailsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Course Header */}
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-4">{course.title}</h1>
             <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
@@ -101,7 +100,7 @@ export function CourseDetails({ course }: CourseDetailsProps) {
                 <span>{course.duration}</span>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 mb-4">
               <Badge variant="secondary">{course.category}</Badge>
               <Badge variant="outline">{course.level}</Badge>
             </div>

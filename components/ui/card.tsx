@@ -1,6 +1,24 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { cva } from "class-variance-authority"
+
+const cardVariants = cva(
+  "rounded-2xl border border-gray-200 bg-white text-gray-700 shadow-[0_1px_2px_rgba(14,36,48,0.04),0_4px_12px_rgba(14,36,48,0.06)]",
+  {
+    variants: {
+      variant: {
+        default: "border-gray-200 bg-white",
+        secondary: "border-gray-200 bg-gray-50",
+        ghost: "border-transparent bg-transparent shadow-none",
+        outline: "border-gray-200 bg-transparent",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
 
 const Card = React.forwardRef<
   HTMLDivElement,
@@ -9,7 +27,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-2xl border border-sand-200 bg-white text-ink-700 shadow-[0_1px_2px_rgba(14,36,48,0.04),0_4px_12px_rgba(14,36,48,0.06)]",
+      "rounded-2xl border border-gray-200 bg-white text-gray-700 shadow-[0_1px_2px_rgba(14,36,48,0.04),0_4px_12px_rgba(14,36,48,0.06)]",
       className
     )}
     {...props}

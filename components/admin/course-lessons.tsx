@@ -1,17 +1,18 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent } from '@/components/ui/card'
-import * as tus from 'tus-js-client'
-import { startBunnyUpload } from '@/lib/bunny/uploader'
 import { Progress } from '@/components/ui/progress'
+import { Plus, Upload, Edit, Trash } from 'lucide-react'
+import { startBunnyUpload } from '@/lib/bunny/uploader'
 
 interface Lesson {
   _id?: string
   title: string
+  description: string
   duration: number
   preview?: boolean
 }
@@ -60,46 +61,73 @@ export function CourseLessons({ course, onChanged, variant = 'default' }: { cour
   }
 
   const handleUpload = async (file: File) => {
-    setUploading(true)
-    setUploadProgress(0)
-    try {
-      const videoId = await startBunnyUpload(file, title, {
-        onProgress: (p) => setUploadProgress(p),
-      })
+    if (!file) return
 
-      // Save lesson pointing at bunny:VIDEO_ID
-      const res = await fetch(`/api/lessons`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, duration: Number(duration), courseId: course._id, videoUrl: `bunny:${videoId}` })
-      })
-      if (!res.ok) throw new Error('Failed to save lesson')
-      setTitle('')
-      setDuration('')
-      onChanged()
-      const r2 = await fetch(`/api/courses/${course._id}`)
-      if (r2.ok) {
-        const data = await r2.json()
-        const c = data.course || data
-        setLessons(c.lessons || [])
+    try {
+      setUploading(true)
+      setUploadProgress(0)
+      
+      // Check file type
+      if (!file.type.startsWith('video/')) {
+        alert('Please select a video file')
+        return
       }
-    } catch (e) {
-      console.error('Bunny upload failed:', e)
-    } finally {
+
+      const videoId = await startBunnyUpload(file, file.name, {
+        onProgress: setUploadProgress,
+        onSuccess: (id) => {
+          console.log('Immediate success for video:', id)
+          setUploading(false)
+          setUploadProgress(0)
+          
+          // Show immediate success message (like old implementation)
+          alert('Видео амжилттай байршуулагдлаа! Одоо 1-2 минутын дараа харах боломжтой.')
+          
+          // Refresh lessons
+          if (onChanged) onChanged()
+        },
+        onError: (error) => {
+          console.error('Bunny upload failed:', error)
+          setUploading(false)
+          setUploadProgress(0)
+          
+          // Check if it's a credentials error
+          if (error instanceof Error && error.message.includes('502')) {
+            alert('Video upload service is not configured. Please contact your administrator to set up Bunny.net credentials.')
+          } else {
+            alert('Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error'))
+          }
+        }
+      })
+    } catch (error) {
+      console.error('Upload error:', error)
       setUploading(false)
       setUploadProgress(0)
+      
+      if (error instanceof Error && error.message.includes('502')) {
+        alert('Video upload service is not configured. Please contact your administrator to set up Bunny.net credentials.')
+      } else {
+        alert('Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      }
     }
   }
 
   return (
     <Card className={variant === 'compact' ? 'border-0 bg-transparent shadow-none' : undefined}>
       <CardContent className={variant === 'compact' ? 'pt-0 px-0' : 'pt-4'}>
-        <div className={variant === 'compact' ? 'rounded-xl overflow-hidden bg-white divide-y divide-sand-100' : 'space-y-3'}>
+        {/* Add Lesson Form */}
+        <div className={variant === 'compact' ? 'rounded-xl overflow-hidden bg-white divide-y divide-gray-100' : 'space-y-3'}>
           {lessons.map((l, idx) => (
-            <div key={l._id || idx} className={variant === 'compact' ? 'flex items-center justify-between px-3 py-3 hover:bg-sand-50 transition-colors' : 'flex items-center justify-between p-2 border rounded'}>
-              <div>
-                <div className="font-medium">{idx + 1}. {l.title}</div>
-                <div className="text-xs text-gray-500">{l.duration} минут</div>
+            <div key={l._id || idx} className={variant === 'compact' ? 'flex items-center justify-between px-3 py-3 hover:bg-gray-50 transition-colors' : 'flex items-center justify-between p-2 border rounded'}>
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-700">
+                  {idx + 1}
+                </div>
+                <div>
+                  <h4 className="font-medium text-black">{l.title}</h4>
+                  <p className="text-sm text-gray-600">{l.description}</p>
+                  <div className="text-xs text-gray-500">{l.duration} минут</div>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button size="sm" variant="outline" onClick={async () => {
@@ -166,13 +194,13 @@ export function CourseLessons({ course, onChanged, variant = 'default' }: { cour
               )}
             </div>
             <div className="space-x-2 flex justify-end">
-              <Button type="button" variant="outline" onClick={handleAdd} disabled={!title || !duration}>Хичээл нэмэх</Button>
+              
               <Button
                 type="button"
                 onClick={() => selectedFile && handleUpload(selectedFile)}
                 disabled={uploading || !selectedFile || !title || !duration}
               >
-                {uploading ? 'Байршуулж байна...' : 'Видео байршуулах + нэмэх'}
+                {uploading ? 'Байршуулж байна...' : 'Видео байршуулах'}
               </Button>
             </div>
           </div>

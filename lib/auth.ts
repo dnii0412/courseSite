@@ -11,7 +11,7 @@ export async function verifyToken(request: NextRequest) {
       return null;
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as any;
     return decoded;
   } catch (error) {
     return null;
@@ -27,7 +27,7 @@ export function getUserFromCookies(): null | {
   try {
     const token = cookies().get('token')?.value;
     if (!token) return null;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as any;
     return decoded;
   } catch (error) {
     return null;

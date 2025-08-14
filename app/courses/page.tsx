@@ -5,7 +5,6 @@ import { Filters } from '@/components/courses/Filters'
 import { SortSelect } from '@/components/courses/SortSelect'
 import { SkeletonCard } from '@/components/courses/SkeletonCard'
 import { getCourses } from '@/lib/api/courses'
-import { Course } from '@/lib/models/course'
 
 interface CoursesPageProps {
   searchParams: {
@@ -17,7 +16,7 @@ interface CoursesPageProps {
 }
 
 async function CoursesContent({ searchParams }: CoursesPageProps) {
-  const courses = await getCourses(searchParams)
+  const courses = await getCourses()
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -31,7 +30,7 @@ async function CoursesContent({ searchParams }: CoursesPageProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {courses.map((course: Course) => (
+        {courses.map((course: any) => (
           <CourseCard key={course._id} course={course} />
         ))}
       </div>

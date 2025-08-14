@@ -145,7 +145,7 @@ export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsu
   const fetchLayout = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/layouts?slug=${slug}&admin=true`);
+      const response = await fetch(`/api/layouts?slug=${slug}&admin=true`, { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
         setLayout(data.data);
@@ -309,12 +309,14 @@ export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsu
         response = await fetch('/api/layouts', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ id: layout._id, ...layoutData }),
         });
       } else {
         response = await fetch('/api/layouts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(layoutData),
         });
       }
@@ -351,6 +353,7 @@ export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsu
       const response = await fetch('/api/layouts', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           id: layout._id,
           published: !layout.published

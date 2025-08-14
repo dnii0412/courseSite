@@ -27,9 +27,12 @@ export function SearchBar() {
         onChange={(e) => setQ(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && submit()}
         placeholder="Хичээл хайх…"
-        className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+        className="h-10 sm:h-12 w-full rounded-xl border-2 border-[#D2C1B6] bg-white px-3 sm:px-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#456882] focus:border-[#456882] transition-all duration-200 text-sm sm:text-base"
       />
-      <button onClick={submit} className="absolute right-1 top-1/2 -translate-y-1/2 h-9 px-3 rounded-lg bg-slate-900 text-white text-sm">
+      <button 
+        onClick={submit} 
+        className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 h-7 sm:h-8 px-3 sm:px-4 rounded-lg bg-[#456882] text-white text-xs sm:text-sm font-medium hover:bg-[#1B3C53] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#456882] focus:ring-offset-2"
+      >
         Хайх
       </button>
     </div>

@@ -14,8 +14,12 @@ export async function GET(req: NextRequest) {
     const price = searchParams.get('price') || '' // free|paid
     const duration = searchParams.get('duration') || '' // lt1|1_3|3_10|10p
     const languageCsv = (searchParams.get('language') || '').split(',').filter(Boolean)
+    const all = searchParams.get('all') === 'true'
 
-    const filter: any = { published: true }
+    const filter: any = {}
+    if (!all) {
+      filter.published = true
+    }
     if (q) filter.title = { $regex: q, $options: 'i' }
     if (categoryCsv.length) filter.category = { $in: categoryCsv }
     if (level) filter.level = level
@@ -45,6 +49,88 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ data, total, page, pageSize })
   } catch (e) {
     return NextResponse.json({ data: [], total: 0, page: 1, pageSize: 12 }, { status: 200 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    await connectDB()
+    
+    const body = await request.json()
+    const { 
+      title, 
+      description, 
+      price, 
+      category, 
+      level, 
+      duration, 
+      language = 'mongolian',
+      instructor,
+      requirements,
+      whatYouWillLearn,
+      published = false,
+      status = 'active'
+    } = body
+
+    // Validate required fields
+    if (!title || !description || !category || !level) {
+      const missingFields = []
+      if (!title) missingFields.push('title')
+      if (!description) missingFields.push('description')
+      if (!category) missingFields.push('category')
+      if (!level) missingFields.push('level')
+      
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Missing required fields: ${missingFields.join(', ')}` 
+        },
+        { status: 400 }
+      )
+    }
+
+    // Check if course with same title already exists
+    const existingCourse = await Course.findOne({ title: { $regex: new RegExp(`^${title}$`, 'i') } })
+    if (existingCourse) {
+      return NextResponse.json(
+        { success: false, error: 'Course with this title already exists' },
+        { status: 409 }
+      )
+    }
+
+    // Create new course
+    const course = new Course({
+      title,
+      description,
+      price: price || 0,
+      category,
+      level,
+      duration: duration || 0,
+      language,
+      instructor: instructor || 'Unknown',
+      requirements: requirements || [],
+      whatYouWillLearn: whatYouWillLearn || [],
+      published,
+      status,
+      studentsCount: 0,
+      rating: 0,
+      totalRatings: 0
+    })
+
+    await course.save()
+
+    return NextResponse.json({ 
+      success: true, 
+      data: course,
+      message: 'Course created successfully'
+    }, { status: 201 })
+
+  } catch (error) {
+    console.error('Error creating course:', error)
+    return NextResponse.json(
+      { success: false, error: 'Failed to create course' },
+      { status: 500 }
+    )
   }
 }
 

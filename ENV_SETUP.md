@@ -1,13 +1,15 @@
-# Environment Variables Setup
+# Environment Setup Guide
 
-Create a `.env.local` file in your project root with the following variables:
+## Required Environment Variables
 
-## Required Variables
+Add these to your `.env.local` file:
 
-```env
-# MongoDB Connection
-MONGODB_URI=mongodb://localhost:27017/your-database-name
-# or for MongoDB Atlas: mongodb+srv://username:password@cluster.mongodb.net/database-name
+```bash
+# MongoDB Atlas Programmatic API
+ATLAS_PUBLIC_KEY=your_public_key_here
+ATLAS_PRIVATE_KEY=your_private_key_here
+ATLAS_PROJECT_ID=your_project_id_here
+ATLAS_ORG_ID=your_organization_id_here
 
 # NextAuth Configuration
 NEXTAUTH_URL=http://localhost:3000
@@ -23,13 +25,19 @@ AUTH_GOOGLE_SECRET=your_google_client_secret_here
 FACEBOOK_CLIENT_ID=your_facebook_client_id_here
 FACEBOOK_CLIENT_SECRET=your_facebook_client_secret_here
 
-# Byl Configuration
-BYL_API_URL=https://api.byl.mn/v2
-BYL_ACCESS_TOKEN=your_byl_access_token_here
+# Bunny.net Video Streaming
+BUNNY_LIBRARY_ID=your_library_id_here
+BUNNY_STREAM_API_KEY=your_stream_api_key_here
 
-# App URL (for callbacks)
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-# In production: https://your-domain.com
+# Public links for quick navigation (optional)
+NEXT_PUBLIC_ATLAS_PROJECT_ID=your_project_id_here
+NEXT_PUBLIC_ATLAS_ORG_ID=your_organization_id_here
+
+# Email notifications via Resend
+RESEND_API_KEY=your_resend_api_key_here
+
+# Cron job security
+CRON_SECRET=your_random_secret_here
 ```
 
 ## OAuth Setup Instructions
@@ -63,38 +71,53 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ## Byl Setup Instructions
 
-1. **Get Byl Merchant Account**: Sign up at [Byl Merchant Portal](https://merchant.byl.mn)
+```bash
+# Email notifications via Resend
+RESEND_API_KEY=your_resend_api_key_here
 
-2. **Get API Credentials**:
-   - Access Token: From your Byl merchant dashboard (this is your API key)
-   - API URL: Usually `https://api.byl.mn/v2`
+# Cron job security
+CRON_SECRET=your_random_secret_here
+```
 
-3. **Configure Callback URL**: 
-   - Set your callback URL in Byl dashboard to: `https://your-domain.com/api/payments/byl/callback`
-   - For development: `http://localhost:3000/api/payments/byl/callback`
+## How to Get Atlas API Keys
+
+1. **Go to MongoDB Atlas**: https://cloud.mongodb.com
+2. **Navigate to Access Manager** → **API Keys**
+3. **Create a new API Key** with the following permissions:
+   - **Organization Permissions**: Read
+   - **Project Permissions**: Read
+4. **Copy the Public Key and Private Key**
+5. **Get your Project ID** from the project URL or settings
+6. **Get your Organization ID** from the organization URL or settings
+
+## How to Get Bunny.net API Keys
+
+1. **Go to Bunny.net**: https://bunny.net
+2. **Sign in to your account**
+3. **Navigate to Stream** → **Libraries**
+4. **Create a new library** or use an existing one
+5. **Copy the Library ID** (numeric value)
+6. **Go to Account** → **API Keys**
+7. **Create a new API Key** with Stream permissions
+8. **Copy the API Key**
 
 ## Testing OAuth
 
-1. **Start your development server**:
-   ```bash
-   npm run dev
-   ```
-
+1. **Start your development server**: `npm run dev`
 2. **Go to login page**: `http://localhost:3000/auth/login`
-
 3. **Test Google OAuth**: Click "Continue with Google" button
 4. **Test Facebook OAuth**: Click "Continue with Facebook" button
-
 5. **Check console logs** for OAuth flow debugging
 
-## Troubleshooting OAuth
+## Testing
 
-- **"Invalid client" error**: Check your OAuth client IDs and secrets
-- **"Redirect URI mismatch"**: Verify redirect URIs in Google/Facebook developer consoles
-- **"OAuth sign in error"**: Check MongoDB connection and User model
-- **"405 Method Not Allowed"**: Ensure NextAuth route is properly configured
+1. Set up the environment variables
+2. Visit `/admin/billing` to see the Cost Guard dashboard
+3. The system will automatically check billing daily at 9 AM UTC
+4. Alerts are created when spending reaches 80% and 100% of your budget
+5. Test video uploads in the course lessons section
 
-## Payment Flow
+## Payment Flow Testing
 
 1. User clicks "Buy" → Payment modal opens
 2. If not logged in → Redirect to login page
@@ -111,3 +134,14 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - **"MongoDB connection failed"**: Check MONGODB_URI format
 - **Payment not completing**: Check callback URL in Byl dashboard
 - **OAuth not working**: Check OAuth client IDs, secrets, and redirect URIs
+- **"Invalid client" error**: Check your OAuth client IDs and secrets
+- **"Redirect URI mismatch"**: Verify redirect URIs in Google/Facebook developer consoles
+- **"OAuth sign in error"**: Check MongoDB connection and User model
+- **"405 Method Not Allowed"**: Ensure NextAuth route is properly configured
+
+## Security Notes
+
+- **Never commit** `.env.local` to version control
+- **ATLAS_PRIVATE_KEY** and **BUNNY_STREAM_API_KEY** are server-only and will never be exposed to the client
+- **NEXT_PUBLIC_*** variables are safe to expose to the client
+- **CRON_SECRET** should be a random string for additional security

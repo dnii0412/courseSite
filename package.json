@@ -6,7 +6,11 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "init-db": "node scripts/init-db.js",
+    "test-enroll": "node scripts/test-enrollment.js",
+    "test-lesson": "node scripts/test-lesson-creation.js",
+    "test-bunny": "node scripts/test-bunny-config.js"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.10.0",
