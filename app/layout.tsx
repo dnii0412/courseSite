@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/components/providers/auth-provider'
+import { AuthSessionProvider } from '@/components/providers/session-provider'
 import { Toaster } from '@/components/ui/toaster'
 import Navbar from '@/components/Navbar'
 
@@ -36,13 +37,15 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/favicon.svg" />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
-          <Navbar />
-          <main>
-            {children}
-          </main>
-          <Toaster />
-        </AuthProvider>
+        <AuthSessionProvider>
+          <AuthProvider>
+            <Navbar />
+            <main>
+              {children}
+            </main>
+            <Toaster />
+          </AuthProvider>
+        </AuthSessionProvider>
       </body>
     </html>
   )

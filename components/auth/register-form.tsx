@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
+import { GoogleOAuthButton } from './oauth-buttons'
 
 export function RegisterForm() {
   const [name, setName] = useState('')
@@ -130,6 +131,8 @@ export function RegisterForm() {
       <Button type="submit" className="w-full bg-[#456882] hover:bg-[#1B3C53] text-white transition-colors" disabled={isLoading}>
         {isLoading ? 'Бүртгүүлж байна...' : 'Бүртгүүлэх'}
       </Button>
+
+      <GoogleOAuthButton mode="register" />
     </form>
   )
 }

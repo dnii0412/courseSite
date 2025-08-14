@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { verifyToken } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import { Media } from '@/lib/models/media';
 import { cloudinaryUtils } from '@/lib/utils/cloudinary';
 
 export async function POST(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        const token = await verifyToken(request);
 
-        if (!session?.user || session.user.role !== 'ADMIN') {
+        if (!token || token.role !== 'ADMIN') {
             return NextResponse.json(
                 { success: false, error: 'Unauthorized' },
                 { status: 401 }

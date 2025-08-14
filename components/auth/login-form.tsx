@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
+import { GoogleOAuthButton } from './oauth-buttons'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
@@ -54,7 +55,7 @@ export function LoginForm() {
           className="border-[#D2C1B6] focus:border-[#456882] focus:ring-[#456882] text-[#1B3C53] placeholder:text-[#456882]/60"
         />
       </div>
-      
+
       <div className="space-y-2">
         <Label htmlFor="password" className="text-[#1B3C53] font-medium">Нууц үг</Label>
         <div className="relative">
@@ -77,10 +78,12 @@ export function LoginForm() {
           </button>
         </div>
       </div>
-      
+
       <Button type="submit" className="w-full bg-[#456882] hover:bg-[#1B3C53] text-white transition-colors" disabled={isLoading}>
         {isLoading ? 'Нэвтэрч байна...' : 'Нэвтрэх'}
       </Button>
+
+      <GoogleOAuthButton mode="login" />
     </form>
   )
 }

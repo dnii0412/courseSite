@@ -7,17 +7,17 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#F9F3EF]">
       <Card className="w-full max-w-md bg-white border-[#D2C1B6] shadow-lg">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl text-[#1B3C53]">Нэвтрэх</CardTitle>
+          <CardTitle className="text-2xl text-[#1B3C53]">Sign In</CardTitle>
           <CardDescription className="text-[#456882]">
-            Өөрийн бүртгэлээр нэвтэрнэ үү
+            Welcome back! Sign in to your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm />
           <div className="mt-4 text-center text-sm text-[#456882]">
-            Бүртгэл байхгүй юу?{' '}
+            Don't have an account?{' '}
             <Link href="/auth/register" className="text-[#1B3C53] hover:text-[#456882] hover:underline transition-colors">
-              Бүртгүүлэх
+              Sign up
             </Link>
           </div>
         </CardContent>

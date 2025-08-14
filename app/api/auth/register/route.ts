@@ -9,7 +9,7 @@ import { User } from '@/lib/models/user'
 export async function POST(request: NextRequest) {
   try {
     await connectDB()
-    
+
     const { name, email, password } = await request.json()
 
     // Check if user exists
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       name,
       email,
       password: hashedPassword,
-      role: 'student'
+      role: 'USER'
     })
 
     // Create JWT token

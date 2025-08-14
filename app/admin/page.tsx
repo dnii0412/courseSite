@@ -11,10 +11,10 @@ export default function AdminPage() {
         <div className="flex-1 p-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Админ самбар
+              Admin Dashboard
             </h1>
             <p className="text-gray-600">
-              Системийн ерөнхий мэдээлэл
+              System Dashboard
             </p>
           </div>
 

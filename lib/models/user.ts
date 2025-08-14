@@ -4,8 +4,10 @@ export interface IUser {
   _id: string;
   name: string;
   email: string;
-  password: string;
+  password?: string;
   role: 'USER' | 'ADMIN';
+  oauthProvider?: string;
+  oauthId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,12 +25,20 @@ const userSchema = new mongoose.Schema<IUser>({
   },
   password: {
     type: String,
-    required: true
+    required: false
   },
   role: {
     type: String,
     enum: ['USER', 'ADMIN'],
     default: 'USER'
+  },
+  oauthProvider: {
+    type: String,
+    required: false
+  },
+  oauthId: {
+    type: String,
+    required: false
   }
 }, {
   timestamps: true
