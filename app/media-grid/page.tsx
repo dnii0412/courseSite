@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Footer } from '@/components/layout/footer'
+import Navbar from '@/components/Navbar'
 
 type MediaItem = {
   _id: string
