@@ -186,7 +186,7 @@ export default function Navbar({
 
                     <button
                       onClick={() => (onSignOut ? onSignOut() : signOut())}
-                      className="w-full text-left px-3 py-2 rounded-lg text-sm text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                      className="block w-full text-left px-3 py-2 rounded-lg text-sm text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800"
                       role="menuitem"
                     >
                       Гарах
@@ -197,120 +197,113 @@ export default function Navbar({
             )}
           </div>
 
-          {/* Mobile hamburger */}
-          <div className="lg:hidden flex items-center">
-            <button
-              aria-controls="mobile-menu"
-              aria-expanded={mobileOpen}
-              onClick={() => setMobileOpen(true)}
-              className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
-            >
-              <span className="sr-only">Цэс нээх</span>
-              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            </button>
-          </div>
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="lg:hidden p-2 rounded-md text-neutral-700 hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+            aria-label="Цэс нээх"
+          >
+            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
         </div>
       </div>
 
       {/* Mobile Drawer */}
-      {mobileOpen && (
+      <div
+        id="mobile-menu"
+        className={`fixed inset-0 z-50 lg:hidden ${mobileOpen ? '' : 'pointer-events-none'}`}
+        aria-hidden={!mobileOpen}
+      >
+        {/* Backdrop */}
         <div
-          id="mobile-menu"
-          className="fixed inset-0 z-50 lg:hidden"
+          className={`absolute inset-0 bg-black/30 transition-opacity ${mobileOpen ? 'opacity-100' : 'opacity-0'}`}
+          onClick={() => setMobileOpen(false)}
+        />
+        {/* Panel */}
+        <div
+          className={`absolute right-0 top-0 h-full w-80 max-w-[85%] bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800 transition-transform duration-300 ease-out ${mobileOpen ? 'translate-x-0' : 'translate-x-full'
+            }`}
           role="dialog"
           aria-modal="true"
-          aria-label="Mobile navigation menu"
         >
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/20 transition-opacity"
-            onClick={() => setMobileOpen(false)}
-          />
-          {/* Panel */}
-          <div
-            className="absolute right-0 top-0 h-full w-72 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-xl transition-transform duration-300 ease-out transform translate-x-0"
-            role="dialog"
-            aria-modal="true"
-          >
-            <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800">
-              <Link href="/" className="font-semibold tracking-tight text-slate-900 dark:text-slate-100" onClick={() => setMobileOpen(false)}>
-                New Era
-              </Link>
-              <button
-                onClick={() => setMobileOpen(false)}
-                aria-label="Цэс хаах"
-                className="p-2 rounded-md text-slate-700 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
-              >
-                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
+          <div className="h-16 flex items-center justify-between px-4 border-b border-neutral-200 dark:border-neutral-800">
+            <Link href="/" className="font-semibold tracking-tight" onClick={() => setMobileOpen(false)}>
+              New Era
+            </Link>
+            <button
+              onClick={() => setMobileOpen(false)}
+              aria-label="Цэс хаах"
+              className="p-2 rounded-md text-neutral-700 hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+            >
+              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
 
-            <nav className="px-4 py-4 space-y-1" aria-label="Main Navigation">
-              {items.map((item) => {
-                const active = isActive(item.href)
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={`block px-3 py-2 rounded-lg text-base transition-colors ${active
-                      ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white'
-                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-800'
-                      }`}
-                  >
-                    {item.name}
-                  </Link>
-                )
-              })}
-            </nav>
+          <nav className="px-4 py-4 space-y-1" aria-label="Main Navigation">
+            {items.map((item) => {
+              const active = isActive(item.href)
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`block px-3 py-2 rounded-lg text-base ${active
+                      ? 'bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-white'
+                      : 'text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-800'
+                    }`}
+                >
+                  {item.name}
+                </Link>
+              )
+            })}
+          </nav>
 
-            <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-800">
-              {!isAuthed ? (
-                <div className="flex flex-col gap-3">
-                  <Link
-                    href="/auth/login"
-                    onClick={() => setMobileOpen(false)}
-                    className="w-full text-center text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-slate-800 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors"
-                  >
-                    Нэвтрэх
-                  </Link>
-                  <Link
-                    href="/auth/register"
-                    onClick={() => setMobileOpen(false)}
-                    className="w-full text-center bg-sky-700 text-white hover:bg-sky-800 rounded-xl px-3 py-2 transition-colors"
-                  >
-                    Бүртгүүлэх
-                  </Link>
+          <div className="px-4 py-4 border-t border-neutral-200 dark:border-neutral-800">
+            {!isAuthed ? (
+              <div className="flex flex-col gap-3">
+                <Link
+                  href="/auth/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="w-full text-center text-neutral-700 hover:text-neutral-900 dark:text-neutral-200 dark:hover:text-neutral-800 px-3 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 transition-colors"
+                >
+                  Нэвтрэх
+                </Link>
+                <Link
+                  href="/auth/register"
+                  onClick={() => setMobileOpen(false)}
+                  className="w-full text-center bg-neutral-700 text-white hover:bg-neutral-800 rounded-xl px-3 py-2 transition-colors"
+                >
+                  Бүртгүүлэх
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <div className="flex items-center gap-3 px-3 py-2">
+                  <Image src={currentUser.image || '/placeholder-user.jpg'} alt={currentUser.name || 'User'} width={36} height={36} className="rounded-full" />
+                  <div className="text-sm text-neutral-800 dark:text-neutral-200">{currentUser.name || 'Хэрэглэгч'}</div>
                 </div>
-              ) : (
-                <div className="space-y-1">
-                  <div className="flex items-center gap-3 px-3 py-2">
-                    <Image src={currentUser.image || '/placeholder-user.jpg'} alt={currentUser.name || 'User'} width={36} height={36} className="rounded-full" />
-                    <div className="text-sm text-slate-800 dark:text-slate-200">{currentUser.name || 'Хэрэглэгч'}</div>
-                  </div>
-                  <Link href="/profile" onClick={() => setMobileOpen(false)} className="block px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:text-slate-800 transition-colors">
-                    Профайл
-                  </Link>
-                  <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="block px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:text-slate-800 transition-colors">
-                    Миний сургалтууд
-                  </Link>
+                <Link href="/profile" onClick={() => setMobileOpen(false)} className="block px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:text-neutral-800 transition-colors">
+                  Профайл
+                </Link>
+                <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="block px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:text-neutral-800 transition-colors">
+                  Миний сургалтууд
+                </Link>
 
-                  <button onClick={() => { setMobileOpen(false); (onSignOut ? onSignOut() : signOut()) }} className="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:text-slate-800 transition-colors">
-                    Гарах
-                  </button>
-                </div>
-              )}
-            </div>
+                <button onClick={() => { setMobileOpen(false); (onSignOut ? onSignOut() : signOut()) }} className="w-full text-left px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:text-neutral-800 transition-colors">
+                  Гарах
+                </button>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </header>
   )
 }

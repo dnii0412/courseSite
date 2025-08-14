@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { ThemeProvider } from '@/components/theme-provider'
+import Navbar from '@/components/Navbar'
 import SessionProviderClient from '@/components/providers/session-provider'
 import { PasswordToggleProvider } from '@/components/providers/password-toggle-provider'
 
@@ -35,6 +36,7 @@ export default function RootLayout({
         <SessionProviderClient>
           <PasswordToggleProvider>
             <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+              <Navbar />
               {children}
               <Toaster />
             </ThemeProvider>
