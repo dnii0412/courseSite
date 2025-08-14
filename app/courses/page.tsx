@@ -1,64 +1,66 @@
-import { Footer } from '@/components/layout/footer'
-import Navbar from '@/components/Navbar'
-import CourseCard from '@/components/courses/CourseCard'
-import SearchBar from '@/components/courses/SearchBar'
-import SortSelect from '@/components/courses/SortSelect'
-import Filters from '@/components/courses/Filters'
-import AppliedChips from '@/components/courses/AppliedChips'
-import SkeletonCard from '@/components/courses/SkeletonCard'
-import EmptyState from '@/components/ui/EmptyState'
 import { Suspense } from 'react'
-import { headers } from 'next/headers'
+import { CourseCard } from '@/components/courses/course-card'
+import { SearchBar } from '@/components/courses/SearchBar'
+import { Filters } from '@/components/courses/Filters'
+import { SortSelect } from '@/components/courses/SortSelect'
+import { SkeletonCard } from '@/components/courses/SkeletonCard'
+import { getCourses } from '@/lib/api/courses'
+import { Course } from '@/lib/models/course'
 
-async function fetchCourses(searchParams: Record<string, string | string[] | undefined>) {
-  const qs = new URLSearchParams()
-  Object.entries(searchParams).forEach(([k, v]) => {
-    if (typeof v === 'string') qs.set(k, v)
-  })
-  const h = headers()
-  const host = h.get('host') || 'localhost:3000'
-  const proto = h.get('x-forwarded-proto') || 'http'
-  const base = process.env.NEXT_PUBLIC_SITE_URL || `${proto}://${host}`
-  const url = `${base}/api/courses?${qs.toString()}`
-  const res = await fetch(url, { cache: 'no-store' })
-  if (!res.ok) return { data: [], total: 0, page: 1, pageSize: 12 }
-  return res.json()
+interface CoursesPageProps {
+  searchParams: {
+    search?: string
+    category?: string
+    level?: string
+    sort?: string
+  }
 }
 
-export default async function CoursesPage({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
-  const { data, total } = await fetchCourses(searchParams)
+async function CoursesContent({ searchParams }: CoursesPageProps) {
+  const courses = await getCourses(searchParams)
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar/>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Хичээлүүд <span className="text-slate-500 text-lg align-middle">({total})</span></h1>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Бүх хичээлүүд</h1>
+        <div className="flex flex-col lg:flex-row gap-4">
+          <SearchBar />
+          <Filters />
           <SortSelect />
-        </div>
-
-        <SearchBar />
-        <AppliedChips />
-
-        <div className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-[280px,1fr] gap-6">
-            {/* Sidebar; applied chips moved above grid to avoid pushing cards */}
-            <Filters />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
-              {data.length === 0 ? (
-                <div className="col-span-full">
-                  <EmptyState />
-                </div>
-              ) : (
-                data.map((course: any) => <CourseCard key={course._id} course={course} />)
-              )}
-            </div>
-          </div>
         </div>
       </div>
 
-      <Footer />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {courses.map((course: Course) => (
+          <CourseCard key={course._id} course={course} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default function CoursesPage({ searchParams }: CoursesPageProps) {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Suspense fallback={
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="h-10 bg-gray-200 rounded flex-1"></div>
+              <div className="h-10 bg-gray-200 rounded w-32"></div>
+              <div className="h-10 bg-gray-200 rounded w-32"></div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        </div>
+      }>
+        <CoursesContent searchParams={searchParams} />
+      </Suspense>
     </div>
   )
 }

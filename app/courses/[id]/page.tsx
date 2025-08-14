@@ -1,27 +1,36 @@
-import { Footer } from '@/components/layout/footer'
+import { Suspense } from 'react'
 import { CourseDetails } from '@/components/courses/course-details'
 import { getCourseById } from '@/lib/api/courses'
 import { notFound } from 'next/navigation'
-import Navbar from '@/components/Navbar'
 
 interface CoursePageProps {
-  params: {
-    id: string
-  }
+  params: { id: string }
 }
 
-export default async function CoursePage({ params }: CoursePageProps) {
+async function CourseContent({ params }: CoursePageProps) {
   const course = await getCourseById(params.id)
   
   if (!course) {
     notFound()
   }
 
+  return <CourseDetails course={course} />
+}
+
+export default function CoursePage({ params }: CoursePageProps) {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <CourseDetails course={course} />
-      <Footer />
+      <Suspense fallback={
+        <div className="container mx-auto px-4 py-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+            <div className="h-64 bg-gray-200 rounded"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      }>
+        <CourseContent params={params} />
+      </Suspense>
     </div>
   )
 }

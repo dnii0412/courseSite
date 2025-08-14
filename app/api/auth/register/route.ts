@@ -1,28 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { hashPassword } from '@/lib/password'
-import { findUserByEmail, createUser } from '@/lib/users'
+import { hash } from 'bcryptjs'
+import { connectDB } from '@/lib/mongodb'
+import { User } from '@/lib/models/user'
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password } = await request.json()
+    const { name, email, phone, password } = await request.json()
 
-    // Check if user exists
-    const existingUser = await findUserByEmail(email)
-    if (existingUser) {
+    // Validate required fields
+    if (!name || !email || !phone || !password) {
       return NextResponse.json(
-        { error: 'Энэ имэйлээр бүртгэл аль хэдийн байна' },
+        { error: 'Бүх талбарыг бөглөнө үү' },
         { status: 400 }
       )
     }
 
+    // Validate password length
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: 'Нууц үг хамгийн багадаа 8 тэмдэгт байх ёстой' },
+        { status: 400 }
+      )
+    }
+
+    await connectDB()
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email })
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'Энэ имэйл хаяг бүртгэлтэй байна' },
+        { status: 409 }
+      )
+    }
+
     // Hash password
-    const passwordHash = await hashPassword(password)
-    await createUser({ name, email, passwordHash, role: 'USER' })
-    return NextResponse.json({ message: 'Амжилттай бүртгэгдлээ' })
-  } catch (error) {
-    console.error('Register error:', error)
+    const hashedPassword = await hash(password, 12)
+
+    // Create user using the User model
+    const newUser = new User({
+      name,
+      email,
+      phone,
+      password: hashedPassword,
+      role: 'USER',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    })
+
+    await newUser.save()
+
     return NextResponse.json(
-      { error: 'Серверийн алдаа' },
+      { 
+        message: 'Бүртгэл амжилттай үүслээ',
+        userId: newUser._id 
+      },
+      { status: 201 }
+    )
+
+  } catch (error) {
+    console.error('Registration error:', error)
+    return NextResponse.json(
+      { error: 'Серверийн алдаа гарлаа' },
       { status: 500 }
     )
   }

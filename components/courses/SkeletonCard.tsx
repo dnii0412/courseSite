@@ -1,4 +1,4 @@
-export default function SkeletonCard() {
+export function SkeletonCard() {
   return (
     <div className="animate-pulse rounded-xl border border-slate-200 bg-white overflow-hidden">
       <div className="aspect-video bg-slate-200" />
@@ -11,5 +11,3 @@ export default function SkeletonCard() {
     </div>
   )
 }
-
-

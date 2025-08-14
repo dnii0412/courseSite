@@ -9,9 +9,9 @@ export function Footer() {
   return (
     <footer className="bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-16">
-        <div className="grid gap-8 lg:grid-cols-4">
+        <div className="grid gap-8 lg:grid-cols-3">
           {/* Company info */}
-          <div className="lg:col-span-2">
+          <div>
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-xl">N</span>
@@ -141,8 +141,15 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 pt-8 border-t border-gray-800 text-center">
           <p className="text-gray-400">
-            © 2024 New Era. Бүх эрх хуулиар хамгаалагдсан.
-            Монгол улс, Улаанбаатар хот.
+            © 2025 New Era. All rights reserved. Made by{' '}
+            <Link 
+              href="https://xp-hazel-eta.vercel.app/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 transition-colors duration-300 font-medium"
+            >
+              XP Team
+            </Link>
           </p>
         </div>
       </div>

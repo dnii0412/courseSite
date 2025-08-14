@@ -1,50 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from '@/lib/auth'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth-config'
 import { connectDB } from '@/lib/mongodb'
 import { User } from '@/lib/models/user'
 
 export async function GET(request: NextRequest) {
-  try {
-    const decoded = await verifyToken(request)
-    if (!decoded) {
-      return NextResponse.json({ user: null }, { headers: { 'Cache-Control': 'no-store' } })
-    }
-
-    await connectDB()
-    const dbUser = await User.findById(decoded.userId)
-      .select('name email role')
-      .lean<{ name: string; email: string; role: string }>()
-
-    if (!dbUser) {
-      return NextResponse.json({ user: null }, { headers: { 'Cache-Control': 'no-store' } })
-    }
-
-    const res = NextResponse.json({
-      user: {
-        id: decoded.userId,
-        name: dbUser.name,
-        email: dbUser.email,
-        role: dbUser.role,
-      }
-    }, { headers: { 'Cache-Control': 'no-store' } })
-    // Refresh cookie expiry on me calls
     try {
-      const token = request.cookies.get('token')?.value
-      if (token) {
-        const isHttps = request.headers.get('x-forwarded-proto') === 'https' || request.nextUrl.protocol === 'https:'
-        res.cookies.set('token', token, {
-          httpOnly: true,
-          secure: isHttps,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 7 * 24 * 60 * 60,
+        const session = await getServerSession(authOptions)
+
+        if (!session?.user?.email) {
+            return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+        }
+
+        await connectDB()
+
+        // Get user from database
+        const user = await User.findOne({ email: session.user.email })
+
+        if (!user) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
+
+        return NextResponse.json({
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            role: user.role,
+            oauthProvider: user.oauthProvider,
+            oauthId: user.oauthId,
+            hasPassword: !!user.password,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
         })
-      }
-    } catch {}
-    return res
-  } catch (error) {
-    console.error('Auth me error:', error)
-    // Fail open with user null to avoid crashing the client UI
-    return NextResponse.json({ user: null }, { headers: { 'Cache-Control': 'no-store' } })
-  }
-} 
+
+    } catch (error) {
+        console.error('Error in /api/auth/me:', error)
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
+}

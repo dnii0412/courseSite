@@ -1,244 +1,222 @@
-'use client'
+"use client"
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
+import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Clock, Users, Star, Play, CheckCircle } from 'lucide-react'
-import Image from 'next/image'
+import { Separator } from '@/components/ui/separator'
+import { Clock, Users, BookOpen, Star, Play, CheckCircle } from 'lucide-react'
 import { PaymentModal } from '@/components/payments/payment-modal'
-import { useAuth } from '@/hooks/use-auth'
-import { useRouter } from 'next/navigation'
 
 interface CourseDetailsProps {
   course: {
     _id: string
     title: string
     description: string
-    thumbnail: string
     price: number
-    duration: number
-    studentsCount: number
+    duration: string
+    level: string
     rating: number
-    instructor: {
-      name: string
-    }
+    enrolledCount: number
+    lessonCount: number
+    image?: string
     category: string
-    lessons: Array<{
+    lessons?: Array<{
       _id: string
       title: string
       duration: number
-      preview: boolean
     }>
-    requirements: string[]
-    whatYouWillLearn: string[]
   }
 }
 
 export function CourseDetails({ course }: CourseDetailsProps) {
-  const [showPayment, setShowPayment] = useState(false)
+  const { data: session } = useSession()
   const [isEnrolled, setIsEnrolled] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const { user, isLoading: authLoading } = useAuth()
-  const router = useRouter()
+  const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(true)
 
   useEffect(() => {
     const checkEnrollment = async () => {
-      if (authLoading) return
-      if (!user) {
-        setIsLoading(false)
-        setIsEnrolled(false)
+      if (!session?.user) {
+        setIsCheckingEnrollment(false)
         return
       }
 
       try {
-        const response = await fetch(`/api/enrollments/check/${course._id}`, { cache: 'no-store', credentials: 'include' })
+        const response = await fetch('/api/users/enrollments')
         if (response.ok) {
-          const data = await response.json()
-          setIsEnrolled(Boolean(data?.enrolled))
-        } else {
-          setIsEnrolled(false)
+          const enrollments = await response.json()
+          const isEnrolledInCourse = enrollments.some(
+            (enrollment: any) => enrollment.courseId === course._id
+          )
+          setIsEnrolled(isEnrolledInCourse)
         }
       } catch (error) {
         console.error('Error checking enrollment:', error)
-        setIsEnrolled(false)
       } finally {
-        setIsLoading(false)
+        setIsCheckingEnrollment(false)
       }
     }
 
     checkEnrollment()
-  }, [authLoading, user, course._id])
+  }, [session?.user, course._id])
 
-  const handleWatchCourse = () => {
-    router.push(`/learn/${course._id}`)
+  const handleContinueCourse = () => {
+    if (isEnrolled) {
+      window.location.href = `/learn/${course._id}`
+    }
   }
 
-  const handlePaymentSuccess = () => {
-    setIsEnrolled(true)
+  if (isCheckingEnrollment) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid lg:grid-cols-3 gap-8">
+    <div className="max-w-4xl mx-auto p-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
-        <div className="lg:col-span-2">
-          <div className="mb-6">
-            <Badge className="mb-2">{course.category}</Badge>
-            <h1 className="text-3xl font-bold mb-4">{course.title}</h1>
-            <p className="text-gray-600 mb-4">{course.description}</p>
-            
-            <div className="flex items-center gap-6 text-sm text-gray-500">
-              <div className="flex items-center">
-                <Clock className="w-4 h-4 mr-1" />
-                {course.duration} цаг
+        <div className="lg:col-span-2 space-y-6">
+          {/* Course Header */}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">{course.title}</h1>
+            <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+              <div className="flex items-center gap-1">
+                <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                <span>{course.rating}</span>
               </div>
-              <div className="flex items-center">
-                <Users className="w-4 h-4 mr-1" />
-                {course.studentsCount} оюутан
+              <div className="flex items-center gap-1">
+                <Users className="w-4 h-4" />
+                <span>{course.enrolledCount} сурагч</span>
               </div>
-              <div className="flex items-center">
-                <Star className="w-4 h-4 mr-1 fill-yellow-400 text-yellow-400" />
-                {course.rating}
+              <div className="flex items-center gap-1">
+                <BookOpen className="w-4 h-4" />
+                <span>{course.lessonCount} хичээл</span>
               </div>
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                <span>{course.duration}</span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Badge variant="secondary">{course.category}</Badge>
+              <Badge variant="outline">{course.level}</Badge>
             </div>
           </div>
 
-          <Tabs defaultValue="curriculum" className="w-full">
-            <TabsList>
-              <TabsTrigger value="curriculum">Хичээлийн хөтөлбөр</TabsTrigger>
-              <TabsTrigger value="requirements">Шаардлага</TabsTrigger>
-              <TabsTrigger value="instructor">Багш</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="curriculum" className="space-y-4">
-              <div className="space-y-2">
-                {course.lessons.map((lesson, index) => (
-                  <div key={lesson._id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                        {lesson.preview ? (
-                          <Play className="w-4 h-4 text-blue-600" />
-                        ) : (
-                          <span className="text-sm font-medium">{index + 1}</span>
-                        )}
+          {/* Course Image */}
+          {course.image && (
+            <div className="rounded-lg overflow-hidden">
+              <img
+                src={course.image}
+                alt={course.title}
+                className="w-full h-64 object-cover"
+              />
+            </div>
+          )}
+
+          {/* Course Description */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Хичээлийн тайлбар</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-700 leading-relaxed">{course.description}</p>
+            </CardContent>
+          </Card>
+
+          {/* Course Lessons */}
+          {course.lessons && course.lessons.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Хичээлүүд</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {course.lessons.map((lesson, index) => (
+                    <div key={lesson._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium text-sm">
+                          {index + 1}
+                        </div>
+                        <span className="font-medium">{lesson.title}</span>
                       </div>
-                      <div>
-                        <h4 className="font-medium">{lesson.title}</h4>
-                        <p className="text-sm text-gray-500">{lesson.duration} минут</p>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Clock className="w-4 h-4" />
+                        <span>{lesson.duration} мин</span>
                       </div>
                     </div>
-                    {lesson.preview && (
-                      <Badge variant="outline">Үнэгүй үзэх</Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="requirements">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Шаардлага</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {course.requirements.map((req, index) => (
-                      <li key={index} className="flex items-start">
-                        <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        {req}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="instructor">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Багшийн тухай</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="font-medium">{course.instructor.name}</p>
-                  <p className="text-gray-600 mt-2">
-                    Туршлагатай мэргэжилтэн
-                  </p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Sidebar */}
-        <div className="lg:col-span-1">
-          <Card className="sticky top-8">
-            <CardHeader className="p-0">
-              <div className="relative aspect-video">
-                <Image
-                  src={course.thumbnail || '/placeholder.svg?height=200&width=300&query=course preview'}
-                  alt={course.title}
-                  fill
-                  className="object-cover rounded-t-lg"
-                />
-              </div>
-            </CardHeader>
-            
+        <div className="space-y-6">
+          {/* Course Card */}
+          <Card className="sticky top-4">
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-blue-600 mb-4">
-                {course.price.toLocaleString()}₮
+              <div className="text-center mb-6">
+                <div className="text-3xl font-bold text-blue-600 mb-2">
+                  ₮{course.price.toLocaleString()}
+                </div>
+                <p className="text-sm text-gray-600">Нэг удаагийн төлбөр</p>
               </div>
-              
-              <div className="space-y-3 mb-6">
-                <h4 className="font-medium">Энэ хичээлээс та:</h4>
-                <ul className="space-y-2">
-                  {course.whatYouWillLearn.map((item, index) => (
-                    <li key={index} className="flex items-start text-sm">
-                      <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              {authLoading || isLoading ? (
-                <Button className="w-full" size="lg" disabled>
-                  Шалгаж байна...
-                </Button>
-              ) : !user ? (
-                <Button className="w-full" size="lg" asChild>
-                  <a href="/auth/login">Нэвтэрч бүртгүүлэх</a>
-                </Button>
-              ) : isEnrolled ? (
-                <Button 
-                  className="w-full" 
+
+              {isEnrolled ? (
+                <Button
+                  onClick={handleContinueCourse}
+                  className="w-full mb-3"
                   size="lg"
-                  onClick={handleWatchCourse}
                 >
                   <Play className="w-4 h-4 mr-2" />
-                  Хичээл үзэх
+                  Сургалтаа үргэлжлүүлэх
                 </Button>
               ) : (
-                <Button 
-                  className="w-full" 
-                  size="lg"
-                  onClick={() => setShowPayment(true)}
-                >
-                  Хичээлд бүртгүүлэх
-                </Button>
+                <PaymentModal
+                  courseId={course._id}
+                  courseTitle={course.title}
+                  price={course.price}
+                  onSuccess={() => setIsEnrolled(true)}
+                />
               )}
+
+              {isEnrolled && (
+                <div className="flex items-center justify-center gap-2 text-green-600 text-sm">
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Бүртгэлтэй</span>
+                </div>
+              )}
+
+              <Separator className="my-4" />
+
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Хичээлийн тоо:</span>
+                  <span className="font-medium">{course.lessonCount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Үргэлжлэх хугацаа:</span>
+                  <span className="font-medium">{course.duration}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Түвшин:</span>
+                  <span className="font-medium">{course.level}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Категори:</span>
+                  <span className="font-medium">{course.category}</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
       </div>
-
-      <PaymentModal
-        isOpen={showPayment}
-        onClose={() => setShowPayment(false)}
-        onPaymentSuccess={handlePaymentSuccess}
-        course={course}
-      />
     </div>
   )
 }

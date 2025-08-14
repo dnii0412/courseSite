@@ -1,202 +1,111 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Star, Clock, Users, Play } from 'lucide-react';
+import { Play, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
-const categories = [
-    { id: 'all', name: 'Бүгд', color: 'bg-gray-500' },
-    { id: 'tech', name: 'Технологи', color: 'bg-blue-500' },
-    { id: 'design', name: 'Дизайн', color: 'bg-purple-500' },
-    { id: 'business', name: 'Бизнес', color: 'bg-green-500' },
-    { id: 'language', name: 'Хэл', color: 'bg-yellow-500' },
-];
-
-const courses = [
-    {
-        id: 1,
-        title: 'React.js - Мэргэжлийн түвшин',
-        instructor: 'Б.Бат',
-        rating: 4.9,
-        students: 1247,
-        duration: '12 цаг',
-        price: '₮89,000',
-        image: '/placeholder.jpg',
-        category: 'tech',
-        featured: true,
-    },
-    {
-        id: 2,
-        title: 'UI/UX Дизайн - Figma ашиглан',
-        instructor: 'Д.Сүхээ',
-        rating: 4.8,
-        students: 892,
-        duration: '8 цаг',
-        price: '₮65,000',
-        image: '/placeholder.jpg',
-        category: 'design',
-        featured: true,
-    },
-    {
-        id: 3,
-        title: 'Python - Машин сургалт',
-        instructor: 'Л.Мөнх',
-        rating: 4.7,
-        students: 1563,
-        duration: '15 цаг',
-        price: '₮95,000',
-        image: '/placeholder.jpg',
-        category: 'tech',
-        featured: true,
-    },
-    {
-        id: 4,
-        title: 'Бизнес стратеги - Стартап',
-        instructor: 'Н.Оюун',
-        rating: 4.6,
-        students: 634,
-        duration: '10 цаг',
-        price: '₮75,000',
-        image: '/placeholder.jpg',
-        category: 'business',
-        featured: false,
-    },
-    {
-        id: 5,
-        title: 'Англи хэл - IELTS 7.0+',
-        instructor: 'С.Болор',
-        rating: 4.9,
-        students: 2103,
-        duration: '20 цаг',
-        price: '₮120,000',
-        image: '/placeholder.jpg',
-        category: 'language',
-        featured: false,
-    },
-    {
-        id: 6,
-        title: 'JavaScript - ES6+ онцлогууд',
-        instructor: 'Т.Ганбаатар',
-        rating: 4.8,
-        students: 987,
-        duration: '14 цаг',
-        price: '₮85,000',
-        image: '/placeholder.jpg',
-        category: 'tech',
-        featured: false,
-    },
-];
-
 export function TopCoursesSection() {
-    const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-    const filteredCourses = selectedCategory === 'all'
-        ? courses
-        : courses.filter(course => course.category === selectedCategory);
+  const handleVideoClick = () => {
+    setShowPaymentModal(true);
+  };
 
-    const featuredCourses = courses.filter(course => course.featured);
+  return (
+    <section className="bg-gray-50 py-20">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Топ хичээлүүд
+          </h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Хамгийн их суралцагддаг хичээлүүд
+          </p>
+        </div>
 
-    return (
-        <section className="py-20 bg-gray-50">
-            <div className="container mx-auto px-4">
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                        Топ хичээлүүд
-                    </h2>
-                    <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                        Олон сурагчдын сонгосон, чанартай хичээлүүд
-                    </p>
-                </div>
-
-                {/* Category filters */}
-                <div className="flex flex-wrap justify-center gap-4 mb-12">
-                    {categories.map((category) => (
-                        <Button
-                            key={category.id}
-                            variant={selectedCategory === category.id ? 'default' : 'outline'}
-                            onClick={() => setSelectedCategory(category.id)}
-                            className={`rounded-full px-6 py-2 ${selectedCategory === category.id
-                                    ? 'bg-blue-600 text-white'
-                                    : 'border-gray-300 text-gray-700 hover:bg-gray-100'
-                                }`}
-                        >
-                            {category.name}
-                        </Button>
-                    ))}
-                </div>
-
-                {/* Featured courses grid */}
-                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-12">
-                    {featuredCourses.map((course) => (
-                        <Card key={course.id} className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border-0 bg-white">
-                            <div className="relative overflow-hidden rounded-t-lg">
-                                <div className="w-full h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                                    <div className="text-white text-center">
-                                        <Play className="w-16 h-16 mx-auto mb-4 opacity-80" />
-                                        <p className="text-lg font-semibold">{course.title.split(' - ')[0]}</p>
-                                    </div>
-                                </div>
-
-                                {/* Featured badge */}
-                                <div className="absolute top-4 right-4 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-sm font-bold">
-                                    ⭐ Топ
-                                </div>
-
-                                {/* Play overlay */}
-                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                                    <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-2xl">
-                                        <Play className="w-8 h-8 text-blue-600 ml-1" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-lg text-gray-900 line-clamp-2">
-                                    {course.title}
-                                </CardTitle>
-                                <p className="text-gray-600">Багш: {course.instructor}</p>
-                            </CardHeader>
-
-                            <CardContent className="pt-0">
-                                {/* Rating and stats */}
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center gap-2">
-                                        <Star className="w-5 h-5 text-yellow-500 fill-current" />
-                                        <span className="font-semibold text-gray-900">{course.rating}</span>
-                                    </div>
-                                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                                        <div className="flex items-center gap-1">
-                                            <Users className="w-4 h-4" />
-                                            <span>{course.students}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <Clock className="w-4 h-4" />
-                                            <span>{course.duration}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Price and CTA */}
-                                <div className="flex items-center justify-between">
-                                    <div className="text-2xl font-bold text-blue-600">{course.price}</div>
-                                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                                        Дэлгэрэнгүй
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-
-                {/* View all courses button */}
-                <div className="text-center">
-                    <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-                        <Link href="/courses">Бүх хичээлүүд</Link>
-                    </Button>
-                </div>
+        <div className="flex justify-center">
+          {/* Single AI Course Card with Media Player */}
+          <div className="bg-white/80 backdrop-blur-sm border border-gray-200 p-10 rounded-3xl shadow-lg max-w-2xl w-full">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm mb-4">
+                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                Featured Course
+              </div>
+              <h3 className="text-3xl font-bold text-gray-900 mb-3">AI Course</h3>
+              <p className="text-gray-600 text-lg mb-4">Machine Learning & Deep Learning</p>
+              <div className="flex items-center justify-center gap-6 mb-6">
+                <span className="text-blue-600 font-bold text-xl">₮200,000</span>
+                <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">4.9 ⭐</span>
+              </div>
             </div>
-        </section>
-    );
+
+            {/* Media Player Preview */}
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 mb-8">
+              <div className="aspect-video bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl flex items-center justify-center cursor-pointer hover:from-blue-500/30 hover:to-purple-500/30 transition-all duration-300 border border-gray-200" onClick={handleVideoClick}>
+                <Play className="w-20 h-20 text-blue-600" />
+              </div>
+              <p className="text-sm text-gray-600 mt-3 text-center font-medium">Click to preview</p>
+            </div>
+
+            {/* Course Info */}
+            <div className="grid grid-cols-2 gap-3 mb-8">
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <p className="text-sm text-gray-700 font-medium">Machine Learning</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <p className="text-sm text-gray-700 font-medium">Neural Networks</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <p className="text-sm text-gray-700 font-medium">Deep Learning</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <p className="text-sm text-gray-700 font-medium">AI Applications</p>
+              </div>
+            </div>
+
+            <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300">
+              <Link href="/courses">Хичээлд бүртгүүлэх</Link>
+            </Button>
+          </div>
+        </div>
+
+        <div className="text-center mt-12">
+          <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
+            <Link href="/courses">Бүх хичээлүүдийг харах</Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* Payment Requirement Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Payment Required</h3>
+            <p className="text-gray-600 mb-6">
+              This course requires a subscription. Please login or register to access the full content.
+            </p>
+            <div className="flex flex-col gap-3">
+              <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Link href="/auth/login">Login</Link>
+              </Button>
+              <Button asChild variant="outline" className="border-gray-300 text-gray-700">
+                <Link href="/auth/register">Register</Link>
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setShowPaymentModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  )
 }

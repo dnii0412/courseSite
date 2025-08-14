@@ -1,24 +1,32 @@
 "use client"
 
-import Link from 'next/link'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import zod from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import * as zod from 'zod'
+import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { SocialButton } from '@/components/ui/SocialButton'
+import { GoogleLoginButton, FacebookLoginButton } from '@/components/auth/GoogleButtons'
+import { Card, CardContent } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { PasswordToggle } from '@/components/ui/password-toggle'
+import { usePasswordToggle } from '@/components/providers/password-toggle-provider'
 
 const schema = zod.object({
-  email: zod.string().email('Имэйл буруу байна'),
-  password: zod.string().min(8, 'Нууц үг хамгийн багадаа 8 тэмдэгт байх ёстой'),
+  email: zod.string().email('Имэйл хаяг буруу байна'),
+  password: zod.string().min(1, 'Нууц үг оруулна уу'),
 })
 
 export default function LoginPage() {
-  const router = useRouter()
   const [apiError, setApiError] = useState('')
   const [hasSubmitted, setHasSubmitted] = useState(false)
-  
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { isPasswordVisible, setIsPasswordVisible } = usePasswordToggle()
+  const router = useRouter()
+
   // Custom resolver that only validates when hasSubmitted is true
   const customResolver = (values: any) => {
     if (!hasSubmitted) {
@@ -29,77 +37,126 @@ export default function LoginPage() {
       return { values: result.data, errors: {} }
     }
     const fieldErrors = result.error.flatten().fieldErrors
-    return { 
-      values, 
+    return {
+      values,
       errors: {
         email: fieldErrors.email ? { message: fieldErrors.email[0] } : undefined,
-        password: fieldErrors.password ? { message: fieldErrors.password[0] } : undefined
+        password: fieldErrors.password ? { message: fieldErrors.password[0] } : undefined,
       }
     }
   }
-  
-  const { register, handleSubmit, formState: { errors, isSubmitting }, setFocus } = useForm<zod.infer<typeof schema>>({
+
+  const { register, handleSubmit, formState: { errors }, setFocus } = useForm<zod.infer<typeof schema>>({
     resolver: customResolver,
-    mode: 'onChange',
-    reValidateMode: 'onChange',
   })
 
-  async function onSubmit(values: zod.infer<typeof schema>) {
+  const onSubmit = async (values: zod.infer<typeof schema>) => {
     setHasSubmitted(true)
     setApiError('')
-    const res = await signIn('credentials', {
-      email: values.email,
-      password: values.password,
-      redirect: false,
-      callbackUrl: '/',
-    })
-    if (!res || res.error) {
-      setApiError('И-мэйл эсвэл нууц үг буруу байна')
-      setFocus('email')
-      return
+    setIsSubmitting(true)
+
+    try {
+      const result = await signIn('credentials', {
+        email: values.email,
+        password: values.password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        setApiError('Имэйл эсвэл нууц үг буруу байна')
+      } else {
+        // Redirect to courses page after successful login
+        router.push('/courses')
+      }
+    } catch (error) {
+      setApiError('Серверийн алдаа')
+    } finally {
+      setIsSubmitting(false)
     }
-    router.push('/')
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F9F3EF] p-4">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold text-slate-900">Нэвтрэх</h1>
-        <p className="mt-1 text-sm text-slate-600">Өөрийн бүртгэлээр нэвтэрнэ үү</p>
-
-        <div className="mt-6 space-y-4">
-          <SocialButton onClick={() => signIn('google', { callbackUrl: '/dashboard' })} />
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-slate-200" />
-            <span className="text-xs text-slate-500">эсвэл</span>
-            <div className="h-px flex-1 bg-slate-200" />
-          </div>
-
-          <form onSubmit={handleSubmit(onSubmit, () => setFocus('email'))} className="space-y-4" aria-busy={isSubmitting}>
-            <div className="space-y-1">
-              <label htmlFor="email" className="block text-sm font-medium text-slate-800">Имэйл</label>
-              <input id="email" type="email" {...register('email')} aria-invalid={!!errors.email || undefined} aria-describedby={errors.email ? 'email-error' : undefined} className="h-11 w-full rounded-xl border border-slate-300 px-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300" />
-              {hasSubmitted && errors.email && <p id="email-error" className="text-xs text-red-600">{errors.email.message}</p>}
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="password" className="block text-sm font-medium text-slate-800">Нууц үг</label>
-              <input id="password" type="password" {...register('password')} aria-invalid={!!errors.password || undefined} aria-describedby={errors.password ? 'password-error' : undefined} className="h-11 w-full rounded-xl border border-slate-300 px-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300" />
-              {hasSubmitted && errors.password && <p id="password-error" className="text-xs text-red-600">{errors.password.message}</p>}
-            </div>
-            {apiError && <div className="text-sm text-red-600">{apiError}</div>}
-            <div className="flex items-center justify-between">
-              <Link href="/auth/reset" className="text-sm text-sky-700 hover:underline">Нууц үг мартсан?</Link>
-            </div>
-            <button disabled={isSubmitting} className="w-full h-11 rounded-xl bg-sky-700 text-white hover:bg-sky-800 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300">
-              {isSubmitting ? 'Нэвтэрч байна…' : 'Нэвтрэх'}
-            </button>
-          </form>
-
-          <div className="text-center text-sm">
-            Бүртгэл байхгүй юу?{' '}
-            <Link href="/auth/register" className="text-sky-700 hover:underline">Бүртгүүлэх</Link>
-          </div>
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Нэвтрэх</h1>
+          <p className="text-gray-600">Бүртгэлтэй имэйл хаягаа оруулна уу</p>
         </div>
+
+        <Card>
+          <CardContent className="p-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Имэйл</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Таны имэйл"
+                  {...register("email")}
+                  className={errors.email ? "border-red-500" : ""}
+                />
+                {errors.email && (
+                  <p className="text-sm text-red-500">{errors.email.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Нууц үг</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={isPasswordVisible ? "text" : "password"}
+                    placeholder="Таны нууц үг"
+                    {...register("password")}
+                    className={errors.password ? "border-red-500 pr-10" : "pr-10"}
+                  />
+                  <PasswordToggle
+                    id="login-password"
+                    isGlobalVisible={isPasswordVisible}
+                    onToggle={setIsPasswordVisible}
+                  />
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-red-500">{errors.password.message}</p>
+                )}
+              </div>
+
+              {apiError && (
+                <div className="text-sm text-red-500 bg-red-50 p-3 rounded-md">
+                  {apiError}
+                </div>
+              )}
+
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Нэвтэрч байна..." : "Нэвтрэх"}
+              </Button>
+            </form>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-gray-500">Эсвэл</span>
+              </div>
+            </div>
+
+            <GoogleLoginButton />
+
+            <div className="mt-4">
+              <FacebookLoginButton />
+            </div>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Бүртгэл байхгүй юу?{" "}
+                <Link href="/auth/register" className="text-blue-600 hover:text-blue-500 font-medium">
+                  Бүртгүүлэх
+                </Link>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { AuthProvider } from '@/components/providers/auth-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { ThemeProvider } from '@/components/theme-provider'
 
 import Navbar from '@/components/Navbar'
 import SessionProviderClient from '@/components/providers/session-provider'
+import { PasswordToggleProvider } from '@/components/providers/password-toggle-provider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -38,14 +38,15 @@ export default function RootLayout({
         <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/favicon.svg" />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} bg-white text-neutral-900`}>
         <SessionProviderClient>
-          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-            <AuthProvider>
+          <PasswordToggleProvider>
+            <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+              <Navbar />
               {children}
               <Toaster />
-            </AuthProvider>
-          </ThemeProvider>
+            </ThemeProvider>
+          </PasswordToggleProvider>
         </SessionProviderClient>
       </body>
     </html>
