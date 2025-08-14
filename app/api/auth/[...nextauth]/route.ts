@@ -18,7 +18,7 @@ export const authOptions: NextAuthOptions = {
 
   pages: {
     signIn: "/auth/login",
-    newUser: "/", // after first-ever OAuth signup
+    newUser: "/onboarding?from=register", // after first-ever OAuth signup
   },
 
   providers: [
@@ -112,9 +112,20 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
 
-    async redirect({ baseUrl }) {
-      // Always go home after login/register/signout
-      return baseUrl;
+    async redirect({ url, baseUrl }) {
+      // Handle OAuth redirects from register page
+      if (url.includes('from=register')) {
+        return `${baseUrl}/onboarding?from=register`
+      }
+      
+      // Handle returnUrl for login flows
+      if (url.startsWith('/') && !url.startsWith('/api')) {
+        return `${baseUrl}${url}`
+      }
+      
+      // Default redirect to courses for successful auth
+      if (url.startsWith(baseUrl)) return url
+      else return `${baseUrl}/courses`
     },
   },
 };

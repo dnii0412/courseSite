@@ -13,7 +13,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      router.push('/') // Changed to redirect to home page
+      router.push('/onboarding?from=register') // Restored original redirect
     }
   }, [status, router])
 

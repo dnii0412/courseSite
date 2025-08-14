@@ -13,7 +13,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      router.push('/') // Changed to redirect to home page
+      router.push('/courses') // Restored original redirect
     }
   }, [status, router])
 

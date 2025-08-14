@@ -45,7 +45,7 @@ export function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
+    
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: 'Error',
@@ -75,24 +75,15 @@ export function RegisterForm() {
         throw new Error(error.error || 'Registration failed')
       }
 
-      // Sign in immediately after successful registration
-      const result = await signIn('credentials', {
+      // Sign in immediately after successful registration with redirect
+      await signIn('credentials', {
         email: formData.email,
         password: formData.password,
-        redirect: false,
+        redirect: true,
+        callbackUrl: '/onboarding?from=register'
       })
 
-      if (result?.error) {
-        throw new Error(result.error)
-      }
-
-      toast({
-        title: 'Account created successfully!',
-        description: 'Welcome to New Era!'
-      })
-
-      // Redirect to home page
-      router.push('/')
+      // If we get here, there was an error (successful login redirects automatically)
     } catch (error) {
       toast({
         title: 'Registration failed',
@@ -106,7 +97,7 @@ export function RegisterForm() {
 
   const handleOAuthSignIn = (provider: 'google' | 'facebook') => {
     signIn(provider, {
-      callbackUrl: '/'
+      callbackUrl: '/onboarding?from=register'
     })
   }
 

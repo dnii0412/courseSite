@@ -19,7 +19,7 @@ export function LoginForm() {
   const { toast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const returnUrl = searchParams.get('returnUrl') || '/'
+  const returnUrl = searchParams.get('returnUrl') || '/courses'
 
   useEffect(() => {
     // Fetch OAuth provider availability from server
@@ -46,22 +46,18 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
+      // Use redirect: true to let NextAuth handle the redirect
       const result = await signIn('credentials', {
         email,
         password,
-        redirect: false,
+        redirect: true,
+        callbackUrl: returnUrl,
       })
 
+      // If we get here, there was an error (successful login redirects automatically)
       if (result?.error) {
         throw new Error(result.error)
       }
-
-      toast({
-        title: 'Successfully signed in',
-        description: 'Welcome back!'
-      })
-      
-      router.push(returnUrl)
     } catch (error) {
       toast({
         title: 'Sign in failed',
@@ -100,7 +96,7 @@ export function LoginForm() {
           <div className="relative">
             <Input
               id="password"
-              type={showPassword ? 'text' : 'password'}
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -156,7 +152,7 @@ export function LoginForm() {
                 className="w-full bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400 transition-colors"
               >
                 <Facebook className="mr-2 h-4 w-4" />
-                Continue with Facebook
+                Sign in with Facebook
               </Button>
             )}
           </div>
