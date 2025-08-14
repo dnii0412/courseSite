@@ -49,11 +49,11 @@ export function AddCourseDropdown({ userId, onAdded }: { userId: string; onAdded
 
   return (
     <div className="grid gap-2">
-      <Label>Курс нэмэх</Label>
+      <Label>Хичээл нэмэх</Label>
       <div className="flex gap-2">
         <Select value={selected} onValueChange={setSelected}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Курс сонгох" />
+            <SelectValue placeholder="Хичээл сонгох" />
           </SelectTrigger>
           <SelectContent>
             {courses.map(c => (

@@ -9,7 +9,9 @@ import {
   CreditCard,
   Settings,
   Database,
-  Grid3X3
+  Grid3X3,
+  DollarSign,
+  TestTube
 } from 'lucide-react'
 
 const menuItems = [

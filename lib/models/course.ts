@@ -34,6 +34,11 @@ const courseSchema = new mongoose.Schema({
     enum: ['beginner', 'intermediate', 'advanced'],
     default: 'beginner'
   },
+  language: {
+    type: String,
+    required: true,
+    default: 'mongolian'
+  },
   instructor: {
     type: mongoose.Schema.Types.Mixed, // allow ObjectId or string
     required: true
@@ -47,6 +52,11 @@ const courseSchema = new mongoose.Schema({
   published: {
     type: Boolean,
     default: false
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'draft'],
+    default: 'active'
   },
   studentsCount: {
     type: Number,

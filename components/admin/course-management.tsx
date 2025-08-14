@@ -25,6 +25,8 @@ interface Course {
   price: number
   status?: 'active' | 'draft' | 'archived' | string
   category: string
+  level?: string
+  language?: string
   lessons?: number | any[]
   students?: number
   studentsCount?: number
@@ -49,6 +51,8 @@ export function CourseManagement() {
     instructor: '',
     price: '',
     category: '',
+    level: 'beginner',
+    language: 'mongolian',
     status: 'active',
     published: true,
     duration: '',
@@ -110,6 +114,8 @@ export function CourseManagement() {
         instructor: '',
         price: '',
         category: '',
+        level: 'beginner',
+        language: 'mongolian',
         status: 'active',
         published: true,
         duration: '',
@@ -256,6 +262,58 @@ export function CourseManagement() {
                   </Select>
                 </div>
                 <div className="grid gap-2">
+                  <Label htmlFor="edit-level">Түвшин</Label>
+                  <Select 
+                    value={selectedCourse.level || 'beginner'} 
+                    onValueChange={val => setSelectedCourse({ ...selectedCourse, level: val })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Түвшин сонгох" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="beginner">Эхлэгч</SelectItem>
+                      <SelectItem value="intermediate">Дунд</SelectItem>
+                      <SelectItem value="advanced">Дээд</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-language">Хэл</Label>
+                  <Select 
+                    value={selectedCourse.language || 'mongolian'} 
+                    onValueChange={val => setSelectedCourse({ ...selectedCourse, language: val })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Хэл сонгох" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mongolian">Монгол</SelectItem>
+                      <SelectItem value="english">English</SelectItem>
+                      <SelectItem value="russian">Орос</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-status">Төлөв</Label>
+                  <Select 
+                    value={selectedCourse.status || 'active'} 
+                    onValueChange={val => setSelectedCourse({ ...selectedCourse, status: val })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Төлөв сонгох" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Идэвхтэй</SelectItem>
+                      <SelectItem value="draft">Ноорог</SelectItem>
+                      <SelectItem value="archived">Архивласан</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
                   <Label htmlFor="edit-published">Нийтлэх</Label>
                   <div className="flex items-center space-x-2">
                     <Switch 
@@ -266,15 +324,15 @@ export function CourseManagement() {
                     <span>{selectedCourse.published ? 'Тийм' : 'Үгүй'}</span>
                   </div>
                 </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-duration">Үргэлжлэх хугацаа (цаг)</Label>
-                <Input 
-                  id="edit-duration" 
-                  type="number" 
-                  value={selectedCourse.duration || ''} 
-                  onChange={e => setSelectedCourse({ ...selectedCourse, duration: Number(e.target.value) })} 
-                />
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-duration">Үргэлжлэх хугацаа (цаг)</Label>
+                  <Input 
+                    id="edit-duration" 
+                    type="number" 
+                    value={selectedCourse.duration || ''} 
+                    onChange={e => setSelectedCourse({ ...selectedCourse, duration: Number(e.target.value) })} 
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -364,6 +422,34 @@ export function CourseManagement() {
                       </Select>
                     </div>
                     <div className="grid gap-2">
+                      <Label htmlFor="level">Түвшин</Label>
+                      <Select value={newCourse.level} onValueChange={val => setNewCourse(v => ({ ...v, level: val }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Түвшин сонгох" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="beginner">Эхлэгч</SelectItem>
+                          <SelectItem value="intermediate">Дунд</SelectItem>
+                          <SelectItem value="advanced">Дээд</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="language">Хэл</Label>
+                      <Select value={newCourse.language} onValueChange={val => setNewCourse(v => ({ ...v, language: val }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Хэл сонгох" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="mongolian">Монгол</SelectItem>
+                          <SelectItem value="english">English</SelectItem>
+                          <SelectItem value="russian">Орос</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
                       <Label htmlFor="published">Нийтлэх</Label>
                       <div className="flex items-center space-x-2">
                         <Switch id="published" checked={newCourse.published} onCheckedChange={val => setNewCourse(v => ({ ...v, published: val }))} />
@@ -374,6 +460,19 @@ export function CourseManagement() {
                   <div className="grid gap-2">
                     <Label htmlFor="duration">Үргэлжлэх хугацаа (цаг)</Label>
                     <Input id="duration" type="number" placeholder="1" value={newCourse.duration} onChange={e => setNewCourse(v => ({ ...v, duration: e.target.value }))} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="status">Төлөв</Label>
+                    <Select value={newCourse.status} onValueChange={val => setNewCourse(v => ({ ...v, status: val }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Төлөв сонгох" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Идэвхтэй</SelectItem>
+                        <SelectItem value="draft">Ноорог</SelectItem>
+                        <SelectItem value="archived">Архивласан</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="flex justify-end space-x-2">

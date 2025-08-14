@@ -90,7 +90,7 @@ export default function Navbar({
           {/* Left: Brand */}
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 rounded-md">
-              <Image src="/favicon.svg" alt="New Era" width={24} height={24} className="rounded" />
+              <Image src="/favicon.svg" alt="New Era" width={24} height={24} className="rounded" priority />
               <span className="font-semibold tracking-tight text-slate-900 dark:text-slate-100">New Era</span>
             </Link>
           </div>

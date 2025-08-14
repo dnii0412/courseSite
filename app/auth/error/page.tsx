@@ -3,8 +3,9 @@
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
+import { Suspense } from 'react'
 
-export default function AuthErrorPage() {
+function AuthErrorContent() {
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
 
@@ -79,5 +80,27 @@ export default function AuthErrorPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#F9F3EF] p-4">
+        <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm text-center">
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <div className="w-8 h-8 bg-slate-300 rounded"></div>
+          </div>
+          <div className="h-8 bg-slate-200 rounded mb-2 animate-pulse"></div>
+          <div className="h-4 bg-slate-200 rounded mb-6 animate-pulse"></div>
+          <div className="space-y-3">
+            <div className="h-11 bg-slate-200 rounded-xl animate-pulse"></div>
+            <div className="h-11 bg-slate-200 rounded-xl animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    }>
+      <AuthErrorContent />
+    </Suspense>
   )
 }

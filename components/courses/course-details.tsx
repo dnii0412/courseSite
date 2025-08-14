@@ -105,12 +105,24 @@ export function CourseDetails({ course }: CourseDetailsProps) {
             </div>
           </div>
 
-          <Tabs defaultValue="curriculum" className="w-full">
+          <Tabs defaultValue="description" className="w-full">
             <TabsList>
-              <TabsTrigger value="curriculum">Хичээлийн хөтөлбөр</TabsTrigger>
-              <TabsTrigger value="requirements">Шаардлага</TabsTrigger>
-              <TabsTrigger value="instructor">Багш</TabsTrigger>
+              <TabsTrigger value="description">Тайлбар</TabsTrigger>
+              <TabsTrigger value="curriculum">Хичээлүүд</TabsTrigger>
             </TabsList>
+            
+            <TabsContent value="description" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Хичээлийн тайлбар</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+                    {course.description}
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
             
             <TabsContent value="curriculum" className="space-y-4">
               <div className="space-y-2">

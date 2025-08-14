@@ -76,46 +76,7 @@ export function WhyUsSection() {
                 </div>
 
                 {/* Additional features */}
-                <div className="mt-20 grid lg:grid-cols-3 gap-8">
-                    <div className="text-center">
-                        <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <span className="text-3xl font-bold text-white">🎯</span>
-                        </div>
-                        <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                            Зорилготой сургалт
-                        </h3>
-                        <p className="text-gray-600">
-                            Хүссэн зорилгодоо хүрэхийн тулд зорилготой,
-                            системтэй сургалтын хөтөлбөр
-                        </p>
-                    </div>
-
-                    <div className="text-center">
-                        <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <span className="text-3xl font-bold text-white">🏆</span>
-                        </div>
-                        <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                            Гэрчилгээ & урамшуулал
-                        </h3>
-                        <p className="text-gray-600">
-                            Хичээл дуусгахад гэрчилгээ,
-                            онцлох амжилтад урамшуулал
-                        </p>
-                    </div>
-
-                    <div className="text-center">
-                        <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <span className="text-3xl font-bold text-white">🤝</span>
-                        </div>
-                        <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                            Нийгэмлэг & дэмжлэг
-                        </h3>
-                        <p className="text-gray-600">
-                            Бусад сурагчидтай холбогдож,
-                            багш нараас дэмжлэг авах боломж
-                        </p>
-                    </div>
-                </div>
+                
 
                 {/* CTA section */}
                 <div className="mt-20 text-center">

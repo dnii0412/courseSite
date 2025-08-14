@@ -2,11 +2,35 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Layout } from '@/lib/models/layout';
 import { verifyToken } from '@/lib/auth';
+import mongoose from 'mongoose';
 
 // GET - List all layouts (admin) or get published layout by slug (public)
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
+    
+    // Check if the Layout collection exists, if not return appropriate response
+    try {
+      const collections = await mongoose.connection.db?.listCollections().toArray();
+      const layoutCollectionExists = collections?.some(col => col.name === 'layouts');
+      
+      if (!layoutCollectionExists) {
+        console.log('Layout collection does not exist yet');
+        const { searchParams } = new URL(request.url);
+        const slug = searchParams.get('slug');
+        
+        if (slug) {
+          return NextResponse.json(
+            { success: false, error: 'Layout not found' },
+            { status: 404 }
+          );
+        }
+        
+        return NextResponse.json({ success: true, data: [] });
+      }
+    } catch (collectionError) {
+      console.log('Could not check collections, assuming they exist');
+    }
     
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');
@@ -62,6 +86,22 @@ export async function GET(request: NextRequest) {
     
   } catch (error) {
     console.error('Error fetching layouts:', error);
+    
+    // If it's a collection doesn't exist error, return appropriate response
+    if (error instanceof Error && error.message.includes('collection')) {
+      const { searchParams } = new URL(request.url);
+      const slug = searchParams.get('slug');
+      
+      if (slug) {
+        return NextResponse.json(
+          { success: false, error: 'Layout not found' },
+          { status: 404 }
+        );
+      }
+      
+      return NextResponse.json({ success: true, data: [] });
+    }
+    
     return NextResponse.json(
       { success: false, error: 'Failed to fetch layouts' },
       { status: 500 }

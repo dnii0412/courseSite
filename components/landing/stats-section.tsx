@@ -61,24 +61,7 @@ export function StatsSection() {
                 </div>
 
                 {/* Additional stats row */}
-                <div className="mt-16 grid gap-8 md:grid-cols-4">
-                    <div className="text-center">
-                        <div className="text-3xl font-bold text-gray-900 mb-2">24/7</div>
-                        <p className="text-gray-600">Дэмжлэг</p>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-3xl font-bold text-gray-900 mb-2">50+</div>
-                        <p className="text-gray-600">Мэргэжлийн багш</p>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-3xl font-bold text-gray-900 mb-2">14</div>
-                        <p className="text-gray-600">Хоногийн буцаалт</p>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-3xl font-bold text-gray-900 mb-2">4.8/5</div>
-                        <p className="text-gray-600">Үнэлгээ</p>
-                    </div>
-                </div>
+               
             </div>
         </section>
     );

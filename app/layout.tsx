@@ -42,6 +42,9 @@ export default function RootLayout({
         <SessionProviderClient>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             <AuthProvider>
+              <div className="hidden lg:block">
+                <Navbar />
+              </div>
               {children}
               <Toaster />
             </AuthProvider>

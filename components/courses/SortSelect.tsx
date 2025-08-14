@@ -24,10 +24,10 @@ export default function SortSelect() {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+      className="h-9 sm:h-10 lg:h-11 rounded-xl border-2 border-[#D2C1B6] bg-white px-3 sm:px-4 text-xs sm:text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-[#456882] focus:border-[#456882] transition-all duration-200 text-[#1B3C53]"
     >
       {options.map((o) => (
-        <option key={o.value} value={o.value}>{o.label}</option>
+        <option key={o.value} value={o.value} className="text-[#1B3C53]">{o.label}</option>
       ))}
     </select>
   )

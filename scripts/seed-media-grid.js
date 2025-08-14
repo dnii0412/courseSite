@@ -1,5 +1,5 @@
 const { MongoClient } = require('mongodb');
-require('dotenv').config();
+require('dotenv').config({ path: '.env.local' });
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -22,12 +22,12 @@ async function seedMediaGrid() {
     await db.collection('layouts').deleteMany({});
     console.log('Cleared existing data');
 
-    // Sample media data (mock URLs for demonstration)
+    // Sample media data (using reliable placeholder services)
     const sampleMedia = [
       {
         type: 'image',
         cloudinaryPublicId: 'sample-image-1',
-        url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop',
+        url: 'https://picsum.photos/800/600?random=1',
         alt: 'Student studying with laptop',
         width: 800,
         height: 600,
@@ -37,7 +37,7 @@ async function seedMediaGrid() {
       {
         type: 'image',
         cloudinaryPublicId: 'sample-image-2',
-        url: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=600&fit=crop',
+        url: 'https://picsum.photos/800/600?random=2',
         alt: 'Group of students collaborating',
         width: 800,
         height: 600,
@@ -47,7 +47,7 @@ async function seedMediaGrid() {
       {
         type: 'image',
         cloudinaryPublicId: 'sample-image-3',
-        url: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=600&fit=crop',
+        url: 'https://picsum.photos/800/600?random=3',
         alt: 'Online learning platform',
         width: 800,
         height: 600,
@@ -57,8 +57,8 @@ async function seedMediaGrid() {
       {
         type: 'video',
         cloudinaryPublicId: 'sample-video-1',
-        url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-        posterUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop',
+        url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        posterUrl: 'https://picsum.photos/400/300?random=4',
         alt: 'Introduction to online learning',
         width: 1280,
         height: 720,

@@ -47,28 +47,15 @@ export function HeroSection() {
                         {/* CTA buttons */}
                         <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                             <Button asChild size="lg" className="text-lg px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-                                <Link href="/auth/register">Бүртгүүлэх — үнэгүй эхлэх</Link>
+                                <Link href="/auth/register">Бүртгүүлэх</Link>
                             </Button>
                             <Button variant="outline" size="lg" asChild className="text-lg px-8 py-4 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-                                <Link href="/courses">Хичээлүүдийг үзэх</Link>
+                                <Link href="/courses">Хичээл үзэх</Link>
                             </Button>
                         </div>
 
                         {/* Trust metrics */}
-                        <div className="flex flex-wrap items-center gap-6 justify-center lg:justify-start text-sm text-gray-600">
-                            <div className="flex items-center gap-2">
-                                <Users className="w-5 h-5 text-blue-600" />
-                                <span>3,200+ сурагч</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Star className="w-5 h-5 text-yellow-500" />
-                                <span>4.8/5 үнэлгээ</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Shield className="w-5 h-5 text-green-600" />
-                                <span>14 хоногийн буцаалт</span>
-                            </div>
-                        </div>
+                       
                     </div>
 
                     {/* Right Column - Product Preview */}

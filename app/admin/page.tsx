@@ -26,7 +26,10 @@ export default function AdminPage() {
   })
   const [recentUsers, setRecentUsers] = useState<any[]>([])
   const [recentCourses, setRecentCourses] = useState<any[]>([])
+  const [recentPayments, setRecentPayments] = useState<any[]>([])
+
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'users' | 'payments'>('users')
 
   useEffect(() => {
     fetchDashboardData()
@@ -35,11 +38,11 @@ export default function AdminPage() {
   const fetchDashboardData = async () => {
     try {
       // Fetch all data from MongoDB
-      const [usersRes, coursesRes, paymentsRes, enrollmentsRes] = await Promise.all([
+      const [usersRes, coursesRes, paymentsRes] = await Promise.all([
         fetch('/api/users'),
         fetch('/api/courses'),
         fetch('/api/payments'),
-        fetch('/api/enrollments/check')
+
       ])
 
       // Log response statuses
@@ -47,23 +50,27 @@ export default function AdminPage() {
         users: usersRes.status,
         courses: coursesRes.status,
         payments: paymentsRes.status,
-        enrollments: enrollmentsRes.status
+
       })
 
       if (usersRes.ok && coursesRes.ok && paymentsRes.ok) {
-        const users = await usersRes.json()
+        const usersData = await usersRes.json()
         const coursesData = await coursesRes.json()
-        const payments = await paymentsRes.json()
+        const paymentsData = await paymentsRes.json()
 
-        // Extract courses array from the response
-        const courses = coursesData.data || coursesData || []
+        // Extract arrays from the responses (handle both direct arrays and {data: array} format)
+        const users = Array.isArray(usersData) ? usersData : (usersData.data || [])
+        const courses = Array.isArray(coursesData) ? coursesData : (coursesData.data || [])
+        const payments = Array.isArray(paymentsData) ? paymentsData : (paymentsData.data || [])
 
         // Debug logging
         console.log('Dashboard data fetched:', {
           users: users.length,
           courses: courses.length,
           payments: payments.length,
-          coursesResponse: coursesData
+          usersResponse: usersData,
+          coursesResponse: coursesData,
+          paymentsResponse: paymentsData
         })
 
         // Calculate stats
@@ -95,6 +102,9 @@ export default function AdminPage() {
         
         // Set recent courses (last 5)
         setRecentCourses(courses.slice(-5).reverse())
+
+        // Set recent payments (last 5)
+        setRecentPayments(payments.slice(-5).reverse())
       } else {
         // Log which APIs failed
         console.error('Some APIs failed:', {
@@ -131,6 +141,20 @@ export default function AdminPage() {
       icon: DollarSign,
       href: '/admin/payments',
       color: 'bg-yellow-500'
+    },
+    {
+      title: 'Media Grid',
+      description: 'Media grid management',
+      icon: FileText,
+      href: '/admin/media-grid',
+      color: 'bg-indigo-500'
+    },
+    {
+      title: 'Database',
+      description: 'Database management and backup',
+      icon: FileText,
+      href: '/admin/database',
+      color: 'bg-red-500'
     },
     {
       title: 'Тохиргоо',
@@ -209,111 +233,141 @@ export default function AdminPage() {
           
         </div>
 
-        {/* Quick Actions */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-xl text-ink-900">Хурдан үйлдлүүд</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Quick Actions and Recent Activities */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base text-ink-900">Quick Actions</CardTitle>
+            </CardHeader>
+                      <CardContent className="pt-0 px-6 pb-6">
+            <div className="grid grid-cols-2 gap-4">
               {quickActions.map((action, index) => (
                 <Button
                   key={index}
                   variant="outline"
-                  className="h-auto p-4 flex flex-col items-center text-center hover:shadow-md transition-shadow"
+                  className="h-auto p-4 flex flex-col items-center text-center hover:shadow-md transition-shadow min-h-[120px]"
                   onClick={() => window.location.href = action.href}
                 >
-                  <div className={`p-3 rounded-xl mb-3 ${action.color}`}>
+                  <div className={`p-3 rounded-lg mb-3 ${action.color}`}>
                     <action.icon className="w-6 h-6 text-white" />
                   </div>
-                  <div className="font-medium text-ink-900">{action.title}</div>
-                  <div className="text-sm text-ink-500 mt-1">{action.description}</div>
+                  <div className="font-medium text-ink-900 text-sm">{action.title}</div>
                 </Button>
               ))}
             </div>
           </CardContent>
-        </Card>
-
-        {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Users */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl text-ink-900">Сүүлийн хэрэглэгчид</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentUsers.length === 0 ? (
-                  <p className="text-ink-500 text-center py-4">Хэрэглэгч олдсонгүй</p>
-                ) : (
-                  recentUsers.map((user) => (
-                    <div key={user._id} className="flex items-center justify-between p-3 border border-sand-200 rounded-xl hover:bg-sand-50">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-sand-200 rounded-full flex items-center justify-center">
-                          <Users className="w-5 h-5 text-ink-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-ink-900">{user.displayName || user.email}</p>
-                          <p className="text-sm text-ink-500">{user.email}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {user.role || 'user'}
-                        </Badge>
-                        <Button variant="ghost" size="sm" onClick={() => window.location.href = `/admin/users/${user._id}`}>
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/users'}>
-                  Бүх хэрэглэгчийг харах
-                </Button>
-              </div>
-            </CardContent>
           </Card>
 
-          {/* Recent Courses */}
+          {/* Recent Activities with Tabs */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-xl text-ink-900">Сүүлийн курсүүд</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base text-ink-900">Recent Activities</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentCourses.length === 0 ? (
-                  <p className="text-ink-500 text-center py-4">Курс олдсонгүй</p>
-                ) : (
-                  recentCourses.map((course) => (
-                    <div key={course._id} className="flex items-center justify-between p-3 border border-sand-200 rounded-xl hover:bg-sand-50">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                          <BookOpen className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-ink-900">{course.title}</p>
-                          <p className="text-sm text-ink-500">{course.description?.substring(0, 50)}...</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {course.status || 'active'}
-                        </Badge>
-                        <Button variant="ghost" size="sm" onClick={() => window.location.href = `/admin/courses/${course._id}`}>
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/courses'}>
-                  Бүх курсыг харах
-                </Button>
+            <CardContent className="pt-0 px-6 pb-6">
+              <div className="flex space-x-1 mb-6 bg-sand-100 p-1 rounded-lg">
+                <button 
+                  className={`px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
+                    activeTab === 'users' 
+                      ? 'bg-white text-primary shadow-sm ring-1 ring-sand-200' 
+                      : 'text-ink-600 hover:text-ink-800 hover:bg-white/50'
+                  }`}
+                  onClick={() => setActiveTab('users')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <Users className="w-4 h-4" />
+                    <span>New Users</span>
+                  </div>
+                </button>
+                <button 
+                  className={`px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
+                    activeTab === 'payments' 
+                      ? 'bg-white text-primary shadow-sm ring-1 ring-sand-200' 
+                      : 'text-ink-600 hover:text-ink-800 hover:bg-white/50'
+                  }`}
+                  onClick={() => setActiveTab('payments')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <DollarSign className="w-4 h-4" />
+                    <span>Payment History</span>
+                  </div>
+                </button>
               </div>
+              
+              {activeTab === 'users' && (
+                <div className="space-y-4">
+                  {recentUsers.length === 0 ? (
+                    <p className="text-ink-500 text-center py-4">No users found</p>
+                  ) : (
+                    recentUsers.map((user) => (
+                      <div key={user._id} className="flex items-center justify-between p-3 border border-sand-200 rounded-lg hover:bg-sand-50">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-sand-200 rounded-full flex items-center justify-center">
+                            <Users className="w-4 h-4 text-ink-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-ink-900 text-sm">{user.displayName || user.email}</p>
+                            <p className="text-xs text-ink-500">{user.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {user.role || 'user'}
+                          </Badge>
+                          <Button variant="ghost" size="sm" onClick={() => window.location.href = `/admin/users/${user._id}`}>
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => window.location.href = '/admin/users'}>
+                    View All Users
+                  </Button>
+                </div>
+              )}
+              
+              {activeTab === 'payments' && (
+                <div className="space-y-4">
+                  {recentPayments.length === 0 ? (
+                    <p className="text-ink-500 text-center py-4">No payments found</p>
+                  ) : (
+                    recentPayments.map((payment) => (
+                      <div key={payment._id} className="flex items-center justify-between p-3 border border-sand-200 rounded-lg hover:bg-sand-50">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <DollarSign className="w-4 h-4 text-yellow-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-ink-900 text-sm">${payment.amount || 0}</p>
+                            <p className="text-xs text-ink-500">{payment.status || 'pending'}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge 
+                            variant={payment.status === 'completed' ? 'default' : 'secondary'} 
+                            className="text-xs"
+                          >
+                            {payment.status || 'pending'}
+                          </Badge>
+                          <Button variant="ghost" size="sm" onClick={() => window.location.href = `/admin/payments`}>
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => window.location.href = '/admin/payments'}>
+                    View All Payments
+                  </Button>
+                </div>
+              )}
+              
             </CardContent>
           </Card>
         </div>
+
+
       </div>
     </div>
   )

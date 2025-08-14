@@ -141,7 +141,7 @@ export default function AdminUsersPage() {
           <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>Хэрэглэгч засах</DialogTitle>
+                <DialogTitle>Хэрэглэгчийн мэдээлэл засах</DialogTitle>
               </DialogHeader>
               {selectedUser && (
                 <div className="grid gap-4 py-4">
@@ -166,7 +166,7 @@ export default function AdminUsersPage() {
                   {/* Show user's courses */}
                   {Array.isArray(selectedUser.enrolledCourses) && selectedUser.enrolledCourses.length > 0 && (
                     <div className="grid gap-2">
-                      <Label>Худалдан авсан курсууд</Label>
+                      <Label>Худалдан авсан хичээлүүд</Label>
                       <div className="flex flex-wrap gap-2">
                         {selectedUser.enrolledCourses.map((c: any) => (
                           <span key={typeof c === 'string' ? c : c._id} className="px-2 py-1 text-xs rounded bg-gray-100">

@@ -86,29 +86,7 @@ export default function AdminMediaGridPage() {
       </div>
 
       {/* Combined Presets + Upload toolbar */}
-      <Card className="mb-4">
-        <CardContent className="py-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Preset chooser */}
-            <Select value={layoutSlug} onValueChange={(slug)=> setLayoutSlug(slug)}>
-              <SelectTrigger className="h-9 w-52">
-                <SelectValue placeholder={presetsLoading ? 'Loading presets...' : 'Choose preset'} />
-              </SelectTrigger>
-              <SelectContent>
-                {presets.map((p)=> (
-                  <SelectItem key={p._id} value={p.slug}>{p.slug}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="sm" onClick={()=>setShowCreateLayout(true)}>
-              <Plus className="w-4 h-4 mr-1"/> New
-            </Button>
-            <Button variant="outline" size="sm" onClick={()=>window.open(`/`, '_blank')}>
-              <Eye className="w-4 h-4 mr-1"/> View
-            </Button>
-            
-            <div className="ml-auto">
-              <Button variant="outline" size="sm" asChild>
+      <Button variant="outline" size="sm" asChild>
                 <label className="inline-flex items-center gap-2 cursor-pointer">
                   <Upload className="w-4 h-4" />
                   <span>Upload</span>
@@ -119,11 +97,7 @@ export default function AdminMediaGridPage() {
                     }
                   }} />
                 </label>
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        </Button>
 
       {/* Create New Layout Modal */}
       {showCreateLayout && (

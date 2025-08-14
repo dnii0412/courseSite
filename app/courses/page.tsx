@@ -31,28 +31,60 @@ export default async function CoursesPage({ searchParams }: { searchParams: Reco
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar/>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Хичээлүүд <span className="text-slate-500 text-lg align-middle">({total})</span></h1>
-          <SortSelect />
-        </div>
+      
+      {/* Mobile & Tablet Layout */}
+      <div className="lg:hidden">
+        <div className="px-4 py-6">
+          {/* Mobile Header */}
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-[#1B3C53] mb-3">Хичээлүүд</h1>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm text-[#456882] font-medium">{total} хичээл</span>
+            </div>
+          </div>
 
-        <SearchBar />
-        <AppliedChips />
-
-        <div className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-[280px,1fr] gap-6">
-            {/* Sidebar; applied chips moved above grid to avoid pushing cards */}
+          {/* Mobile Search & Filters */}
+          <div className="space-y-4 mb-6">
+            <SearchBar />
+            <AppliedChips />
             <Filters />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
-              {data.length === 0 ? (
-                <div className="col-span-full">
-                  <EmptyState />
-                </div>
-              ) : (
-                data.map((course: any) => <CourseCard key={course._id} course={course} />)
-              )}
+          </div>
+
+          {/* Mobile Course Grid */}
+          <div className="grid grid-cols-1 gap-4">
+            {data.length === 0 ? (
+              <EmptyState />
+            ) : (
+              data.map((course: any) => <CourseCard key={course._id} course={course} />)
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden lg:block">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          {/* Desktop Header */}
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold text-slate-900">Хичээлүүд <span className="text-slate-500 text-lg align-middle">({total})</span></h1>
+            <SortSelect />
+          </div>
+
+          <SearchBar />
+          <AppliedChips />
+
+          <div className="mt-6">
+            <div className="grid grid-cols-[280px,1fr] gap-6">
+              <Filters />
+              <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+                {data.length === 0 ? (
+                  <div className="col-span-full">
+                    <EmptyState />
+                  </div>
+                ) : (
+                  data.map((course: any) => <CourseCard key={course._id} course={course} />)
+                )}
+              </div>
             </div>
           </div>
         </div>

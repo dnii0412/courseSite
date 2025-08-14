@@ -47,20 +47,27 @@ export default function AppliedChips() {
   if (!chips.length) return null
 
   return (
-    <div className="mb-4 flex flex-wrap gap-2">
-      {chips.map((c, i) => (
-        <button
-          key={i}
-          onClick={() => removeChip(c)}
-          className="inline-flex items-center gap-1 rounded-full border border-slate-300 px-3 py-1 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+    <div className="mb-4">
+      <div className="flex flex-wrap gap-2 mb-3">
+        {chips.map((c, i) => (
+          <button
+            key={i}
+            onClick={() => removeChip(c)}
+            className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border-2 border-[#D2C1B6] bg-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-[#1B3C53] hover:bg-[#F9F3EF] focus:outline-none focus:ring-2 focus:ring-[#456882] focus:ring-offset-2 transition-all duration-200"
+          >
+            <span className="truncate max-w-[120px] sm:max-w-none">{c.label}</span>
+            <span className="text-[#456882] font-bold text-sm sm:text-base flex-shrink-0">×</span>
+          </button>
+        ))}
+      </div>
+      {chips.length > 0 && (
+        <button 
+          onClick={() => router.push('/courses')} 
+          className="text-xs sm:text-sm font-medium text-[#456882] hover:text-[#1B3C53] underline focus:outline-none focus:ring-2 focus:ring-[#456882] focus:ring-offset-2 transition-colors duration-200"
         >
-          <span>{c.label}</span>
-          <span>×</span>
+          Бүх шүүлтийг цэвэрлэх
         </button>
-      ))}
-      <button onClick={() => router.push('/courses')} className="text-sm underline focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 rounded">
-        Цэвэрлэх
-      </button>
+      )}
     </div>
   )
 }

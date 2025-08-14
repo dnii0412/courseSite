@@ -3,17 +3,37 @@ import { connectDB } from '@/lib/mongodb';
 import { Media } from '@/lib/models/media';
 import { cloudinaryUtils } from '@/lib/utils/cloudinary';
 import { verifyToken } from '@/lib/auth';
+import mongoose from 'mongoose';
 
 // GET - List all media
 export async function GET() {
   try {
     await connectDB();
     
+    // Check if the Media collection exists, if not return empty array
+    try {
+      const collections = await mongoose.connection.db?.listCollections().toArray();
+      const mediaCollectionExists = collections?.some(col => col.name === 'media');
+      
+      if (!mediaCollectionExists) {
+        console.log('Media collection does not exist yet, returning empty array');
+        return NextResponse.json({ success: true, data: [] });
+      }
+    } catch (collectionError) {
+      console.log('Could not check collections, assuming they exist');
+    }
+    
     const media = await Media.find().sort({ createdAt: -1 });
     
     return NextResponse.json({ success: true, data: media });
   } catch (error) {
     console.error('Error fetching media:', error);
+    
+    // If it's a collection doesn't exist error, return empty array
+    if (error instanceof Error && error.message.includes('collection')) {
+      return NextResponse.json({ success: true, data: [] });
+    }
+    
     return NextResponse.json(
       { success: false, error: 'Failed to fetch media' },
       { status: 500 }

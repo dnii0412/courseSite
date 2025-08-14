@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { Course } from '@/lib/models/course'
-import '@/lib/models/lesson'
-import { User } from '@/lib/models/user'
-import mongoose from 'mongoose'
 
 export async function GET(
   request: NextRequest,
@@ -11,40 +8,21 @@ export async function GET(
 ) {
   try {
     await connectDB()
-
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
-      return NextResponse.json({ error: 'Буруу ID' }, { status: 400 })
-    }
-
-    const course = await Course.findById(params.id)
-      .populate('lessons')
-      .lean()
-
+    
+    const course = await Course.findById(params.id).lean()
+    
     if (!course) {
       return NextResponse.json(
-        { error: 'Хичээл олдсонгүй' },
+        { success: false, error: 'Course not found' },
         { status: 404 }
       )
     }
 
-    // Users who have this course in their profile (support both ObjectId and legacy string values)
-    const courseObjectId = new mongoose.Types.ObjectId(params.id)
-    const userDocs = await User.find({
-      $or: [
-        { enrolledCourses: params.id },
-        { enrolledCourses: courseObjectId },
-      ],
-    })
-      .select('name email _id')
-      .lean()
-
-    const enrollments = userDocs.map((u: any) => ({ user: { _id: u._id, name: u.name, email: u.email } }))
-
-    return NextResponse.json({ course, enrollments })
+    return NextResponse.json({ success: true, data: course })
   } catch (error) {
-    console.error('Get course error:', error)
+    console.error('Error fetching course:', error)
     return NextResponse.json(
-      { error: 'Серверийн алдаа', details: process.env.NODE_ENV !== 'production' ? String((error as any)?.message || error) : undefined },
+      { success: false, error: 'Failed to fetch course' },
       { status: 500 }
     )
   }
@@ -57,25 +35,75 @@ export async function PUT(
   try {
     await connectDB()
     
-    const courseData = await request.json()
-    const course = await Course.findByIdAndUpdate(
-      params.id,
-      courseData,
-      { new: true }
-    )
+    const body = await request.json()
+    const { 
+      title, 
+      description, 
+      price, 
+      category, 
+      level, 
+      duration, 
+      language,
+      instructor,
+      requirements,
+      whatYouWillLearn,
+      published,
+      status
+    } = body
 
-    if (!course) {
+    // Check if course exists
+    const existingCourse = await Course.findById(params.id)
+    if (!existingCourse) {
       return NextResponse.json(
-        { error: 'Хичээл олдсонгүй' },
+        { success: false, error: 'Course not found' },
         { status: 404 }
       )
     }
 
-    return NextResponse.json(course)
+    // Check if title is being changed and if new title already exists
+    if (title && title !== existingCourse.title) {
+      const duplicateCourse = await Course.findOne({ 
+        title: { $regex: new RegExp(`^${title}$`, 'i') },
+        _id: { $ne: params.id }
+      })
+      if (duplicateCourse) {
+        return NextResponse.json(
+          { success: false, error: 'Course with this title already exists' },
+          { status: 409 }
+        )
+      }
+    }
+
+    // Update course
+    const updatedCourse = await Course.findByIdAndUpdate(
+      params.id,
+      {
+        ...(title && { title }),
+        ...(description && { description }),
+        ...(price !== undefined && { price }),
+        ...(category && { category }),
+        ...(level && { level }),
+        ...(duration !== undefined && { duration }),
+        ...(language && { language }),
+        ...(instructor && { instructor }),
+        ...(requirements && { requirements }),
+        ...(whatYouWillLearn && { whatYouWillLearn }),
+        ...(published !== undefined && { published }),
+        ...(status && { status })
+      },
+      { new: true, runValidators: true }
+    )
+
+    return NextResponse.json({ 
+      success: true, 
+      data: updatedCourse,
+      message: 'Course updated successfully'
+    })
+
   } catch (error) {
-    console.error('Update course error:', error)
+    console.error('Error updating course:', error)
     return NextResponse.json(
-      { error: 'Серверийн алдаа' },
+      { success: false, error: 'Failed to update course' },
       { status: 500 }
     )
   }
@@ -87,21 +115,28 @@ export async function DELETE(
 ) {
   try {
     await connectDB()
-    
-    const course = await Course.findByIdAndDelete(params.id)
 
-    if (!course) {
+    // Check if course exists
+    const existingCourse = await Course.findById(params.id)
+    if (!existingCourse) {
       return NextResponse.json(
-        { error: 'Хичээл олдсонгүй' },
+        { success: false, error: 'Course not found' },
         { status: 404 }
       )
     }
 
-    return NextResponse.json({ message: 'Хичээл амжилттай устгагдлаа' })
+    // Delete course
+    await Course.findByIdAndDelete(params.id)
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Course deleted successfully'
+    })
+
   } catch (error) {
-    console.error('Delete course error:', error)
+    console.error('Error deleting course:', error)
     return NextResponse.json(
-      { error: 'Серверийн алдаа' },
+      { success: false, error: 'Failed to delete course' },
       { status: 500 }
     )
   }

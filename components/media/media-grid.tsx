@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { IMedia, ILayout } from '@/lib/models/layout';
+import { ILayout } from '@/lib/models/layout';
+import { IMedia } from '@/lib/models/media';
 
 interface MediaGridProps {
   slug: string;
@@ -190,15 +191,15 @@ export const MediaGrid = ({ slug }: MediaGridProps) => {
           if (mediaResponse.ok) {
             const mediaData = await mediaResponse.json();
             const allMedia = mediaData.data;
-            const filteredMedia = allMedia.filter((m: IMedia) =>
-              mediaIds.includes(m._id)
-            );
+            const filteredMedia = allMedia.filter((m: IMedia) => {
+              return mediaIds.some((id: any) => id.toString() === m._id);
+            });
             setMedia(filteredMedia);
           }
         }
 
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load layout');
+        console.error('Error in media-grid:', err);
       } finally {
         setLoading(false);
       }
@@ -226,6 +227,7 @@ export const MediaGrid = ({ slug }: MediaGridProps) => {
     );
   }
 
+  console.log('Render check - layout:', layout, 'media:', media, 'media.length:', media.length);
   if (!layout || !media.length) {
     return (
       <div className="w-full h-[90vh] flex items-center justify-center">
@@ -241,16 +243,16 @@ export const MediaGrid = ({ slug }: MediaGridProps) => {
   const mediaMap = new Map(media.map(m => [m._id, m]));
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4">
+    <div className="w-full max-w-7xl mx-auto px-4 py-8">
       <div
-        className="grid gap-3 h-[600px]"
+        className="grid gap-4 h-auto"
         style={{
-          gridTemplateColumns: 'repeat(6, 1fr)',
-          gridTemplateRows: 'repeat(4, 1fr)',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+          gridAutoRows: 'minmax(150px, auto)',
         }}
       >
         {layout.items.map((item) => {
-          const mediaItem = mediaMap.get(item.mediaId);
+          const mediaItem = mediaMap.get(item.mediaId.toString());
           if (!mediaItem) return null;
 
           return (

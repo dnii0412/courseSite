@@ -213,8 +213,8 @@ export const MediaLibrary = forwardRef<MediaLibraryHandle, MediaLibraryProps>(fu
       {!compact && (
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-[#1B3C53]">Media Library</h2>
-            <p className="text-gray-600">Manage your uploaded images and videos</p>
+            <h2 className="text-2xl font-bold text-black">Media Library</h2>
+            <p className="text-black">Manage your uploaded images and videos</p>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -229,183 +229,84 @@ export const MediaLibrary = forwardRef<MediaLibraryHandle, MediaLibraryProps>(fu
         </div>
       )}
 
-      {/* Upload Section */}
-      {!hideUpload && (
-        <Card className={compact ? 'border-sand-200' : 'border-[#D2C1B6] bg-[#F9F3EF]'}>
-          <CardContent className="py-3">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Label htmlFor="media-upload" className="sr-only">Upload</Label>
-              <Input id="media-upload" type="file" multiple accept="image/*,video/*" onChange={handleFileUpload} disabled={uploading} className="h-9 w-56" />
-              <div className="text-xs text-gray-500">JPEG, PNG, WebP, MP4…</div>
-              {uploading && (
-                <div className="flex items-center gap-2 text-[#456882] ml-auto">
-                  <div className="w-4 h-4 border-2 border-[#456882] border-t-transparent rounded-full animate-spin" />
-                  <span className="text-xs">Uploading…</span>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Search and Filters */}
-      <div className="flex items-center gap-2">
-        <div className="flex-1">
-          <Input
-            placeholder="Search media..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`h-9 ${compact ? '' : 'border-[#D2C1B6]'}`}
-          />
-        </div>
-        <Badge variant="secondary" className="bg-[#456882] text-white h-6">
-          {filteredMedia.length} items
-        </Badge>
-      </div>
-
-      {/* Media Grid/List */}
-      <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'grid' | 'list')}>
-        {!compact && (
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="grid">Grid View</TabsTrigger>
-            <TabsTrigger value="list">List View</TabsTrigger>
-          </TabsList>
+      {/* Media and Upload Container */}
+      <div className="bg-white p-4 rounded-lg shadow-md">
+        {/* Upload Button */}
+        {!hideUpload && (
+          <div className="mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+            >
+              <label className="inline-flex items-center gap-2 cursor-pointer">
+                <Upload className="w-4 h-4" />
+                <span>Upload</span>
+                <input type="file" multiple accept="image/*,video/*" className="hidden" onChange={handleFileUpload} />
+              </label>
+            </Button>
+          </div>
         )}
 
-        <TabsContent value="grid" className="space-y-4">
+        {/* Media List */}
+        <ul className="space-y-2">
           {filteredMedia.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
+            <li className="text-center py-12 text-gray-500">
               <Upload className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p>No media found. Upload some files to get started!</p>
-            </div>
-          ) : (
-            <div className={compact ? 'grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-3' : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4'}>
-              {filteredMedia.map((item) => (
-                <Card
-                  key={item._id}
-                  className={`cursor-pointer transition-all hover:shadow-lg ${compact ? '' : 'border-[#D2C1B6] bg-[#F9F3EF]'} ${selectedMedia?._id === item._id ? 'ring-2 ring-[#1B3C53]' : ''
-                    }`}
-                  onClick={() => handleMediaClick(item)}
-                >
-                  <CardContent className="p-2 md:p-3">
-                    <div className={compact ? 'aspect-[4/3] relative mb-1' : 'aspect-square relative mb-2'}>
-                      {item.type === 'video' ? (
-                        <video
-                          src={item.url}
-                          poster={item.posterUrl}
-                          className="w-full h-full object-cover rounded"
-                          muted
-                          preload="metadata"
-                        />
-                      ) : (
-                        <img
-                          src={item.url}
-                          alt={item.alt}
-                          className="w-full h-full object-cover rounded"
-                        />
-                      )}
-                      <div className="absolute top-1 right-1">
-                        {item.type === 'video' ? (
-                          <Video className="w-4 h-4 text-white bg-black/50 rounded p-0.5" />
-                        ) : (
-                          <Image className="w-4 h-4 text-white bg-black/50 rounded p-0.5" />
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-xs md:text-sm font-medium text-[#1B3C53] truncate">
-                        {item.alt}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="text-[10px] md:text-xs">
-                          {item.type}
-                        </Badge>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteMedia(item._id, item.cloudinaryPublicId);
-                          }}
-                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="list" className="space-y-2">
-          {filteredMedia.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <Upload className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No media found. Upload some files to get started!</p>
-            </div>
+            </li>
           ) : (
             filteredMedia.map((item) => (
-              <Card
-                key={item._id}
-                className={`cursor-pointer transition-all hover:shadow-md border-[#D2C1B6] bg-[#F9F3EF] ${selectedMedia?._id === item._id ? 'ring-2 ring-[#1B3C53]' : ''
-                  }`}
-                onClick={() => handleMediaClick(item)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 relative flex-shrink-0">
-                      {item.type === 'video' ? (
-                        <video
-                          src={item.url}
-                          poster={item.posterUrl}
-                          className="w-full h-full object-cover rounded"
-                          muted
-                          preload="metadata"
-                        />
-                      ) : (
-                        <img
-                          src={item.url}
-                          alt={item.alt}
-                          className="w-full h-full object-cover rounded"
-                        />
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-[#1B3C53] truncate">{item.alt}</h3>
-                      <p className="text-sm text-gray-600">
-                        {item.width} × {item.height} • {item.type}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(item.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="outline">{item.type}</Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteMedia(item._id, item.cloudinaryPublicId);
-                        }}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+              <li key={item._id} className="cursor-pointer transition-all hover:shadow-md border-gray-300 bg-white rounded-lg">
+                <div className="p-4 flex items-center space-x-4">
+                  <div className="w-16 h-16 relative flex-shrink-0">
+                    {item.type === 'video' ? (
+                      <video
+                        src={item.url}
+                        poster={item.posterUrl}
+                        className="w-full h-full object-cover rounded"
+                        muted
+                        preload="metadata"
+                      />
+                    ) : (
+                      <img
+                        src={item.url}
+                        alt={item.alt}
+                        className="w-full h-full object-cover rounded"
+                      />
+                    )}
                   </div>
-                </CardContent>
-              </Card>
+
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-black truncate">{item.alt}</h3>
+                    <p className="text-sm text-black">
+                      {item.width} × {item.height} • {item.type}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(item.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="outline">{item.type}</Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteMedia(item._id, item.cloudinaryPublicId);
+                      }}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </li>
             ))
           )}
-        </TabsContent>
-      </Tabs>
+        </ul>
+      </div>
     </div>
   );
 });
