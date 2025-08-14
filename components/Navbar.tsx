@@ -43,6 +43,10 @@ export default function Navbar({
   const menuRef = useRef<HTMLDivElement>(null)
   const { data: session, status } = useSession()
 
+  // Debug session state
+  console.log('Navbar - Session status:', status)
+  console.log('Navbar - Session data:', session)
+
   const isAuthed = !!session?.user
   const currentUser = {
     name: session?.user?.name || user?.name || '',
@@ -83,9 +87,9 @@ export default function Navbar({
   const headerClass = useMemo(
     () =>
       `sticky top-0 z-50 h-16 border-b ${scrolled
-        ? 'bg-white shadow-[0_1px_0_0_rgba(0,0,0,0.06)] dark:bg-slate-900'
-        : 'bg-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:bg-slate-900/70'
-      } border-slate-200/70 dark:border-slate-800`,
+        ? 'bg-white shadow-sm dark:bg-neutral-900'
+        : 'bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/95 dark:bg-neutral-900/95'
+      } border-neutral-200 dark:border-neutral-800`,
     [scrolled]
   )
 
@@ -94,17 +98,19 @@ export default function Navbar({
   return (
     <header className={headerClass}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-        <div className="flex items-center justify-between h-16">
-          {/* Left: Brand */}
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 rounded-md">
-              <Image src="/favicon.svg" alt="New Era" width={24} height={24} className="rounded" />
-              <span className="font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">New Era</span>
-            </Link>
-          </div>
+        <div className="flex items-center justify-between h-full">
+          {/* Left: Logo */}
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-neutral-900 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">NE</span>
+            </div>
+            <span className="font-semibold tracking-tight text-neutral-900 dark:text-white">
+              New Era
+            </span>
+          </Link>
 
-          {/* Center: Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-8" aria-label="Main Navigation">
+          {/* Center: Navigation */}
+          <nav className="hidden lg:flex items-center space-x-8">
             {items.map((item) => {
               const active = isActive(item.href)
               return (
@@ -112,9 +118,9 @@ export default function Navbar({
                   key={item.href}
                   href={item.href}
                   className={`relative text-sm transition-colors ${active
-                    ? 'text-slate-900 dark:text-slate-50 after:absolute after:inset-x-0 after:-bottom-2 after:h-0.5 after:bg-sky-600 after:rounded'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
-                    } focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 rounded`}
+                    ? 'text-neutral-900 dark:text-neutral-50 after:absolute after:inset-x-0 after:-bottom-2 after:h-0.5 after:bg-neutral-600 after:rounded'
+                    : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white'
+                    } focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 rounded`}
                 >
                   {item.name}
                 </Link>
@@ -183,7 +189,7 @@ export default function Navbar({
 
                     <button
                       onClick={() => (onSignOut ? onSignOut() : signOut())}
-                      className="w-full text-left px-3 py-2 rounded-lg text-sm text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                      className="block w-full text-left px-3 py-2 rounded-lg text-sm text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800"
                       role="menuitem"
                     >
                       Гарах
@@ -194,18 +200,18 @@ export default function Navbar({
             )}
           </div>
 
-          {/* Mobile hamburger */}
-          <div className="lg:hidden flex items-center">
-            <button
-              aria-controls="mobile-menu"
-              aria-expanded={mobileOpen}
-              onClick={() => setMobileOpen(true)}
-              className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
-            >
-              <span className="sr-only">Цэс нээх</span>
-              <Menu className="h-6 w-6" />
-            </button>
-          </div>
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="lg:hidden p-2 rounded-md text-neutral-700 hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+            aria-label="Цэс нээх"
+          >
+            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -222,19 +228,19 @@ export default function Navbar({
         />
         {/* Panel */}
         <div
-          className={`absolute right-0 top-0 h-full w-80 max-w-[85%] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 transition-transform duration-300 ease-out ${mobileOpen ? 'translate-x-0' : 'translate-x-full'
+          className={`absolute right-0 top-0 h-full w-80 max-w-[85%] bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800 transition-transform duration-300 ease-out ${mobileOpen ? 'translate-x-0' : 'translate-x-full'
             }`}
           role="dialog"
           aria-modal="true"
         >
-          <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800">
+          <div className="h-16 flex items-center justify-between px-4 border-b border-neutral-200 dark:border-neutral-800">
             <Link href="/" className="font-semibold tracking-tight" onClick={() => setMobileOpen(false)}>
               New Era
             </Link>
             <button
               onClick={() => setMobileOpen(false)}
               aria-label="Цэс хаах"
-              className="p-2 rounded-md text-slate-700 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+              className="p-2 rounded-md text-neutral-700 hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
             >
               <X className="h-6 w-6" />
             </button>
@@ -249,8 +255,8 @@ export default function Navbar({
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                   className={`block px-3 py-2 rounded-lg text-base ${active
-                    ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white'
-                    : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                    ? 'bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-white'
+                    : 'text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-800'
                     }`}
                 >
                   {item.name}
@@ -259,40 +265,68 @@ export default function Navbar({
             })}
           </nav>
 
-          <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-800">
+          <div className="px-4 py-4 border-t border-neutral-200 dark:border-neutral-800">
             {!isAuthed ? (
               <div className="flex flex-col gap-3">
                 <Link
                   href="/auth/login"
                   onClick={() => setMobileOpen(false)}
-                  className="w-full text-center text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-slate-800 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors"
+                  className="w-full text-center text-neutral-700 hover:text-neutral-900 dark:text-neutral-200 dark:hover:text-neutral-800 px-3 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 transition-colors"
                 >
                   Нэвтрэх
                 </Link>
                 <Link
                   href="/auth/register"
                   onClick={() => setMobileOpen(false)}
-                  className="w-full text-center bg-sky-700 text-white hover:bg-sky-800 rounded-xl px-3 py-2 transition-colors"
+                  className="w-full text-center bg-neutral-900 text-white hover:bg-neutral-800 px-3 py-2 rounded-xl transition-colors"
                 >
                   Бүртгүүлэх
                 </Link>
               </div>
             ) : (
-              <div className="space-y-1">
-                <div className="flex items-center gap-3 px-3 py-2">
-                  <Image src={currentUser.image || '/placeholder-user.jpg'} alt={currentUser.name || 'User'} width={36} height={36} className="rounded-full" />
-                  <div className="text-sm text-slate-800 dark:text-slate-200">{currentUser.name || 'Хэрэглэгч'}</div>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3 p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                  <Image
+                    src={currentUser.image || '/placeholder-user.jpg'}
+                    alt={currentUser.name || 'User'}
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-neutral-900 dark:text-white">
+                      {currentUser.name || 'User'}
+                    </p>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                      {session?.user?.email}
+                    </p>
+                  </div>
                 </div>
-                <Link href="/profile" onClick={() => setMobileOpen(false)} className="block px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:text-slate-800 transition-colors">
-                  Профайл
-                </Link>
-                <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="block px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:text-slate-800 transition-colors">
-                  Миний сургалтууд
-                </Link>
-
-                <button onClick={() => { setMobileOpen(false); (onSignOut ? onSignOut() : signOut()) }} className="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:text-slate-800 transition-colors">
-                  Гарах
-                </button>
+                <div className="space-y-1">
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileOpen(false)}
+                    className="block px-3 py-2 rounded-lg text-sm text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                  >
+                    Профайл
+                  </Link>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileOpen(false)}
+                    className="block px-3 py-2 rounded-lg text-sm text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                  >
+                    Миний сургалтууд
+                  </Link>
+                  <button
+                    onClick={() => {
+                      onSignOut ? onSignOut() : signOut()
+                      setMobileOpen(false)
+                    }}
+                    className="block w-full text-left px-3 py-2 rounded-lg text-sm text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                  >
+                    Гарах
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -301,5 +335,3 @@ export default function Navbar({
     </header>
   )
 }
-
-export { useScrolled }

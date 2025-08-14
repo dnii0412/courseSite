@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import React, { useState, useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { useAdminAuth } from '@/hooks/use-admin-auth'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { Menu } from 'lucide-react'
 
@@ -10,6 +11,32 @@ export default function AdminSectionLayout({ children }: { children: React.React
 	const [mobileOpen, setMobileOpen] = useState(false)
     const pathname = usePathname()
     const isLogin = pathname === '/admin/login'
+    const { isAdmin, isLoading } = useAdminAuth()
+    const router = useRouter()
+
+    // Redirect non-admin users
+    useEffect(() => {
+        if (isLoading) return // Still loading
+        
+        if (!isAdmin && !isLogin) {
+            // Not admin, redirect to login
+            router.push('/admin/login')
+        }
+    }, [isAdmin, isLoading, isLogin, router])
+
+    // Show loading while checking authentication
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+        )
+    }
+
+    // If not admin and not on login page, don't render anything
+    if (!isAdmin && !isLogin) {
+        return null
+    }
 
 	return (
         <div className="min-h-screen bg-white">
