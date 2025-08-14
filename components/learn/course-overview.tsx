@@ -1,258 +1,177 @@
-'use client'
+"use client"
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Play, Lock, CheckCircle, Clock, Users, Star } from 'lucide-react'
-import Image from 'next/image'
+import { Clock, BookOpen, CheckCircle, Play, Lock } from 'lucide-react'
 import Link from 'next/link'
-import { useAuth } from '@/hooks/use-auth'
-import { useToast } from '@/hooks/use-toast'
-
-interface CourseOverviewProps {
-  courseId: string
-}
 
 interface Lesson {
   _id: string
   title: string
-  description: string
   duration: number
-  videoUrl: string
   isCompleted?: boolean
+  isLocked?: boolean
 }
 
 interface Course {
   _id: string
   title: string
   description: string
-  thumbnail: string
-  price: number
-  duration: number
-  studentsCount: number
-  rating: number
-  instructor: {
-    name: string
-  } | string | null
-  lessons?: Lesson[]
+  lessons: Lesson[]
+  totalDuration: number
+  completedLessons: number
 }
 
-interface Enrollment {
-  _id: string
-  progress: number
-  completedLessons: string[]
+interface CourseOverviewProps {
+  course: Course
 }
 
-export function CourseOverview({ courseId }: CourseOverviewProps) {
-  const [course, setCourse] = useState<Course | null>(null)
-  const [enrollment, setEnrollment] = useState<Enrollment | null>(null)
-  const [loading, setLoading] = useState(true)
-  const { user } = useAuth()
-  const { toast } = useToast()
+export function CourseOverview({ course }: CourseOverviewProps) {
+  const { data: session } = useSession()
+  const [currentLesson, setCurrentLesson] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchCourseData = async () => {
-      try {
-        // Fetch course details
-        const courseResponse = await fetch(`/api/courses/${courseId}`)
-        const courseData = await courseResponse.json()
-
-        if (courseResponse.ok) {
-          // API may return { course, enrollments } or the course directly
-          setCourse(courseData.course || courseData)
-        } else {
-          throw new Error('Course not found')
-        }
-
-        // Check enrollment if user is logged in
-          if (user) {
-            const enrollmentResponse = await fetch(`/api/enrollments/check/${courseId}`, { cache: 'no-store', credentials: 'include' })
-          if (enrollmentResponse.ok) {
-            const enrollmentData = await enrollmentResponse.json()
-            if (enrollmentData?.enrolled) {
-              setEnrollment(enrollmentData.enrollment)
-            } else {
-              setEnrollment(null)
-            }
-          } else {
-            setEnrollment(null)
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching course data:', error)
-        toast({
-          title: 'Алдаа гарлаа',
-          description: 'Хичээлийн мэдээлэл ачаалж чадсангүй',
-          variant: 'destructive'
-        })
-      } finally {
-        setLoading(false)
-      }
+    // Find the first incomplete lesson or set to first lesson
+    const firstIncompleteLesson = course.lessons.find(lesson => !lesson.isCompleted)
+    if (firstIncompleteLesson) {
+      setCurrentLesson(firstIncompleteLesson._id)
+    } else if (course.lessons.length > 0) {
+      setCurrentLesson(course.lessons[0]._id)
     }
+  }, [course.lessons])
 
-    fetchCourseData()
-  }, [courseId, user, toast])
+  const progressPercentage = course.lessons.length > 0
+    ? (course.completedLessons / course.lessons.length) * 100
+    : 0
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    )
+  const handleLessonClick = (lessonId: string) => {
+    setCurrentLesson(lessonId)
   }
 
-  if (!course) {
+  const handleContinueLearning = () => {
+    if (currentLesson) {
+      window.location.href = `/learn/${course._id}/${currentLesson}`
+    }
+  }
+
+  if (!session?.user) {
     return (
       <div className="text-center py-8">
-        <h2 className="text-xl font-semibold text-gray-600">Хичээл олдсонгүй</h2>
+        <p className="text-gray-600 mb-4">Нэвтрэх шаардлагатай</p>
+        <Button asChild>
+          <Link href="/auth/login">Нэвтрэх</Link>
+        </Button>
       </div>
     )
   }
 
-  const isEnrolled = Boolean(enrollment)
-  const progress = enrollment?.progress ?? 0
-
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl mx-auto p-4">
       {/* Course Header */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-start space-x-4">
-            <div className="relative w-48 h-32 rounded-lg overflow-hidden">
-              <Image
-                src={course.thumbnail || '/placeholder.svg'}
-                alt={course.title}
-                fill
-                className="object-cover"
-              />
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">{course.title}</h1>
+        <p className="text-gray-600 mb-6">{course.description}</p>
+
+        {/* Progress Section */}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Хичээлийн явц</h3>
+              <span className="text-sm text-gray-600">
+                {course.completedLessons} / {course.lessons.length} хичээл
+              </span>
             </div>
-            <div className="flex-1">
-              <CardTitle className="text-2xl mb-2">{course.title}</CardTitle>
-              <p className="text-gray-600 mb-4">{course.description}</p>
-              
-              <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
-                <div className="flex items-center">
-                  <Clock className="w-4 h-4 mr-1" />
-                  {course.duration} цаг
+            <Progress value={progressPercentage} className="mb-4" />
+            <div className="flex items-center justify-between text-sm text-gray-600">
+              <span>{Math.round(progressPercentage)}% дууссан</span>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  <span>{Math.round(course.totalDuration / 60)} цаг</span>
                 </div>
-                <div className="flex items-center">
-                  <Users className="w-4 h-4 mr-1" />
-                  {course.studentsCount} сурагч
-                </div>
-                <div className="flex items-center">
-                  <Star className="w-4 h-4 mr-1 fill-yellow-400 text-yellow-400" />
-                  {course.rating}
+                <div className="flex items-center gap-1">
+                  <BookOpen className="w-4 h-4" />
+                  <span>{course.lessons.length} хичээл</span>
                 </div>
               </div>
-
-              <p className="text-sm text-gray-600">
-                Багш: {typeof course.instructor === 'object' && course.instructor?.name
-                  ? course.instructor.name
-                  : typeof course.instructor === 'string'
-                    ? course.instructor
-                    : 'Тодорхойгүй'}
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-
-      {/* Enrollment Status */}
-      {!isEnrolled && (
-        <Card className="border-orange-200 bg-orange-50">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <Lock className="w-12 h-12 mx-auto mb-4 text-orange-500" />
-              <h3 className="text-lg font-semibold text-orange-800 mb-2">
-                Энэ хичээлийг үзэхийн тулд бүртгүүлэх шаардлагатай
-              </h3>
-              <p className="text-orange-700 mb-4">
-                Хичээлийг үзэхийн тулд эхлээд төлбөр төлнө үү
-              </p>
-              <Button asChild>
-                <Link href={`/courses/${courseId}`}>
-                  Худалдан авах
-                </Link>
-              </Button>
             </div>
           </CardContent>
         </Card>
-      )}
 
-      {/* Progress Bar */}
-      {isEnrolled && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">Хийгдсэн</span>
-              <span className="text-sm text-gray-500">{progress}%</span>
-            </div>
-            <Progress value={progress} className="w-full" />
-          </CardContent>
-        </Card>
-      )}
+        {/* Continue Learning Button */}
+        {currentLesson && (
+          <Button
+            onClick={handleContinueLearning}
+            className="w-full md:w-auto mb-6"
+            size="lg"
+          >
+            <Play className="w-4 h-4 mr-2" />
+            Сургалтаа үргэлжлүүлэх
+          </Button>
+        )}
+      </div>
 
       {/* Lessons List */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Play className="w-5 h-5 mr-2" />
-            Хичээлүүд ({course.lessons?.length ?? 0})
-          </CardTitle>
+          <CardTitle>Хичээлүүд</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {(course.lessons ?? []).map((lesson, index) => {
-              const isCompleted = enrollment?.completedLessons?.includes(lesson._id)
-              const canAccess = isEnrolled || index === 0 // First lesson is free preview
+            {course.lessons.map((lesson, index) => {
+              const isCurrentLesson = lesson._id === currentLesson
+              const isCompleted = lesson.isCompleted
+              const isLocked = lesson.isLocked
 
               return (
                 <div
                   key={lesson._id}
-                  className={`flex items-center justify-between p-4 rounded-lg border ${
-                    isCompleted 
-                      ? 'bg-green-50 border-green-200' 
-                      : 'bg-white border-gray-200'
-                  }`}
+                  className={`
+                    flex items-center justify-between p-4 rounded-lg border transition-colors
+                    ${isCurrentLesson ? 'border-blue-200 bg-blue-50' : 'border-gray-200'}
+                    ${isCompleted ? 'bg-green-50 border-green-200' : ''}
+                    ${isLocked ? 'bg-gray-50 border-gray-200' : 'hover:bg-gray-50 cursor-pointer'}
+                  `}
+                  onClick={() => !isLocked && handleLessonClick(lesson._id)}
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className="flex-shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className={`
+                      w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
+                      ${isCompleted ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}
+                    `}>
                       {isCompleted ? (
-                        <CheckCircle className="w-6 h-6 text-green-500" />
-                      ) : canAccess ? (
-                        <Play className="w-6 h-6 text-blue-500" />
+                        <CheckCircle className="w-4 h-4" />
                       ) : (
-                        <Lock className="w-6 h-6 text-gray-400" />
+                        index + 1
                       )}
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-900">
-                        {index + 1}. {lesson.title}
+                      <h4 className={`font-medium ${isCompleted ? 'text-green-800' : 'text-gray-900'}`}>
+                        {lesson.title}
                       </h4>
-                      <p className="text-sm text-gray-500">
-                        {lesson.duration} минут
-                      </p>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Clock className="w-3 h-3" />
+                        <span>{lesson.duration} мин</span>
+                        {isCompleted && (
+                          <Badge variant="secondary" className="text-xs">
+                            Дууссан
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    {isCompleted && (
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">
-                        Дууссан
-                      </Badge>
-                    )}
-                    {canAccess ? (
-                      <Button asChild size="sm">
-                        <Link href={`/learn/${courseId}/${lesson._id}`}>
-                          {isCompleted ? 'Дахин үзэх' : 'Үзэх'}
-                        </Link>
-                      </Button>
+
+                  <div className="flex items-center gap-2">
+                    {isLocked ? (
+                      <Lock className="w-4 h-4 text-gray-400" />
+                    ) : isCompleted ? (
+                      <CheckCircle className="w-4 h-4 text-green-600" />
                     ) : (
-                      <Badge variant="outline" className="text-gray-500">
-                        Төлбөртэй
-                      </Badge>
+                      <Play className="w-4 h-4 text-blue-600" />
                     )}
                   </div>
                 </div>

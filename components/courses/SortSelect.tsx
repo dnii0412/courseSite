@@ -10,7 +10,7 @@ const options = [
   { value: 'price_desc', label: 'Үнэ ихээс бага' },
 ]
 
-export default function SortSelect() {
+export function SortSelect() {
   const params = useSearchParams()
   const router = useRouter()
   const value = params.get('sort') || 'new'
@@ -32,5 +32,3 @@ export default function SortSelect() {
     </select>
   )
 }
-
-

@@ -1,17 +1,17 @@
-import { NextAuthOptions } from 'next-auth'
-import GoogleProvider from 'next-auth/providers/google'
-import FacebookProvider from 'next-auth/providers/facebook'
-import CredentialsProvider from 'next-auth/providers/credentials'
-import { MongoDBAdapter } from '@auth/mongodb-adapter'
-import { MongoClient } from 'mongodb'
-import { connectDB } from './mongodb'
-import { User } from './models/user'
-import bcrypt from 'bcryptjs'
+import NextAuth from "next-auth"
+import GoogleProvider from "next-auth/providers/google"
+import FacebookProvider from "next-auth/providers/facebook"
+import CredentialsProvider from "next-auth/providers/credentials"
+import { connectDB } from "@/lib/mongodb"
+import { User } from "@/lib/models/user"
+import { compare } from 'bcryptjs'
 
 // Extend NextAuth types to include role
 declare module "next-auth" {
   interface User {
     role?: string
+    oauthProvider?: string
+    oauthId?: string
   }
   interface Session {
     user: {
@@ -27,187 +27,194 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     role?: string
+    oauthProvider?: string
+    oauthId?: string
   }
 }
 
-// Build providers array dynamically based on available environment variables
-const providers = []
-
-// Add Google provider if configured
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  providers.push(
+const authOptions = {
+  providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: process.env.AUTH_GOOGLE_ID || "",
+      clientSecret: process.env.AUTH_GOOGLE_SECRET || "",
+    }),
+    FacebookProvider({
+      clientId: process.env.FACEBOOK_CLIENT_ID || "",
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "",
       authorization: {
         params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code"
+          scope: 'public_profile'
         }
       },
-      // Ensure proper callback handling
-      checks: ['pkce', 'state'],
       profile(profile) {
         return {
-          id: profile.sub,
+          id: profile.id,
           name: profile.name,
           email: profile.email,
-          image: profile.picture,
+          image: profile.picture?.data?.url,
         }
       }
-    })
-  )
-}
-
-// Add Facebook provider if configured
-if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
-  providers.push(
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-    })
-  )
-}
-
-// Always add credentials provider
-providers.push(
-  CredentialsProvider({
-    name: 'credentials',
-    credentials: {
-      email: { label: "Email", type: "email" },
-      password: { label: "Password", type: "password" }
-    },
-    async authorize(credentials) {
-      if (!credentials?.email || !credentials?.password) {
-        return null
-      }
-
-      try {
-        await connectDB()
-        const user = await User.findOne({ email: credentials.email })
-
-        if (!user || !user.password) {
+    }),
+    CredentialsProvider({
+      name: 'credentials',
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
           return null
         }
 
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+        try {
+          await connectDB()
+          const user = await User.findOne({ email: credentials.email })
 
-        if (!isPasswordValid) {
+          if (!user) {
+            return null
+          }
+
+          const isPasswordValid = await compare(credentials.password, user.password)
+
+          if (!isPasswordValid) {
+            return null
+          }
+
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name,
+            role: user.role || 'USER'
+          }
+        } catch (error) {
+          console.error('Auth error:', error)
           return null
         }
-
-        return {
-          id: user._id.toString(),
-          email: user.email,
-          name: user.name,
-          role: user.role
-        }
-      } catch (error) {
-        console.error('Credentials auth error:', error)
-        return null
       }
-    }
-  })
-)
-
-// Create MongoDB client for the adapter
-const clientPromise = MongoClient.connect(process.env.MONGODB_URI!)
-
-export const authOptions: NextAuthOptions = {
-  adapter: MongoDBAdapter(clientPromise),
-  providers,
-  session: {
-    strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    })
+  ],
+  pages: {
+    signIn: '/auth/login',
+    signUp: '/auth/register',
+    error: '/auth/error'
   },
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account }: { token: any; user: any; account: any }) {
+      console.log('JWT callback - Token:', token)
+      console.log('JWT callback - User:', user)
+      console.log('JWT callback - Account:', account)
+
       if (user) {
         token.role = user.role
-        token.id = user.id
+        if (account?.provider) {
+          token.oauthProvider = account.provider
+          token.oauthId = account.providerAccountId
+        }
+        console.log('JWT callback - Updated token:', token)
       }
       return token
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: any }) {
+      console.log('Session callback - Session:', session)
+      console.log('Session callback - Token:', token)
+
       if (token) {
-        session.user.id = token.id as string
+        session.user.id = token.sub!
         session.user.role = token.role as string
+        // Add OAuth info to session if available
+        if (token.oauthProvider) {
+          (session.user as any).oauthProvider = token.oauthProvider;
+          (session.user as any).oauthId = token.oauthId;
+        }
+        console.log('Session callback - Updated session:', session)
       }
       return session
     },
-    async signIn({ user, account, profile, email }) {
-      console.log('SignIn callback triggered:', { user: user?.email, account: account?.provider })
-      
+    async signIn({ user, account, profile }: { user: any; account: any; profile: any }) {
+      console.log('SignIn callback - User:', user)
+      console.log('SignIn callback - Account:', account)
+      console.log('SignIn callback - Profile:', profile)
+
       if (account?.provider === 'google' || account?.provider === 'facebook') {
         try {
           await connectDB()
-          console.log('Database connected successfully')
+          console.log('OAuth signIn callback - Provider:', account.provider)
+          console.log('OAuth signIn callback - User:', user)
+
+          // For Facebook users, we might not have email access
+          // Use the profile ID as a fallback identifier
+          const userIdentifier = user.email || `fb_${account.providerAccountId}`
 
           // Check if user already exists
-          const existingUser = await User.findOne({ email: user.email })
-          console.log('Existing user check:', !!existingUser)
+          let existingUser = await User.findOne({
+            $or: [
+              { email: user.email },
+              { oauthId: account.providerAccountId, oauthProvider: account.provider }
+            ]
+          })
 
           if (!existingUser) {
-            // Create new user from OAuth
-            const newUser = await User.create({
-              name: user.name || 'Unknown User',
-              email: user.email!,
+            // Create new user with OAuth info
+            const newUser = new User({
+              name: user.name || `Facebook User ${account.providerAccountId}`,
+              email: user.email || `fb_${account.providerAccountId}@facebook.com`,
               role: 'USER',
               oauthProvider: account.provider,
-              oauthId: (profile as any)?.sub || (profile as any)?.id,
+              oauthId: account.providerAccountId,
+              // Set a default password for OAuth users (they won't use it)
+              password: 'oauth_user_' + Math.random().toString(36).substr(2, 9)
             })
-            console.log('New user created:', newUser._id)
-          } else if (!existingUser.oauthProvider) {
-            // Update existing user with OAuth info if they don't have it
-            await User.findByIdAndUpdate(existingUser._id, {
-              oauthProvider: account.provider,
-              oauthId: (profile as any)?.sub || (profile as any)?.id,
-            })
-            console.log('Existing user updated with OAuth info')
+
+            await newUser.save()
+            console.log('New OAuth user created:', newUser.email)
+
+            // Update the user object with the MongoDB _id
+            user.id = newUser._id.toString()
+          } else {
+            // Update existing user's OAuth info if needed
+            if (!existingUser.oauthProvider || !existingUser.oauthId) {
+              existingUser.oauthProvider = account.provider
+              existingUser.oauthId = account.providerAccountId
+              await existingUser.save()
+              console.log('Updated existing user with OAuth info:', existingUser.email)
+            }
+
+            // Use the existing user's MongoDB _id
+            user.id = existingUser._id.toString()
           }
 
+          console.log('OAuth signIn callback - Final user object:', user)
+          console.log('OAuth signIn callback - Success, user ID:', user.id)
           return true
         } catch (error) {
-          console.error('OAuth sign in error:', error)
+          console.error('Error during OAuth sign in:', error)
           return false
         }
       }
+
       return true
     },
-    async redirect({ url, baseUrl }) {
-      // Handle OAuth redirects from register page
-      if (url.includes('from=register')) {
-        return `${baseUrl}/onboarding?from=register`
-      }
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+      console.log('Redirect callback - URL:', url, 'Base URL:', baseUrl)
 
-      // Handle returnUrl for login flows
-      if (url.startsWith('/') && !url.startsWith('/api')) {
+      // If the URL is relative, make it absolute
+      if (url.startsWith('/')) {
         return `${baseUrl}${url}`
       }
 
-      // Default redirect to courses for successful auth
-      if (url.startsWith(baseUrl)) return url
-      else return `${baseUrl}/courses`
-    }
-  },
-  pages: {
-    signIn: '/auth/login',
-    error: '/auth/error',
-  },
-  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development',
-  // Ensure proper OAuth callback handling
-  useSecureCookies: process.env.NODE_ENV === 'production',
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production'
+      // If the URL is on the same domain, allow it
+      if (url.startsWith(baseUrl)) {
+        return url
       }
+
+      // Default redirect to dashboard after successful OAuth
+      return `${baseUrl}/dashboard`
     }
-  }
+  },
+  session: {
+    strategy: "jwt" as const
+  },
+  secret: process.env.NEXTAUTH_SECRET
 }
+
+export { authOptions }

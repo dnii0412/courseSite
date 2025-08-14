@@ -1,18 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth-config'
 import { connectDB } from '@/lib/mongodb'
 import { Order } from '@/lib/models/order'
 import { Course } from '@/lib/models/course'
-import { verifyToken } from '@/lib/auth'
+import { User } from '@/lib/models/user'
 
 export async function POST(request: NextRequest) {
   try {
     await connectDB()
-    
-    const user = await verifyToken(request)
-    if (!user) {
+
+    // Get session using NextAuth
+    const session = await getServerSession(authOptions) as any
+    if (!session?.user?.email) {
       return NextResponse.json(
         { error: 'Нэвтрэх шаардлагатай' },
         { status: 401 }
+      )
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email: session.user.email })
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Хэрэглэгч олдсонгүй' },
+        { status: 404 }
       )
     }
 
@@ -29,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // Create order
     const order = await Order.create({
-      user: user.userId,
+      user: user._id,
       course: courseId,
       amount: course.price,
       currency: 'MNT',
@@ -94,32 +106,14 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Byl create error:', error)
-    
+
     // Return more specific error messages
     if (error instanceof Error) {
       if (error.message.includes('Byl API error')) {
-        return NextResponse.json(
-          { error: `Byl алдаа: ${error.message}` },
-          { status: 500 }
-        )
-      }
-      if (error.message.includes('fetch')) {
-        return NextResponse.json(
-          { error: 'Byl серверт холбогдох боломжгүй байна' },
-          { status: 500 }
-        )
-      }
-      if (error.message.includes('QR image')) {
-        return NextResponse.json(
-          { error: 'Byl API-аас QR код авах боломжгүй байна' },
-          { status: 500 }
-        )
+        return NextResponse.json({ error: error.message }, { status: 500 })
       }
     }
-    
-    return NextResponse.json(
-      { error: 'Төлбөрийн систем дээр алдаа гарлаа' },
-      { status: 500 }
-    )
+
+    return NextResponse.json({ error: 'Серверийн алдаа' }, { status: 500 })
   }
 }

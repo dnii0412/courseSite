@@ -59,9 +59,6 @@ export function StatsSection() {
                         </CardContent>
                     </Card>
                 </div>
-
-                {/* Additional stats row */}
-               
             </div>
         </section>
     );
