@@ -42,7 +42,7 @@ function UserDropdown({ name, image }: { name?: string | null; image?: string | 
                 className="flex items-center gap-2 rounded-full border px-2 py-1 hover:bg-gray-50"
             >
                 <Image
-                    src={image || "/avatar.png"}
+                    src={image || "/placeholder-user.jpg"}
                     alt="avatar"
                     width={28}
                     height={28}

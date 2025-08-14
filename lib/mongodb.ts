@@ -1,19 +1,43 @@
-import { MongoClient } from "mongodb";
+import mongoose from 'mongoose'
 
-const uri = process.env.MONGODB_URI!;
-const options = {};
+const MONGODB_URI = process.env.MONGODB_URI!
 
-let client = new MongoClient(uri, options);
-let clientPromise: Promise<MongoClient>;
+if (!MONGODB_URI) {
+  throw new Error('Please define the MONGODB_URI environment variable inside .env.local')
+}
 
+/**
+ * Global is used here to maintain a cached connection across hot reloads
+ * in development. This prevents connections growing exponentially
+ * during API Route usage.
+ */
 declare global {
-  // eslint-disable-next-line no-var
-  var _mongoClientPromise: Promise<MongoClient> | undefined;
+  var mongoose: { conn: typeof mongoose | null; promise: Promise<typeof mongoose> | null }
 }
 
-if (!global._mongoClientPromise) {
-  global._mongoClientPromise = client.connect();
-}
-clientPromise = global._mongoClientPromise;
+global.mongoose = global.mongoose || { conn: null, promise: null }
 
-export default clientPromise;
+export async function connectDB() {
+  if (global.mongoose.conn) {
+    return global.mongoose.conn
+  }
+
+  if (!global.mongoose.promise) {
+    const opts = {
+      bufferCommands: false,
+    }
+
+    global.mongoose.promise = mongoose.connect(MONGODB_URI, opts)
+  }
+
+  try {
+    global.mongoose.conn = await global.mongoose.promise
+  } catch (e) {
+    global.mongoose.promise = null
+    throw e
+  }
+
+  return global.mongoose.conn
+}
+
+export default connectDB
