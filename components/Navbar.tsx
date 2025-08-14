@@ -28,8 +28,8 @@ function useScrolled(threshold = 16) {
 
 export default function Navbar({
   items = [
+    { name: 'Нүүр', href: '/' },
     { name: 'Хичээлүүд', href: '/courses' },
-    { name: 'Тусламж', href: '/help' },
   ],
   isAuthenticated = false,
   user,
@@ -40,9 +40,18 @@ export default function Navbar({
   const [mobileOpen, setMobileOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const { data } = useSession()
-  const isAuthed = !!data?.user
-  const currentUser = { name: data?.user?.name || '', image: data?.user?.image || '' }
+  const { data: session, status } = useSession()
+
+  // Debug session state
+  console.log('Navbar - Session status:', status)
+  console.log('Navbar - Session data:', session)
+
+  const isAuthed = !!session?.user
+  const currentUser = {
+    name: session?.user?.name || user?.name || '',
+    image: session?.user?.image || user?.image || ''
+  }
+
   // Lock body scroll when mobile drawer is open
   useEffect(() => {
     if (mobileOpen) {
@@ -57,7 +66,10 @@ export default function Navbar({
   // Close user menu on outside click / ESC
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setMenuOpen(false)
+      if (e.key === 'Escape') {
+        setMenuOpen(false)
+        setMobileOpen(false)
+      }
     }
     function onClick(e: MouseEvent) {
       if (!menuRef.current) return
@@ -73,15 +85,14 @@ export default function Navbar({
 
   const headerClass = useMemo(
     () =>
-      `sticky top-0 z-50 h-16 border-b ${
-        scrolled
-          ? 'bg-white shadow-[0_1px_0_0_rgba(0,0,0,0.06)] dark:bg-slate-900'
-          : 'bg-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:bg-slate-900/70'
-      } border-slate-200/70 dark:border-slate-800`,
+      `sticky top-0 z-50 h-16 border-b ${scrolled
+        ? 'bg-white shadow-sm dark:bg-neutral-900'
+        : 'bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/95 dark:bg-neutral-900/95'
+      } border-neutral-200 dark:border-neutral-800`,
     [scrolled]
   )
 
-  const isActive = (href: string) => pathname?.startsWith(href)
+  const isActive = (href: string) => pathname === href
 
   return (
     <header className={headerClass}>
@@ -89,9 +100,9 @@ export default function Navbar({
         <div className="flex items-center justify-between h-16">
           {/* Left: Brand */}
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 rounded-md">
+            <Link href="/" className="flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 rounded-md">
               <Image src="/favicon.svg" alt="New Era" width={24} height={24} className="rounded" />
-              <span className="font-semibold tracking-tight text-slate-900 dark:text-slate-100">New Era</span>
+              <span className="font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">New Era</span>
             </Link>
           </div>
 
@@ -103,11 +114,10 @@ export default function Navbar({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative text-sm transition-colors ${
-                    active
-                      ? 'text-slate-900 dark:text-slate-50 after:absolute after:inset-x-0 after:-bottom-2 after:h-0.5 after:bg-sky-600 after:rounded'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
-                  } focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 rounded`}
+                  className={`relative text-sm transition-colors ${active
+                    ? 'text-neutral-900 dark:text-neutral-50 after:absolute after:inset-x-0 after:-bottom-2 after:h-0.5 after:bg-neutral-600 after:rounded'
+                    : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white'
+                    } focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 rounded`}
                 >
                   {item.name}
                 </Link>
@@ -117,17 +127,22 @@ export default function Navbar({
 
           {/* Right: Actions */}
           <div className="hidden lg:flex items-center gap-3">
-            {!isAuthed ? (
+            {status === 'loading' ? (
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-neutral-200 rounded-full animate-pulse"></div>
+                <div className="w-20 h-4 bg-neutral-200 rounded animate-pulse"></div>
+              </div>
+            ) : !isAuthed ? (
               <div className="flex items-center gap-2">
                 <Link
                   href="/auth/login"
-                  className="text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white px-3 py-2 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+                  className="text-neutral-700 hover:text-neutral-900 dark:text-neutral-200 dark:hover:text-white px-3 py-2 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
                 >
                   Нэвтрэх
                 </Link>
                 <Link
                   href="/auth/register"
-                  className="bg-sky-700 text-white hover:bg-sky-800 rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+                  className="bg-neutral-900 text-white hover:bg-neutral-800 rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
                 >
                   Бүртгүүлэх
                 </Link>
@@ -138,7 +153,7 @@ export default function Navbar({
                   onClick={() => setMenuOpen((v) => !v)}
                   aria-haspopup="menu"
                   aria-expanded={menuOpen}
-                  className="w-9 h-9 rounded-full overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+                  className="w-9 h-9 rounded-full overflow-hidden ring-1 ring-neutral-200 dark:ring-neutral-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
                 >
                   <Image
                     src={currentUser.image || '/placeholder-user.jpg'}
@@ -152,25 +167,26 @@ export default function Navbar({
                   <div
                     role="menu"
                     tabIndex={-1}
-                    className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg p-1 focus:outline-none"
+                    className="absolute right-0 mt-2 w-56 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg p-1 focus:outline-none"
                   >
                     <Link
+                      href="/profile"
+                      className="block px-3 py-2 rounded-lg text-sm text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                      role="menuitem"
+                    >
+                      Профайл
+                    </Link>
+                    <Link
                       href="/dashboard"
-                      className="block px-3 py-2 rounded-lg text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                      className="block px-3 py-2 rounded-lg text-sm text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800"
                       role="menuitem"
                     >
                       Миний сургалтууд
                     </Link>
-                    <Link
-                      href="/settings"
-                      className="block px-3 py-2 rounded-lg text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                      role="menuitem"
-                    >
-                      Тохиргоо
-                    </Link>
+
                     <button
                       onClick={() => (onSignOut ? onSignOut() : signOut())}
-                      className="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                      className="w-full text-left px-3 py-2 rounded-lg text-sm text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800"
                       role="menuitem"
                     >
                       Гарах
@@ -201,102 +217,102 @@ export default function Navbar({
       </div>
 
       {/* Mobile Drawer */}
-      <div
-        id="mobile-menu"
-        className={`fixed inset-0 z-50 lg:hidden ${mobileOpen ? '' : 'pointer-events-none'}`}
-        aria-hidden={!mobileOpen}
-      >
-        {/* Backdrop */}
+      {mobileOpen && (
         <div
-          className={`absolute inset-0 bg-black/30 transition-opacity ${mobileOpen ? 'opacity-100' : 'opacity-0'}`}
-          onClick={() => setMobileOpen(false)}
-        />
-        {/* Panel */}
-        <div
-          className={`absolute right-0 top-0 h-full w-80 max-w-[85%] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 transition-transform duration-300 ease-out ${
-            mobileOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
+          id="mobile-menu"
+          className="fixed inset-0 z-50 lg:hidden"
           role="dialog"
           aria-modal="true"
+          aria-label="Mobile navigation menu"
         >
-          <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800">
-            <Link href="/" className="font-semibold tracking-tight" onClick={() => setMobileOpen(false)}>
-              New Era
-            </Link>
-            <button
-              onClick={() => setMobileOpen(false)}
-              aria-label="Цэс хаах"
-              className="p-2 rounded-md text-slate-700 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
-            >
-              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/20 transition-opacity"
+            onClick={() => setMobileOpen(false)}
+          />
+          {/* Panel */}
+          <div
+            className="absolute right-0 top-0 h-full w-72 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-xl transition-transform duration-300 ease-out transform translate-x-0"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800">
+              <Link href="/" className="font-semibold tracking-tight text-slate-900 dark:text-slate-100" onClick={() => setMobileOpen(false)}>
+                New Era
+              </Link>
+              <button
+                onClick={() => setMobileOpen(false)}
+                aria-label="Цэс хаах"
+                className="p-2 rounded-md text-slate-700 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+              >
+                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
 
-          <nav className="px-4 py-4 space-y-1" aria-label="Main Navigation">
-            {items.map((item) => {
-              const active = isActive(item.href)
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={`block px-3 py-2 rounded-lg text-base ${
-                    active
+            <nav className="px-4 py-4 space-y-1" aria-label="Main Navigation">
+              {items.map((item) => {
+                const active = isActive(item.href)
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={`block px-3 py-2 rounded-lg text-base transition-colors ${active
                       ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white'
-                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              )
-            })}
-          </nav>
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-800'
+                      }`}
+                  >
+                    {item.name}
+                  </Link>
+                )
+              })}
+            </nav>
 
-          <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-800">
-            {!isAuthenticated ? (
-              <div className="flex items-center gap-3">
-                <Link
-                  href="/auth/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex-1 text-center text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700"
-                >
-                  Нэвтрэх
-                </Link>
-                <Link
-                  href="/auth/register"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex-1 text-center bg-sky-700 text-white hover:bg-sky-800 rounded-xl px-4 py-2"
-                >
-                  Бүртгүүлэх
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                <div className="flex items-center gap-3 px-3 py-2">
-                  <Image src={currentUser.image || '/placeholder-user.jpg'} alt={currentUser.name || 'User'} width={36} height={36} className="rounded-full" />
-                  <div className="text-sm text-slate-800 dark:text-slate-200">{currentUser.name || 'Хэрэглэгч'}</div>
+            <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-800">
+              {!isAuthed ? (
+                <div className="flex flex-col gap-3">
+                  <Link
+                    href="/auth/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="w-full text-center text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-slate-800 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors"
+                  >
+                    Нэвтрэх
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    onClick={() => setMobileOpen(false)}
+                    className="w-full text-center bg-sky-700 text-white hover:bg-sky-800 rounded-xl px-3 py-2 transition-colors"
+                  >
+                    Бүртгүүлэх
+                  </Link>
                 </div>
-                <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="block px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
-                  Миний сургалтууд
-                </Link>
-                <Link href="/settings" onClick={() => setMobileOpen(false)} className="block px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
-                  Тохиргоо
-                </Link>
-                <button onClick={() => { setMobileOpen(false); (onSignOut ? onSignOut() : signOut()) }} className="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
-                  Гарах
-                </button>
-              </div>
-            )}
+              ) : (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3 px-3 py-2">
+                    <Image src={currentUser.image || '/placeholder-user.jpg'} alt={currentUser.name || 'User'} width={36} height={36} className="rounded-full" />
+                    <div className="text-sm text-slate-800 dark:text-slate-200">{currentUser.name || 'Хэрэглэгч'}</div>
+                  </div>
+                  <Link href="/profile" onClick={() => setMobileOpen(false)} className="block px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:text-slate-800 transition-colors">
+                    Профайл
+                  </Link>
+                  <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="block px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:text-slate-800 transition-colors">
+                    Миний сургалтууд
+                  </Link>
+
+                  <button onClick={() => { setMobileOpen(false); (onSignOut ? onSignOut() : signOut()) }} className="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:text-slate-800 transition-colors">
+                    Гарах
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </header>
   )
 }
 
 export { useScrolled }
-
-

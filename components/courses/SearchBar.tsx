@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-export default function SearchBar() {
+export function SearchBar() {
   const params = useSearchParams()
   const router = useRouter()
   const [q, setQ] = useState(params.get('q') || '')
@@ -35,5 +35,3 @@ export default function SearchBar() {
     </div>
   )
 }
-
-

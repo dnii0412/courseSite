@@ -10,7 +10,7 @@ const levels = [
   { value: 'advanced', label: 'Ахисан' },
 ]
 
-export default function Filters() {
+export function Filters() {
   const params = useSearchParams()
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -51,7 +51,7 @@ export default function Filters() {
   const chips = useMemo(() => {
     const out: { key: string; label: string; value: string }[] = []
     selectedCategories.forEach((c) => out.push({ key: 'category', value: c, label: `Ангилал: ${c}` }))
-    if (selectedLevel) out.push({ key: 'level', value: selectedLevel, label: `Түвшин: ${levels.find(l => l.value===selectedLevel)?.label || selectedLevel}` })
+    if (selectedLevel) out.push({ key: 'level', value: selectedLevel, label: `Түвшин: ${levels.find(l => l.value === selectedLevel)?.label || selectedLevel}` })
     if (price) out.push({ key: 'price', value: price, label: price === 'free' ? 'Үнэ: Үнэгүй' : 'Үнэ: Төлбөртэй' })
     if (duration) out.push({ key: 'duration', value: duration, label: 'Үргэлжлэх хугацаа' })
     lang.forEach((l) => out.push({ key: 'language', value: l, label: `Хэл: ${l}` }))
@@ -201,5 +201,3 @@ export default function Filters() {
     </>
   )
 }
-
-
