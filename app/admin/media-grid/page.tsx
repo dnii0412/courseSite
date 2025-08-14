@@ -1,33 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 // Force dynamic rendering to avoid build-time database calls
 export const dynamic = 'force-dynamic';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// Removed tabs per new design
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { MediaLibrary } from '@/components/admin/media-library';
+import { MediaLibrary, MediaLibraryHandle } from '@/components/admin/media-library';
 import { LayoutEditor } from '@/components/admin/layout-editor';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ILayout } from '@/lib/models/layout';
 import { IMedia } from '@/lib/models/media';
-import { Plus, Save, Eye, Settings } from 'lucide-react';
+import { Plus, Save, Eye, Settings, Upload } from 'lucide-react';
 
 export default function AdminMediaGridPage() {
-  const [activeTab, setActiveTab] = useState('library');
+  // Tabs removed; keep local state for selected media and layout only
   const [selectedMedia, setSelectedMedia] = useState<IMedia | null>(null);
   const [currentLayout, setCurrentLayout] = useState<ILayout | null>(null);
   const [layoutSlug, setLayoutSlug] = useState('home-hero');
+  const [presets, setPresets] = useState<ILayout[]>([]);
+  const [presetsLoading, setPresetsLoading] = useState(false);
   const [showCreateLayout, setShowCreateLayout] = useState(false);
   const [newLayoutSlug, setNewLayoutSlug] = useState('');
   const { toast } = useToast();
+  const [uploadStamp, setUploadStamp] = useState(0)
+  const libraryRef = useRef<MediaLibraryHandle | null>(null)
 
   const handleMediaSelect = (media: IMedia) => {
     setSelectedMedia(media);
-    setActiveTab('editor');
   };
 
   const handleLayoutSave = (layout: ILayout) => {
@@ -37,6 +41,25 @@ export default function AdminMediaGridPage() {
       description: 'Layout saved successfully',
     });
   };
+
+  // Load presets (saved layouts) for admin
+  useEffect(() => {
+    const loadPresets = async () => {
+      try {
+        setPresetsLoading(true);
+        const res = await fetch('/api/layouts', { credentials: 'include', cache: 'no-store' });
+        if (res.ok) {
+          const json = await res.json();
+          setPresets(Array.isArray(json?.data) ? json.data as ILayout[] : []);
+        }
+      } catch (_) {
+        // ignore
+      } finally {
+        setPresetsLoading(false);
+      }
+    };
+    loadPresets();
+  }, [showCreateLayout, uploadStamp]);
 
   const createNewLayout = () => {
     if (!newLayoutSlug.trim()) {
@@ -51,7 +74,7 @@ export default function AdminMediaGridPage() {
     setLayoutSlug(newLayoutSlug.trim());
     setShowCreateLayout(false);
     setNewLayoutSlug('');
-    setActiveTab('editor');
+    // no tabs, directly shows both sections
   };
 
   return (
@@ -62,41 +85,42 @@ export default function AdminMediaGridPage() {
         <p className="text-gray-600">Upload media and create responsive grid layouts</p>
       </div>
 
-      {/* Layout Slug Selector */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-[#1B3C53]">Current Layout</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
-              <Label htmlFor="layout-slug">Layout Slug</Label>
-              <Input
-                id="layout-slug"
-                value={layoutSlug}
-                onChange={(e) => setLayoutSlug(e.target.value)}
-                placeholder="e.g., home-hero, about-section"
-                className="border-[#D2C1B6]"
-              />
+      {/* Combined Presets + Upload toolbar */}
+      <Card className="mb-4">
+        <CardContent className="py-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Preset chooser */}
+            <Select value={layoutSlug} onValueChange={(slug)=> setLayoutSlug(slug)}>
+              <SelectTrigger className="h-9 w-52">
+                <SelectValue placeholder={presetsLoading ? 'Loading presets...' : 'Choose preset'} />
+              </SelectTrigger>
+              <SelectContent>
+                {presets.map((p)=> (
+                  <SelectItem key={p._id} value={p.slug}>{p.slug}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" onClick={()=>setShowCreateLayout(true)}>
+              <Plus className="w-4 h-4 mr-1"/> New
+            </Button>
+            <Button variant="outline" size="sm" onClick={()=>window.open(`/`, '_blank')}>
+              <Eye className="w-4 h-4 mr-1"/> View
+            </Button>
+            
+            <div className="ml-auto">
+              <Button variant="outline" size="sm" asChild>
+                <label className="inline-flex items-center gap-2 cursor-pointer">
+                  <Upload className="w-4 h-4" />
+                  <span>Upload</span>
+                  <input type="file" multiple accept="image/*,video/*" className="hidden" onChange={async (e)=>{
+                    if (e.target.files) {
+                      await libraryRef.current?.uploadFiles(e.target.files)
+                      setUploadStamp(Date.now())
+                    }
+                  }} />
+                </label>
+              </Button>
             </div>
-            
-            <Button
-              variant="outline"
-              onClick={() => setShowCreateLayout(true)}
-              className="border-[#D2C1B6]"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Layout
-            </Button>
-            
-            <Button
-              variant="outline"
-              onClick={() => window.open(`/media-grid/${layoutSlug}`, '_blank')}
-              className="border-[#D2C1B6]"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              View Public
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -145,34 +169,22 @@ export default function AdminMediaGridPage() {
         </Card>
       )}
 
-      {/* Main Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 bg-sand-100 rounded-xl p-1">
-          <TabsTrigger value="library" className="rounded-lg data-[state=active]:bg-white data-[state=active]:border data-[state=active]:border-sand-200">Media Library</TabsTrigger>
-          <TabsTrigger value="editor" className="rounded-lg data-[state=active]:bg-white data-[state=active]:border data-[state=active]:border-sand-200">Layout Editor</TabsTrigger>
-          <TabsTrigger value="layouts" className="rounded-lg data-[state=active]:bg-white data-[state=active]:border data-[state=active]:border-sand-200">Layouts</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="library" className="space-y-6">
-          <MediaLibrary
-            onMediaSelect={handleMediaSelect}
-            selectedMedia={selectedMedia}
-          />
-        </TabsContent>
-
-        <TabsContent value="editor" className="space-y-6">
+      {/* Compact two-column layout without tabs */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-6">
+          <MediaLibrary ref={libraryRef} onMediaSelect={handleMediaSelect} selectedMedia={selectedMedia} compact hideUpload refreshSignal={uploadStamp} />
+        </div>
+        <div className="space-y-2">
           <LayoutEditor
             slug={layoutSlug}
             onSave={handleLayoutSave}
             selectedMedia={selectedMedia as any}
             onSelectedMediaConsumed={() => setSelectedMedia(null)}
+            compact
           />
-        </TabsContent>
-
-        <TabsContent value="layouts" className="space-y-6">
-          <LayoutsManager />
-        </TabsContent>
-      </Tabs>
+          <p className="text-xs text-ink-500">Tip: Click a media item to add it to the grid; then drag/resize.</p>
+        </div>
+      </div>
     </div>
   );
 }

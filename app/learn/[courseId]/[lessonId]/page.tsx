@@ -1,11 +1,14 @@
 import { VideoPlayer } from '@/components/video/video-player'
 import { LessonSidebar } from '@/components/learn/lesson-sidebar'
 import { QuizModal } from '@/components/quiz/quiz-modal'
-import { getCourseById } from '@/lib/api/courses'
-import { getLessonById } from '@/lib/api/lessons'
+import { connectDB } from '@/lib/mongodb'
+import { Course } from '@/lib/models/course'
+import { Lesson } from '@/lib/models/lesson'
 import { notFound, redirect } from 'next/navigation'
 import { getUserFromCookies } from '@/lib/auth'
 import { hasCourseAccess } from '@/lib/utils/access'
+
+export const dynamic = 'force-dynamic'
 
 interface LearnPageProps {
   params: {
@@ -15,9 +18,10 @@ interface LearnPageProps {
 }
 
 export default async function LearnPage({ params }: LearnPageProps) {
+  await connectDB()
   const [course, lesson] = await Promise.all([
-    getCourseById(params.courseId),
-    getLessonById(params.lessonId)
+    Course.findById(params.courseId).populate('lessons').lean().then((d) => JSON.parse(JSON.stringify(d))),
+    Lesson.findById(params.lessonId).lean().then((d) => JSON.parse(JSON.stringify(d))),
   ])
 
   if (!course || !lesson) {

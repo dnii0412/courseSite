@@ -36,18 +36,29 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, data: layout });
     }
     
-    // List all layouts (admin only)
-    const decoded = await verifyToken(request as any);
-    const role = String((decoded as any)?.role || '').toUpperCase();
-    if (!decoded || role !== 'ADMIN') {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+    // No slug provided
+    // If admin=true, list all (admin only). Otherwise, return latest published layout
+    if (admin === 'true') {
+      const decoded = await verifyToken(request as any);
+      const role = String((decoded as any)?.role || '').toUpperCase();
+      if (!decoded || role !== 'ADMIN') {
+        return NextResponse.json(
+          { success: false, error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      const layouts = await Layout.find().sort({ createdAt: -1 });
+      return NextResponse.json({ success: true, data: layouts });
     }
     
-    const layouts = await Layout.find().sort({ createdAt: -1 });
-    return NextResponse.json({ success: true, data: layouts });
+    const latest = await Layout.findOne({ published: true }).sort({ updatedAt: -1 });
+    if (!latest) {
+      return NextResponse.json(
+        { success: false, error: 'No published layout' },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json({ success: true, data: latest });
     
   } catch (error) {
     console.error('Error fetching layouts:', error);

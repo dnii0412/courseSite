@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,9 +20,16 @@ const getThumbnailUrl = (publicId: string, width: number = 200, height: number =
 interface MediaLibraryProps {
   onMediaSelect?: (media: IMedia) => void;
   selectedMedia?: IMedia | null;
+  compact?: boolean;
+  hideUpload?: boolean;
+  refreshSignal?: number;
 }
 
-export const MediaLibrary = ({ onMediaSelect, selectedMedia }: MediaLibraryProps) => {
+export type MediaLibraryHandle = {
+  uploadFiles: (files: FileList) => Promise<void>
+}
+
+export const MediaLibrary = forwardRef<MediaLibraryHandle, MediaLibraryProps>(function MediaLibrary({ onMediaSelect, selectedMedia, compact = false, hideUpload = false, refreshSignal }: MediaLibraryProps, ref) {
   const [media, setMedia] = useState<IMedia[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -32,7 +39,7 @@ export const MediaLibrary = ({ onMediaSelect, selectedMedia }: MediaLibraryProps
 
   useEffect(() => {
     fetchMedia();
-  }, []);
+  }, [refreshSignal]);
 
   const fetchMedia = async () => {
     try {
@@ -55,34 +62,29 @@ export const MediaLibrary = ({ onMediaSelect, selectedMedia }: MediaLibraryProps
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
+  const uploadFiles = async (files: FileList) => {
     if (!files || files.length === 0) return;
-
     setUploading(true);
-
     try {
       for (const file of Array.from(files)) {
         await uploadFile(file);
       }
-
-      toast({
-        title: 'Success',
-        description: 'Media uploaded successfully',
-      });
-
-      fetchMedia(); // Refresh the media list
+      toast({ title: 'Success', description: 'Media uploaded successfully' });
+      fetchMedia();
     } catch (error) {
       console.error('Upload error:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to upload media',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: error instanceof Error ? error.message : 'Failed to upload media', variant: 'destructive' });
     } finally {
       setUploading(false);
-      // Reset the file input
-      event.target.value = '';
+    }
+  }
+
+  useImperativeHandle(ref, () => ({ uploadFiles }), [uploadFiles])
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      await uploadFiles(event.target.files)
+      event.target.value = ''
     }
   };
 
@@ -208,76 +210,67 @@ export const MediaLibrary = ({ onMediaSelect, selectedMedia }: MediaLibraryProps
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-[#1B3C53]">Media Library</h2>
-          <p className="text-gray-600">Manage your uploaded images and videos</p>
-        </div>
+      {!compact && (
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-[#1B3C53]">Media Library</h2>
+            <p className="text-gray-600">Manage your uploaded images and videos</p>
+          </div>
 
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-          >
-            {viewMode === 'grid' ? <List className="w-4 h-4" /> : <Grid3X3 className="w-4 h-4" />}
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+            >
+              {viewMode === 'grid' ? <List className="w-4 h-4" /> : <Grid3X3 className="w-4 h-4" />}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Upload Section */}
-      <Card className="border-[#D2C1B6] bg-[#F9F3EF]">
-        <CardHeader>
-          <CardTitle className="text-[#1B3C53]">Upload Media</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="media-upload">Select files to upload</Label>
-              <Input
-                id="media-upload"
-                type="file"
-                multiple
-                accept="image/*,video/*"
-                onChange={handleFileUpload}
-                disabled={uploading}
-                className="border-[#D2C1B6]"
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Supported formats: JPEG, PNG, GIF, WebP, MP4, WebM, OGG (max 10MB)
-              </p>
+      {!hideUpload && (
+        <Card className={compact ? 'border-sand-200' : 'border-[#D2C1B6] bg-[#F9F3EF]'}>
+          <CardContent className="py-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Label htmlFor="media-upload" className="sr-only">Upload</Label>
+              <Input id="media-upload" type="file" multiple accept="image/*,video/*" onChange={handleFileUpload} disabled={uploading} className="h-9 w-56" />
+              <div className="text-xs text-gray-500">JPEG, PNG, WebP, MP4…</div>
+              {uploading && (
+                <div className="flex items-center gap-2 text-[#456882] ml-auto">
+                  <div className="w-4 h-4 border-2 border-[#456882] border-t-transparent rounded-full animate-spin" />
+                  <span className="text-xs">Uploading…</span>
+                </div>
+              )}
             </div>
-            {uploading && (
-              <div className="flex items-center space-x-2 text-[#456882]">
-                <div className="w-4 h-4 border-2 border-[#456882] border-t-transparent rounded-full animate-spin"></div>
-                <span>Uploading...</span>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Search and Filters */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center gap-2">
         <div className="flex-1">
           <Input
             placeholder="Search media..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="border-[#D2C1B6]"
+            className={`h-9 ${compact ? '' : 'border-[#D2C1B6]'}`}
           />
         </div>
-        <Badge variant="secondary" className="bg-[#456882] text-white">
+        <Badge variant="secondary" className="bg-[#456882] text-white h-6">
           {filteredMedia.length} items
         </Badge>
       </div>
 
       {/* Media Grid/List */}
       <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'grid' | 'list')}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="grid">Grid View</TabsTrigger>
-          <TabsTrigger value="list">List View</TabsTrigger>
-        </TabsList>
+        {!compact && (
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="grid">Grid View</TabsTrigger>
+            <TabsTrigger value="list">List View</TabsTrigger>
+          </TabsList>
+        )}
 
         <TabsContent value="grid" className="space-y-4">
           {filteredMedia.length === 0 ? (
@@ -286,16 +279,16 @@ export const MediaLibrary = ({ onMediaSelect, selectedMedia }: MediaLibraryProps
               <p>No media found. Upload some files to get started!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+            <div className={compact ? 'grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-3' : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4'}>
               {filteredMedia.map((item) => (
                 <Card
                   key={item._id}
-                  className={`cursor-pointer transition-all hover:shadow-lg border-[#D2C1B6] bg-[#F9F3EF] ${selectedMedia?._id === item._id ? 'ring-2 ring-[#1B3C53]' : ''
+                  className={`cursor-pointer transition-all hover:shadow-lg ${compact ? '' : 'border-[#D2C1B6] bg-[#F9F3EF]'} ${selectedMedia?._id === item._id ? 'ring-2 ring-[#1B3C53]' : ''
                     }`}
                   onClick={() => handleMediaClick(item)}
                 >
-                  <CardContent className="p-3">
-                    <div className="aspect-square relative mb-2">
+                  <CardContent className="p-2 md:p-3">
+                    <div className={compact ? 'aspect-[4/3] relative mb-1' : 'aspect-square relative mb-2'}>
                       {item.type === 'video' ? (
                         <video
                           src={item.url}
@@ -321,11 +314,11 @@ export const MediaLibrary = ({ onMediaSelect, selectedMedia }: MediaLibraryProps
                     </div>
 
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-[#1B3C53] truncate">
+                      <p className="text-xs md:text-sm font-medium text-[#1B3C53] truncate">
                         {item.alt}
                       </p>
                       <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-[10px] md:text-xs">
                           {item.type}
                         </Badge>
                         <Button
@@ -415,4 +408,4 @@ export const MediaLibrary = ({ onMediaSelect, selectedMedia }: MediaLibraryProps
       </Tabs>
     </div>
   );
-};
+});

@@ -13,41 +13,13 @@ import {
 } from 'lucide-react'
 
 const menuItems = [
-  {
-    title: 'Нүүр',
-    href: '/admin',
-    icon: Home
-  },
-  {
-    title: 'Хэрэглэгчид',
-    href: '/admin/users',
-    icon: Users
-  },
-  {
-    title: 'Сургалтууд',
-    href: '/admin/courses',
-    icon: BookOpen
-  },
-  {
-    title: 'Media Grid',
-    href: '/admin/media-grid',
-    icon: Grid3X3
-  },
-  {
-    title: 'Төлбөрүүд',
-    href: '/admin/payments',
-    icon: CreditCard
-  },
-  {
-    title: 'Өгөгдлийн сан',
-    href: '/admin/database',
-    icon: Database
-  },
-  {
-    title: 'Тохиргоо',
-    href: '/admin/settings',
-    icon: Settings
-  }
+  { title: 'Нүүр', href: '/admin', icon: Home },
+  { title: 'Сургалтууд', href: '/admin/courses', icon: BookOpen },
+  { title: 'Хэрэглэгчид', href: '/admin/users', icon: Users },
+  { title: 'Төлбөрүүд', href: '/admin/payments', icon: CreditCard },
+  { title: 'Media Grid', href: '/admin/media-grid', icon: Grid3X3 },
+  { title: 'Өгөгдлийн сан', href: '/admin/database', icon: Database },
+  { title: 'Тохиргоо', href: '/admin/settings', icon: Settings },
 ]
 
 import { useAuth } from '@/hooks/use-auth'
@@ -58,28 +30,8 @@ export function AdminSidebar({ collapsed = false, onNavigate }: { collapsed?: bo
 
   return (
     <div className={`${collapsed ? 'w-[72px]' : 'w-64'} bg-white border-r border-sand-200 min-h-screen flex flex-col`}> 
-      <div className={`p-4 ${collapsed ? 'px-3' : ''} border-b border-sand-200`}> 
-        {collapsed ? (
-          <div className="h-8 w-8 rounded-lg bg-[#1B3C53]" aria-label="Brand" />
-        ) : (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-[#1B3C53]" />
-              <span className="text-sm font-semibold text-[#1B3C53]">Админ</span>
-            </div>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F9F3EF] text-[#1B3C53] border">Admin</span>
-          </div>
-        )}
+      <div className={`p-4 ${collapsed ? 'px-3' : ''} border-b border-sand-200`}>
       </div>
-
-        {!collapsed && (
-          <div className="p-3 border-b border-sand-200">
-            <input
-              className="w-full px-3 py-2 text-sm rounded-xl border border-sand-200 bg-white placeholder:text-ink-500"
-              placeholder="Хайх"
-            />
-          </div>
-        )}
 
         <nav className="p-2 space-y-1">
           {menuItems.map((item) => {

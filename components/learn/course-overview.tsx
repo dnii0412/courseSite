@@ -67,8 +67,8 @@ export function CourseOverview({ courseId }: CourseOverviewProps) {
         }
 
         // Check enrollment if user is logged in
-        if (user) {
-          const enrollmentResponse = await fetch(`/api/enrollments/check/${courseId}`, { cache: 'no-store' })
+          if (user) {
+            const enrollmentResponse = await fetch(`/api/enrollments/check/${courseId}`, { cache: 'no-store', credentials: 'include' })
           if (enrollmentResponse.ok) {
             const enrollmentData = await enrollmentResponse.json()
             if (enrollmentData?.enrolled) {

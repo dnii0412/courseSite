@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ user: null }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       user: {
         id: decoded.userId,
         name: dbUser.name,
@@ -27,6 +27,21 @@ export async function GET(request: NextRequest) {
         role: dbUser.role,
       }
     }, { headers: { 'Cache-Control': 'no-store' } })
+    // Refresh cookie expiry on me calls
+    try {
+      const token = request.cookies.get('token')?.value
+      if (token) {
+        const isHttps = request.headers.get('x-forwarded-proto') === 'https' || request.nextUrl.protocol === 'https:'
+        res.cookies.set('token', token, {
+          httpOnly: true,
+          secure: isHttps,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 7 * 24 * 60 * 60,
+        })
+      }
+    } catch {}
+    return res
   } catch (error) {
     console.error('Auth me error:', error)
     // Fail open with user null to avoid crashing the client UI

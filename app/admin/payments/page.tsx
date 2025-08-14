@@ -82,6 +82,39 @@ export default function AdminPaymentsPage() {
     return matchesSearch && matchesStatus
   })
 
+  const handleExport = () => {
+    const rows = filteredPayments.map((p) => ({
+      Date: p.createdAt ? new Date(p.createdAt).toISOString() : '',
+      User: p.userDisplayName || '',
+      Email: p.user?.email || '',
+      Course: p.courseDisplayName || '',
+      Amount: p.amount ?? 0,
+      Currency: p.currency || 'MNT',
+      Status: p.status,
+      Expired: p.isExpired ? 'yes' : 'no',
+    }))
+
+    const headers = Object.keys(rows[0] || { Date: '', User: '', Email: '', Course: '', Amount: 0, Currency: '', Status: '', Expired: '' })
+    const esc = (val: any) => {
+      const s = String(val ?? '')
+      if (s.includes('"') || s.includes(',') || s.includes('\n')) return '"' + s.replace(/"/g, '""') + '"'
+      return s
+    }
+    const csv = [headers.join(',')]
+      .concat(rows.map((r) => headers.map((h) => esc((r as any)[h])).join(',')))
+      .join('\n')
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `payments_export_${new Date().toISOString().slice(0,10)}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   const stats = {
     total: payments.length,
     completed: payments.filter(p => p.status === 'completed').length,
@@ -155,38 +188,7 @@ export default function AdminPaymentsPage() {
             </Card>
           </div>
 
-          <div className="mb-4 flex items-center gap-3">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
-              <Input 
-                placeholder="Хэрэглэгч, курс хайх..." 
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <select 
-              className="border border-sand-200 rounded-xl px-3 py-2 text-sm bg-white text-ink-700"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">Бүх статус</option>
-              <option value="completed">Амжилттай</option>
-              <option value="pending">Хүлээгдэж буй</option>
-              <option value="failed">Амжилтгүй</option>
-            </select>
-            <div className="flex items-center space-x-2">
-                  <Button variant="outline" onClick={fetchPayments}>
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Шинэчлэх
-                  </Button>
-                  <Button variant="outline">
-                    <Download className="w-4 h-4 mr-2" />
-                    Экспорт
-                  </Button>
-                </div>
-          </div>
-
+          
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -213,6 +215,16 @@ export default function AdminPaymentsPage() {
                   <option value="pending">Хүлээгдэж буй</option>
                   <option value="failed">Амжилтгүй</option>
                 </select>
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" onClick={fetchPayments}>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Шинэчлэх
+                  </Button>
+                  <Button variant="outline" onClick={handleExport}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Экспорт
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>

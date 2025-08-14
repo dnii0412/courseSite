@@ -64,6 +64,7 @@ export function PaymentModal({ isOpen, onClose, onPaymentSuccess, course }: Paym
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           courseId: course._id
         })
@@ -110,7 +111,7 @@ export function PaymentModal({ isOpen, onClose, onPaymentSuccess, course }: Paym
 
   const checkPaymentStatus = async (orderId: string) => {
     try {
-      const response = await fetch(`/api/payments/status/${orderId}`)
+      const response = await fetch(`/api/payments/status/${orderId}`, { credentials: 'include' })
       const data = await response.json()
 
       if (response.ok && data.status === 'completed') {
@@ -120,6 +121,7 @@ export function PaymentModal({ isOpen, onClose, onPaymentSuccess, course }: Paym
           await fetch('/api/users/enroll', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ courseId: course._id })
           })
         } catch (e) {

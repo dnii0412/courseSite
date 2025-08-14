@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs'
 export async function GET(_request: NextRequest) {
   try {
     await connectDB()
-    const users = await User.find()
+    const users = await User.find({ role: { $ne: 'ADMIN' } })
       .sort({ createdAt: -1 })
       .select('name email createdAt enrolledCourses')
       .populate('enrolledCourses', 'title')

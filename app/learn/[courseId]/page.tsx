@@ -1,9 +1,12 @@
 import { CourseOverview } from '@/components/learn/course-overview'
-import { getCourseById } from '@/lib/api/courses'
+import { connectDB } from '@/lib/mongodb'
+import { Course } from '@/lib/models/course'
 import { notFound, redirect } from 'next/navigation'
 import { getUserFromCookies } from '@/lib/auth'
 import { hasCourseAccess } from '@/lib/utils/access'
 import Navbar from '@/components/Navbar'
+
+export const dynamic = 'force-dynamic'
 
 interface CourseLearnPageProps {
   params: {
@@ -12,7 +15,8 @@ interface CourseLearnPageProps {
 }
 
 export default async function CourseLearnPage({ params }: CourseLearnPageProps) {
-  const course = await getCourseById(params.courseId)
+  await connectDB()
+  const course = await Course.findById(params.courseId).lean()
 
   if (!course) {
     notFound()

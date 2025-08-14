@@ -3,7 +3,10 @@ import { ILayout } from '@/lib/models/layout'
 
 async function fetchLayout(slug: string): Promise<ILayout | null> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/layouts?slug=${encodeURIComponent(slug)}`, {
+    const url = slug
+      ? `${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/layouts?slug=${encodeURIComponent(slug)}`
+      : `${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/layouts`
+    const res = await fetch(url, {
       cache: 'no-store',
       // Let the route serve published only for public
     })
@@ -26,9 +29,10 @@ async function fetchMedia(): Promise<IMedia[]> {
   }
 }
 
-export async function GridFeatureSection() {
-  const slug = 'home-hero'
-  const [layout, allMedia] = await Promise.all([fetchLayout(slug), fetchMedia()])
+export async function GridFeatureSection({ slug }: { slug?: string } = {}) {
+  // If slug provided, use it; else fetch latest published from API
+  const layoutPromise = slug ? fetchLayout(slug) : fetchLayout('')
+  const [layout, allMedia] = await Promise.all([layoutPromise, fetchMedia()])
   const mediaById = new Map(allMedia.map((m) => [String(m._id), m]))
 
   return (

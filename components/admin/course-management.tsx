@@ -186,98 +186,7 @@ export function CourseManagement() {
 
   return (
     <div className="space-y-6">
-      {/* Header Actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Хичээл хайх..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 w-64"
-            />
-          </div>
-
-          <Dialog open={showDialog} onOpenChange={setShowDialog}>
-            <DialogTrigger asChild>
-              <Button onClick={() => setShowDialog(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Шинэ хичээл
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Шинэ хичээл нэмэх</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="title">Гарчиг</Label>
-                  <Input id="title" placeholder="Хичээлийн гарчиг" value={newCourse.title} onChange={e => setNewCourse(v => ({ ...v, title: e.target.value }))} />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Тайлбар</Label>
-                  <Textarea id="description" placeholder="Хичээлийн тайлбар" value={newCourse.description} onChange={e => setNewCourse(v => ({ ...v, description: e.target.value }))} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="instructor">Багш (нэр)</Label>
-                    <Input id="instructor" placeholder="Багшийн нэр" value={newCourse.instructor} onChange={e => setNewCourse(v => ({ ...v, instructor: e.target.value }))} />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="price">Үнэ</Label>
-                    <Input id="price" type="number" placeholder="₮" value={newCourse.price} onChange={e => setNewCourse(v => ({ ...v, price: e.target.value }))} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="category">Ангилал</Label>
-                    <Select value={newCourse.category} onValueChange={val => setNewCourse(v => ({ ...v, category: val }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Ангилал сонгох" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="technology">Technology</SelectItem>
-                        <SelectItem value="business">Business</SelectItem>
-                        <SelectItem value="design">Design</SelectItem>
-                        <SelectItem value="marketing">Marketing</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="published">Нийтлэх</Label>
-                    <div className="flex items-center space-x-2">
-                      <Switch id="published" checked={newCourse.published} onCheckedChange={val => setNewCourse(v => ({ ...v, published: val }))} />
-                      <span>{newCourse.published ? 'Тийм' : 'Үгүй'}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="duration">Үргэлжлэх хугацаа (цаг)</Label>
-                  <Input id="duration" type="number" placeholder="1" value={newCourse.duration} onChange={e => setNewCourse(v => ({ ...v, duration: e.target.value }))} />
-                </div>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setShowDialog(false)}>Цуцлах</Button>
-                <Button onClick={handleCreateCourse} disabled={creating}>{creating ? 'Хадгалж байна...' : 'Хадгалах'}</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Бүгд</SelectItem>
-              <SelectItem value="active">Идэвхтэй</SelectItem>
-              <SelectItem value="draft">Ноорог</SelectItem>
-              <SelectItem value="archived">Архивласан</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      {/* Controls moved inside the list card header below */}
 
       {/* Edit Course Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
@@ -396,8 +305,95 @@ export function CourseManagement() {
 
       {/* Courses List */}
       <Card>
-        <CardHeader>
-          <CardTitle>Хичээлүүд ({filteredCourses.length})</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-ink-900 text-lg md:text-xl font-semibold">Хичээлүүд ({filteredCourses.length})</CardTitle>
+          <div className="mt-3 md:mt-4 flex items-center gap-3 md:gap-4 flex-wrap">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Хичээл хайх..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8 w-72 md:w-80"
+              />
+            </div>
+            <Dialog open={showDialog} onOpenChange={setShowDialog}>
+              <DialogTrigger asChild>
+                <Button onClick={() => setShowDialog(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Шинэ хичээл
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Шинэ хичээл нэмэх</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="title">Гарчиг</Label>
+                    <Input id="title" placeholder="Хичээлийн гарчиг" value={newCourse.title} onChange={e => setNewCourse(v => ({ ...v, title: e.target.value }))} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">Тайлбар</Label>
+                    <Textarea id="description" placeholder="Хичээлийн тайлбар" value={newCourse.description} onChange={e => setNewCourse(v => ({ ...v, description: e.target.value }))} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="instructor">Багш (нэр)</Label>
+                      <Input id="instructor" placeholder="Багшийн нэр" value={newCourse.instructor} onChange={e => setNewCourse(v => ({ ...v, instructor: e.target.value }))} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="price">Үнэ</Label>
+                      <Input id="price" type="number" placeholder="₮" value={newCourse.price} onChange={e => setNewCourse(v => ({ ...v, price: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="category">Ангилал</Label>
+                      <Select value={newCourse.category} onValueChange={val => setNewCourse(v => ({ ...v, category: val }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Ангилал сонгох" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="technology">Technology</SelectItem>
+                          <SelectItem value="business">Business</SelectItem>
+                          <SelectItem value="design">Design</SelectItem>
+                          <SelectItem value="marketing">Marketing</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="published">Нийтлэх</Label>
+                      <div className="flex items-center space-x-2">
+                        <Switch id="published" checked={newCourse.published} onCheckedChange={val => setNewCourse(v => ({ ...v, published: val }))} />
+                        <span>{newCourse.published ? 'Тийм' : 'Үгүй'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="duration">Үргэлжлэх хугацаа (цаг)</Label>
+                    <Input id="duration" type="number" placeholder="1" value={newCourse.duration} onChange={e => setNewCourse(v => ({ ...v, duration: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => setShowDialog(false)}>Цуцлах</Button>
+                  <Button onClick={handleCreateCourse} disabled={creating}>{creating ? 'Хадгалж байна...' : 'Хадгалах'}</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Бүгд</SelectItem>
+                <SelectItem value="active">Идэвхтэй</SelectItem>
+                <SelectItem value="draft">Ноорог</SelectItem>
+                <SelectItem value="archived">Архивласан</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (

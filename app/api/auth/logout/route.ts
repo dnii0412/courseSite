@@ -6,11 +6,12 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({ message: 'Logged out successfully' })
     // Prefer delete; set expired fallback for robustness
     try {
-      response.cookies.delete('token')
+      response.cookies.delete('token', { path: '/' })
     } catch {}
+    const isHttps = request.headers.get('x-forwarded-proto') === 'https' || request.nextUrl.protocol === 'https:'
     response.cookies.set('token', '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isHttps,
       sameSite: 'strict',
       path: '/',
       expires: new Date(0)

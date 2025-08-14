@@ -14,7 +14,7 @@ export default function HomePage() {
         <HeroSection />
         <StatsSection />
         <TopCoursesSection />
-        <GridFeatureSection />
+        <GridFeatureSection slug="home-hero" />
         <WhyUsSection />
       </main>
 

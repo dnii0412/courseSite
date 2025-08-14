@@ -28,6 +28,8 @@ interface LayoutEditorProps {
   onSave?: (layout: ILayout) => void;
   selectedMedia?: IMedia | null;
   onSelectedMediaConsumed?: () => void;
+  compact?: boolean;
+  presetRequest?: { key: string; stamp: number };
 }
 
 interface GridCell {
@@ -37,7 +39,7 @@ interface GridCell {
   itemId?: string;
 }
 
-export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsumed }: LayoutEditorProps) => {
+export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsumed, compact = false, presetRequest }: LayoutEditorProps) => {
   const [layout, setLayout] = useState<ILayout | null>(null);
   const [items, setItems] = useState<ILayoutItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<ILayoutItem | null>(null);
@@ -48,6 +50,7 @@ export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsu
   const [showPreview, setShowPreview] = useState(false);
   const [mediaList, setMediaList] = useState<IMedia[]>([]);
   const [mediaMap, setMediaMap] = useState<Map<string, IMedia>>(new Map());
+  const [snapPos, setSnapPos] = useState<{ col: number; row: number } | null>(null)
   const { toast } = useToast();
 
   // Initialize 6x4 grid
@@ -65,6 +68,51 @@ export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsu
   useEffect(() => {
     fetchLayout();
   }, [slug]);
+
+  // Apply preset when requested
+  useEffect(() => {
+    if (!presetRequest?.key) return;
+    const key = presetRequest.key;
+    const make = (k: string): ILayoutItem[] => {
+      switch (k) {
+        case '6x2':
+          return [{ id: `p_${Date.now()}`, mediaId: (mediaList[0]?._id as any) || ('' as any), startCol: 1 as any, startRow: 1 as any, colSpan: 6 as any, rowSpan: 2 as any }];
+        case '3x2':
+          return [
+            { id: `p_${Date.now()}a`, mediaId: (mediaList[0]?._id as any) || ('' as any), startCol: 1 as any, startRow: 1 as any, colSpan: 3 as any, rowSpan: 2 as any },
+            { id: `p_${Date.now()}b`, mediaId: (mediaList[1]?._id as any) || ('' as any), startCol: 4 as any, startRow: 1 as any, colSpan: 3 as any, rowSpan: 2 as any },
+          ];
+        case '2x2':
+          return [
+            { id: `p_${Date.now()}a`, mediaId: (mediaList[0]?._id as any) || ('' as any), startCol: 1 as any, startRow: 1 as any, colSpan: 2 as any, rowSpan: 2 as any },
+            { id: `p_${Date.now()}b`, mediaId: (mediaList[1]?._id as any) || ('' as any), startCol: 3 as any, startRow: 1 as any, colSpan: 2 as any, rowSpan: 2 as any },
+            { id: `p_${Date.now()}c`, mediaId: (mediaList[2]?._id as any) || ('' as any), startCol: 5 as any, startRow: 1 as any, colSpan: 2 as any, rowSpan: 2 as any },
+            { id: `p_${Date.now()}d`, mediaId: (mediaList[3]?._id as any) || ('' as any), startCol: 1 as any, startRow: 3 as any, colSpan: 2 as any, rowSpan: 2 as any },
+          ];
+        case 'mosaic':
+          return [
+            { id: `p_${Date.now()}a`, mediaId: (mediaList[0]?._id as any) || ('' as any), startCol: 1 as any, startRow: 1 as any, colSpan: 3 as any, rowSpan: 2 as any },
+            { id: `p_${Date.now()}b`, mediaId: (mediaList[1]?._id as any) || ('' as any), startCol: 4 as any, startRow: 1 as any, colSpan: 2 as any, rowSpan: 1 as any },
+            { id: `p_${Date.now()}c`, mediaId: (mediaList[2]?._id as any) || ('' as any), startCol: 6 as any, startRow: 1 as any, colSpan: 1 as any, rowSpan: 1 as any },
+            { id: `p_${Date.now()}d`, mediaId: (mediaList[3]?._id as any) || ('' as any), startCol: 4 as any, startRow: 2 as any, colSpan: 3 as any, rowSpan: 2 as any },
+          ];
+        case 'hero':
+          return [
+            { id: `p_${Date.now()}a`, mediaId: (mediaList[0]?._id as any) || ('' as any), startCol: 1 as any, startRow: 1 as any, colSpan: 4 as any, rowSpan: 4 as any },
+            { id: `p_${Date.now()}b`, mediaId: (mediaList[1]?._id as any) || ('' as any), startCol: 5 as any, startRow: 1 as any, colSpan: 2 as any, rowSpan: 2 as any },
+            { id: `p_${Date.now()}c`, mediaId: (mediaList[2]?._id as any) || ('' as any), startCol: 5 as any, startRow: 3 as any, colSpan: 2 as any, rowSpan: 2 as any },
+          ];
+        default:
+          return []
+      }
+    }
+    const presetItems = make(key)
+    if (presetItems.length) {
+      setItems(presetItems)
+      updateGridOccupancy(presetItems)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [presetRequest?.stamp])
 
   // Load media library to render item previews
   useEffect(() => {
@@ -379,64 +427,29 @@ export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsu
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-[#1B3C53]">Layout Editor</h2>
-          <p className="text-gray-600">Edit grid layout for: {slug}</p>
-        </div>
+      
 
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowGrid(!showGrid)}
-          >
-            <Grid3X3 className="w-4 h-4 mr-2" />
-            {showGrid ? 'Hide' : 'Show'} Grid
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowPreview(!showPreview)}
-          >
-            <Eye className="w-4 h-4 mr-2" />
-            Preview
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => selectedMedia && addItem(selectedMedia)}
-            disabled={!selectedMedia}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Selected Media
-          </Button>
-
-          <Button
+      {/* Grid Canvas */}
+        <Card className="border-[#D2C1B6] bg-[#F9F3EF]">
+        <CardHeader>
+          <CardTitle className="text-[#1B3C53]">Grid Canvas (6×4)</CardTitle>
+          <span><Button
             onClick={saveLayout}
             disabled={saving}
             className="bg-[#1B3C53] hover:bg-[#456882]"
           >
             <Save className="w-4 h-4 mr-2" />
             {saving ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-      </div>
-
-      {/* Grid Canvas */}
-      <Card className="border-[#D2C1B6] bg-[#F9F3EF]">
-        <CardHeader>
-          <CardTitle className="text-[#1B3C53]">Grid Canvas (6×4)</CardTitle>
+          </Button></span>
         </CardHeader>
+        
         <CardContent>
           <div className="relative">
             {/* Grid Overlay */}
             {showGrid && (
               <div className="absolute inset-0 pointer-events-none">
                 <div
-                  className="grid gap-0.5 h-[90vh]"
+                  className={compact ? 'grid gap-0.5 h-[360px]' : 'grid gap-0.5 h-[90vh]'}
                   style={{
                     gridTemplateColumns: 'repeat(6, 1fr)',
                     gridTemplateRows: 'repeat(4, 1fr)',
@@ -460,7 +473,7 @@ export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsu
 
             {/* Grid Items */}
             <div
-              className="grid gap-3 h-[90vh] relative"
+              className={compact ? 'grid gap-2 h-[360px] relative' : 'grid gap-3 h-[90vh] relative'}
               style={{
                 gridTemplateColumns: 'repeat(6, 1fr)',
                 gridTemplateRows: 'repeat(4, 1fr)',
@@ -468,6 +481,16 @@ export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsu
               onDragOver={(e) => {
                 e.preventDefault();
               }}
+              onDragEnter={(e) => {
+                const container = e.currentTarget as HTMLDivElement;
+                const rect = container.getBoundingClientRect();
+                const relX = e.clientX - rect.left;
+                const relY = e.clientY - rect.top;
+                const col = Math.max(1, Math.min(6, Math.floor((relX / rect.width) * 6) + 1));
+                const row = Math.max(1, Math.min(4, Math.floor((relY / rect.height) * 4) + 1));
+                setSnapPos({ col, row });
+              }}
+              onDragLeave={() => setSnapPos(null)}
               onDrop={(e) => {
                 e.preventDefault();
                 const itemId = e.dataTransfer.getData('text/plain');
@@ -496,10 +519,16 @@ export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsu
                   if (conflict) break;
                 }
                 if (!conflict) {
-    updateItem(itemId, { startCol: col as 1|2|3|4|5|6, startRow: row as 1|2|3|4 });
+                  updateItem(itemId, { startCol: col as 1|2|3|4|5|6, startRow: row as 1|2|3|4 });
                 }
+                setSnapPos(null)
               }}
             >
+              {snapPos && (
+                <div className="pointer-events-none absolute inset-0 grid" style={{ gridTemplateColumns: 'repeat(6, 1fr)', gridTemplateRows: 'repeat(4, 1fr)' }}>
+                  <div className="border-2 border-dashed border-[#1B3C53]" style={{ gridColumn: `${snapPos.col} / span 1`, gridRow: `${snapPos.row} / span 1` }} />
+                </div>
+              )}
               {items.map((item) => (
                 <GridItem
                   key={item.id}
@@ -533,11 +562,31 @@ export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsu
                   min="1"
                   max="6"
                   value={selectedItem.startCol}
-                  onChange={(e) => updateItem(selectedItem.id, {
-                    startCol: parseInt(e.target.value) as any
-                  })}
+                  onChange={(e) => {
+                    const n = parseInt(e.target.value, 10)
+                    if (Number.isNaN(n)) return
+                    updateItem(selectedItem.id, { startCol: n as any })
+                  }}
                   className="border-[#D2C1B6]"
                 />
+              </div>
+
+              <div className="col-span-2">
+                <Label>Presets</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {[
+                    { c: 1, r: 1, label: '1×1' },
+                    { c: 2, r: 1, label: '2×1' },
+                    { c: 2, r: 2, label: '2×2' },
+                    { c: 3, r: 2, label: '3×2' },
+                    { c: 3, r: 3, label: '3×3' },
+                    { c: 6, r: 2, label: '6×2' },
+                  ].map((p) => (
+                    <Button key={p.label} size="sm" variant="outline" onClick={() => updateItem(selectedItem.id, { colSpan: p.c as any, rowSpan: p.r as any })}>
+                      {p.label}
+                    </Button>
+                  ))}
+                </div>
               </div>
 
               <div>
@@ -548,9 +597,11 @@ export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsu
                   min="1"
                   max="4"
                   value={selectedItem.startRow}
-                  onChange={(e) => updateItem(selectedItem.id, {
-                    startRow: parseInt(e.target.value) as any
-                  })}
+                  onChange={(e) => {
+                    const n = parseInt(e.target.value, 10)
+                    if (Number.isNaN(n)) return
+                    updateItem(selectedItem.id, { startRow: n as any })
+                  }}
                   className="border-[#D2C1B6]"
                 />
               </div>
@@ -563,9 +614,11 @@ export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsu
                   min="1"
                   max="6"
                   value={selectedItem.colSpan}
-                  onChange={(e) => updateItem(selectedItem.id, {
-                    colSpan: parseInt(e.target.value) as any
-                  })}
+                  onChange={(e) => {
+                    const n = parseInt(e.target.value, 10)
+                    if (Number.isNaN(n)) return
+                    updateItem(selectedItem.id, { colSpan: n as any })
+                  }}
                   className="border-[#D2C1B6]"
                 />
               </div>
@@ -578,9 +631,11 @@ export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsu
                   min="1"
                   max="4"
                   value={selectedItem.rowSpan}
-                  onChange={(e) => updateItem(selectedItem.id, {
-                    rowSpan: parseInt(e.target.value) as any
-                  })}
+                  onChange={(e) => {
+                    const n = parseInt(e.target.value, 10)
+                    if (Number.isNaN(n)) return
+                    updateItem(selectedItem.id, { rowSpan: n as any })
+                  }}
                   className="border-[#D2C1B6]"
                 />
               </div>
@@ -611,6 +666,10 @@ export const LayoutEditor = ({ slug, onSave, selectedMedia, onSelectedMediaConsu
                   placeholder="Descriptive text for screen readers"
                   className="border-[#D2C1B6]"
                 />
+              </div>
+              <div className="col-span-2 flex items-center gap-2">
+                <Switch id="newtab" onCheckedChange={(v) => updateItem(selectedItem.id, { ariaLabel: v ? (selectedItem.ariaLabel || 'open in new tab') : selectedItem.ariaLabel })} />
+                <Label htmlFor="newtab">Open link in new tab (hint)</Label>
               </div>
             </div>
 

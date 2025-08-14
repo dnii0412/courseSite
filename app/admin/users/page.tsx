@@ -135,16 +135,7 @@ export default function AdminUsersPage() {
             </DialogContent>
           </Dialog>
 
-          <div className="mx-auto max-w-[1200px] px-4 md:px-6 mt-4 flex items-center gap-3">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
-              <Input placeholder="Хэрэглэгч хайх..." className="pl-8" />
-            </div>
-            <Button onClick={() => setShowCreateDialog(true)}>
-              <Plus className="w-4 h-4" />
-              Шинэ хэрэглэгч
-            </Button>
-          </div>
+          
 
           {/* Edit User Dialog */}
           <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
@@ -222,8 +213,18 @@ export default function AdminUsersPage() {
 
           <div className="mx-auto max-w-[1200px] px-4 md:px-6 mt-4">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Хэрэглэгчид</CardTitle>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-ink-900 text-lg md:text-xl font-semibold">Хэрэглэгчид</CardTitle>
+                <div className="mt-3 flex items-center gap-3 flex-wrap">
+                  <div className="relative flex-1 max-w-sm">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
+                    <Input placeholder="Хэрэглэгч хайх..." className="pl-8" />
+                  </div>
+                  <Button onClick={() => setShowCreateDialog(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Шинэ хэрэглэгч
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
               {loading ? (
@@ -233,17 +234,31 @@ export default function AdminUsersPage() {
               ) : (
                 <div className="space-y-4">
                     {users.map((user) => (
-                      <div key={user._id} className="w-full p-4 border border-sand-200 rounded-2xl hover:bg-sand-50 transition-colors">
+                      <div key={user._id} className="w-full p-3 border border-sand-200 rounded-2xl hover:bg-sand-50 transition-colors">
                         <div className="grid grid-cols-[auto,1fr,auto] items-center gap-3">
-                          <Avatar className="h-9 w-9">
+                          <Avatar className="h-8 w-8">
                             <AvatarImage src={user.avatar || '/placeholder-user.jpg'} alt={user.name} />
                             <AvatarFallback>
                               {user.name?.split(' ').map((n: string) => n[0]).join('')}
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0">
-                            <p className="text-sm font-medium leading-none text-ink-900 truncate">{user.name}</p>
-                            <p className="text-sm text-ink-500 truncate">{user.email}</p>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="text-sm font-medium text-ink-900 truncate max-w-[200px]">{user.name}</p>
+                              {Array.isArray(user.enrolledCourses) && user.enrolledCourses.length > 0 && (
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  {user.enrolledCourses.slice(0,5).map((c: any, idx: number) => (
+                                    <span key={(typeof c === 'string' ? c : c._id) || idx} className="px-1.5 py-0.5 rounded-full text-[10px] leading-none bg-sand-100 text-ink-700">
+                                      {typeof c === 'string' ? c : c.title}
+                                    </span>
+                                  ))}
+                                  {user.enrolledCourses.length > 5 && (
+                                    <span className="px-1.5 py-0.5 rounded-full text-[10px] leading-none bg-sand-100 text-ink-700">+{user.enrolledCourses.length - 5}</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-xs text-ink-500 truncate">{user.email}</p>
                           </div>
                           <div className="flex items-center gap-1 sm:gap-2">
                             <Button 
@@ -270,11 +285,8 @@ export default function AdminUsersPage() {
                             </Button>
                           </div>
                         </div>
-                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-500">
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-500">
                           {user.status && <span>{getStatusBadge(user.status)}</span>}
-                          {Array.isArray(user.enrolledCourses) && user.enrolledCourses.length > 0 && (
-                            <span className="truncate">Курсууд: {user.enrolledCourses.map((c: any) => typeof c === 'string' ? c : c.title).join(', ')}</span>
-                          )}
                           <span className="ml-auto text-ink-500">{user.createdAt ? formatDate(user.createdAt) : ''}</span>
                         </div>
                       </div>

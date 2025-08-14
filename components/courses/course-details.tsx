@@ -40,18 +40,20 @@ export function CourseDetails({ course }: CourseDetailsProps) {
   const [showPayment, setShowPayment] = useState(false)
   const [isEnrolled, setIsEnrolled] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const { user } = useAuth()
+  const { user, isLoading: authLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     const checkEnrollment = async () => {
+      if (authLoading) return
       if (!user) {
         setIsLoading(false)
+        setIsEnrolled(false)
         return
       }
 
       try {
-        const response = await fetch(`/api/enrollments/check/${course._id}`, { cache: 'no-store' })
+        const response = await fetch(`/api/enrollments/check/${course._id}`, { cache: 'no-store', credentials: 'include' })
         if (response.ok) {
           const data = await response.json()
           setIsEnrolled(Boolean(data?.enrolled))
@@ -67,7 +69,7 @@ export function CourseDetails({ course }: CourseDetailsProps) {
     }
 
     checkEnrollment()
-  }, [user, course._id])
+  }, [authLoading, user, course._id])
 
   const handleWatchCourse = () => {
     router.push(`/learn/${course._id}`)
@@ -200,13 +202,13 @@ export function CourseDetails({ course }: CourseDetailsProps) {
                 </ul>
               </div>
               
-              {!user ? (
-                <Button className="w-full" size="lg" asChild>
-                  <a href="/auth/login">Нэвтэрч бүртгүүлэх</a>
-                </Button>
-              ) : isLoading ? (
+              {authLoading || isLoading ? (
                 <Button className="w-full" size="lg" disabled>
                   Шалгаж байна...
+                </Button>
+              ) : !user ? (
+                <Button className="w-full" size="lg" asChild>
+                  <a href="/auth/login">Нэвтэрч бүртгүүлэх</a>
                 </Button>
               ) : isEnrolled ? (
                 <Button 

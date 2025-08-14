@@ -25,11 +25,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     checkAuth()
+    // Re-check on focus to keep UI in sync
+    const onFocus = () => checkAuth()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
   }, [])
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/auth/me', { credentials: 'include' })
+      const response = await fetch('/api/auth/me', { credentials: 'include', cache: 'no-store' })
       if (response.ok) {
         const userData = await response.json()
         setUser(userData.user)
@@ -41,14 +45,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const login = async (email: string, password: string) => {
+  const login = async (emailOrIdentifier: string, password: string) => {
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ identifier: emailOrIdentifier, password }),
     })
 
     if (!response.ok) {
@@ -86,6 +90,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Logout error:', error)
     } finally {
       setUser(null)
+      if (typeof window !== 'undefined') {
+        window.location.href = '/'
+      }
     }
   }
 

@@ -75,48 +75,8 @@ const collections = [
   }
 ]
 
-const recentOperations = [
-  {
-    id: 1,
-    operation: 'Backup created',
-    status: 'success',
-    timestamp: '2024.01.15 14:30',
-    duration: '2m 15s',
-    size: '1.2 GB'
-  },
-  {
-    id: 2,
-    operation: 'Index optimization',
-    status: 'success',
-    timestamp: '2024.01.15 12:00',
-    duration: '45s',
-    size: null
-  },
-  {
-    id: 3,
-    operation: 'Data migration',
-    status: 'running',
-    timestamp: '2024.01.15 10:15',
-    duration: '15m 30s',
-    size: '800 MB'
-  },
-  {
-    id: 4,
-    operation: 'Backup verification',
-    status: 'success',
-    timestamp: '2024.01.15 08:45',
-    duration: '1m 20s',
-    size: null
-  },
-  {
-    id: 5,
-    operation: 'Security scan',
-    status: 'warning',
-    timestamp: '2024.01.15 06:30',
-    duration: '5m 10s',
-    size: null
-  }
-]
+// fetched live from /api/admin/ops
+type Operation = { operation: string; status: 'success'|'running'|'warning'|'active'|'archived'|string; timestamp: string; duration: string; size?: string | null }
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -151,6 +111,7 @@ const getStatusIcon = (status: string) => {
 export default function AdminDatabasePage() {
   // Live infra stats
   const [live, setLive] = useState<any>(null)
+  const [ops, setOps] = useState<Operation[]>([])
   useEffect(() => {
     let mounted = true
     const load = async () => {
@@ -158,6 +119,11 @@ export default function AdminDatabasePage() {
         const r = await fetch('/api/admin/infra', { cache: 'no-store' })
         const j = await r.json()
         if (mounted) setLive(j)
+        const ro = await fetch('/api/admin/ops', { cache: 'no-store' })
+        if (ro.ok) {
+          const jo = await ro.json()
+          if (mounted) setOps(Array.isArray(jo) ? jo : [])
+        }
       } catch {}
     }
     load()
@@ -313,8 +279,8 @@ export default function AdminDatabasePage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentOperations.map((operation) => (
-                    <div key={operation.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  {ops.map((operation, i) => (
+                    <div key={i} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center space-x-4">
                         {getStatusIcon(operation.status)}
                         <div>
@@ -326,11 +292,11 @@ export default function AdminDatabasePage() {
                       </div>
                       
                       <div className="flex items-center space-x-4">
-                        {operation.size && (
+                        {operation.size ? (
                           <div className="text-right">
                             <p className="text-sm font-medium">{operation.size}</p>
                           </div>
-                        )}
+                        ) : null}
                         {getStatusBadge(operation.status)}
                       </div>
                     </div>
