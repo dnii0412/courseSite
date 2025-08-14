@@ -31,8 +31,8 @@ export function AdminSidebar({ collapsed = false, onNavigate }: { collapsed?: bo
   const { user, logout } = useAuth()
 
   return (
-    <div className={`${collapsed ? 'w-[72px]' : 'w-64'} bg-white border-r border-sand-200 min-h-screen flex flex-col`}> 
-      <div className={`p-4 ${collapsed ? 'px-3' : ''} border-b border-sand-200`}>
+    <div className={`${collapsed ? 'w-[72px]' : 'w-64'} bg-white border-r border-gray-200 min-h-screen flex flex-col`}> 
+      <div className={`p-4 ${collapsed ? 'px-3' : ''} border-b border-gray-200`}>
       </div>
 
         <nav className="p-2 space-y-1">
@@ -46,8 +46,8 @@ export function AdminSidebar({ collapsed = false, onNavigate }: { collapsed?: bo
                 href={item.href}
                 onClick={onNavigate}
                 className={`group flex items-center ${collapsed ? 'justify-center' : ''} px-3 py-2 text-sm font-medium rounded-xl transition-colors border-l-2 ${isActive
-                    ? 'bg-sand-100 text-ink-900 border-sand-200'
-                    : 'text-ink-700 hover:bg-sand-50 hover:text-ink-900 border-transparent'
+                    ? 'bg-gray-100 text-black border-gray-200'
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-black border-transparent'
                   }`}
               >
                 <Icon className={`w-5 h-5 ${collapsed ? '' : 'mr-3'} shrink-0`} />
@@ -57,7 +57,7 @@ export function AdminSidebar({ collapsed = false, onNavigate }: { collapsed?: bo
           })}
         </nav>
         {/* Profile footer */}
-        <div className="mt-auto p-3 border-t border-sand-200">
+        <div className="mt-auto p-3 border-t border-gray-200">
           {collapsed ? (
             <button onClick={logout} className="w-full flex items-center justify-center p-2 rounded-md hover:bg-gray-50 text-sm text-gray-700">
               Гарах
@@ -66,10 +66,10 @@ export function AdminSidebar({ collapsed = false, onNavigate }: { collapsed?: bo
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-full bg-gray-200" />
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium text-gray-900 truncate">{user?.name || 'Админ'}</div>
+                <div className="text-sm font-medium text-black truncate">{user?.name || 'Админ'}</div>
                 <div className="text-xs text-gray-500 truncate">{user?.email || ''}</div>
               </div>
-              <button onClick={logout} className="text-xs text-[#1B3C53] hover:underline">Гарах</button>
+              <button onClick={logout} className="text-xs text-black hover:underline">Гарах</button>
             </div>
           )}
         </div>

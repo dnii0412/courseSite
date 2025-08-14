@@ -16,6 +16,7 @@ import {
   Eye
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
 export default function AdminPage() {
   const [stats, setStats] = useState({
@@ -167,7 +168,7 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-sand-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-ink-600">Уншиж байна...</p>
@@ -177,7 +178,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-sand-50">
+    <div className="min-h-screen bg-white">
       <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-6">
         {/* Header */}
         <div className="mb-8">
@@ -265,11 +266,11 @@ export default function AdminPage() {
               <CardTitle className="text-base text-ink-900">Recent Activities</CardTitle>
             </CardHeader>
             <CardContent className="pt-0 px-6 pb-6">
-              <div className="flex space-x-1 mb-6 bg-sand-100 p-1 rounded-lg">
+              <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
                 <button 
                   className={`px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
                     activeTab === 'users' 
-                      ? 'bg-white text-primary shadow-sm ring-1 ring-sand-200' 
+                      ? 'bg-white text-primary shadow-sm ring-1 ring-gray-200' 
                       : 'text-ink-600 hover:text-ink-800 hover:bg-white/50'
                   }`}
                   onClick={() => setActiveTab('users')}
@@ -282,7 +283,7 @@ export default function AdminPage() {
                 <button 
                   className={`px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
                     activeTab === 'payments' 
-                      ? 'bg-white text-primary shadow-sm ring-1 ring-sand-200' 
+                      ? 'bg-white text-primary shadow-sm ring-1 ring-gray-200' 
                       : 'text-ink-600 hover:text-ink-800 hover:bg-white/50'
                   }`}
                   onClick={() => setActiveTab('payments')}
@@ -300,9 +301,9 @@ export default function AdminPage() {
                     <p className="text-ink-500 text-center py-4">No users found</p>
                   ) : (
                     recentUsers.map((user) => (
-                      <div key={user._id} className="flex items-center justify-between p-3 border border-sand-200 rounded-lg hover:bg-sand-50">
+                      <div key={user._id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-sand-200 rounded-full flex items-center justify-center">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
                             <Users className="w-4 h-4 text-ink-600" />
                           </div>
                           <div>
@@ -333,7 +334,7 @@ export default function AdminPage() {
                     <p className="text-ink-500 text-center py-4">No payments found</p>
                   ) : (
                     recentPayments.map((payment) => (
-                      <div key={payment._id} className="flex items-center justify-between p-3 border border-sand-200 rounded-lg hover:bg-sand-50">
+                      <div key={payment._id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
                             <DollarSign className="w-4 h-4 text-yellow-600" />

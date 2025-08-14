@@ -50,27 +50,27 @@ export function AdminCourseDetailsInline({ courseId, onChanged }: { courseId: st
   }, [enrollments, search])
 
   return (
-    <Card className="mt-2 border-t border-sand-200 border-x-0 border-b-0 rounded-none shadow-none bg-transparent">
+    <Card className="mt-2 border-t border-gray-200 border-x-0 border-b-0 rounded-none shadow-none bg-transparent">
       <CardHeader className="pb-2 px-0">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm">Дэлгэрэнгүй</CardTitle>
-          <div className="text-xs text-ink-500">Худалдан авсан: {enrollments.length}</div>
+          <div className="text-xs text-gray-500">Худалдан авсан: {enrollments.length}</div>
         </div>
       </CardHeader>
       <CardContent className="pt-0 px-0">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-4">
-          <TabsList className="bg-sand-100 rounded-xl p-1">
-            <TabsTrigger value="lessons" className="rounded-lg data-[state=active]:bg-white data-[state=active]:border data-[state=active]:border-sand-200">
+          <TabsList className="bg-gray-100 rounded-xl p-1">
+            <TabsTrigger value="lessons" className="data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:border data-[state=active]:border-gray-200">
               Хичээлүүд
             </TabsTrigger>
-            <TabsTrigger value="enrollments" className="rounded-lg data-[state=active]:bg-white data-[state=active]:border data-[state=active]:border-sand-200">
+            <TabsTrigger value="enrollments" className="data-[state=active]:bg-white data-[state=active]:text-black data-[state=active]:border data-[state=active]:border-gray-200">
               Худалдан авсан
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="enrollments">
             <div className="mb-3 relative max-w-sm">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
               <Input placeholder="Хэрэглэгч хайх..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             {loading ? (
@@ -82,22 +82,22 @@ export function AdminCourseDetailsInline({ courseId, onChanged }: { courseId: st
             ) : error ? (
               <div className="text-sm text-red-600">{error}</div>
             ) : filteredEnrollments.length === 0 ? (
-              <div className="text-sm text-ink-500">Одоогоор хэрэглэгч байхгүй</div>
+              <div className="text-sm text-gray-500">Одоогоор хэрэглэгч байхгүй</div>
             ) : (
-              <div className="divide-y divide-sand-100 rounded-xl overflow-hidden bg-white">
+              <div className="divide-y divide-gray-100 rounded-xl overflow-hidden bg-white">
                 {filteredEnrollments.map((e, idx) => (
-                  <div key={idx} className="flex items-center justify-between px-3 py-3 hover:bg-sand-50 transition-colors">
+                  <div key={idx} className="flex items-center justify-between px-3 py-3 hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-sand-100 flex items-center justify-center text-xs text-ink-700">
+                      <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-700">
                         {(e.user?.name || 'Н').slice(0,1)}
                       </div>
                       <div>
-                        <div className="font-medium text-sm text-ink-900">{e.user?.name || 'Нэргүй'}</div>
-                        <div className="text-xs text-ink-500">{e.user?.email}</div>
+                        <div className="font-medium text-sm text-black">{e.user?.name || 'Нэргүй'}</div>
+                        <div className="text-xs text-gray-500">{e.user?.email}</div>
                       </div>
                     </div>
                     {e.enrolledAt && (
-                      <div className="text-xs text-ink-500">{formatDate(e.enrolledAt)}</div>
+                      <div className="text-xs text-gray-500">{formatDate(e.enrolledAt)}</div>
                     )}
                   </div>
                 ))}

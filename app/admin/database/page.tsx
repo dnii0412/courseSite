@@ -134,7 +134,7 @@ export default function AdminDatabasePage() {
     }
   }, [])
   return (
-    <div className="min-h-screen bg-sand-50">
+    <div className="min-h-screen bg-white">
       <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-6">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-ink-900 mb-2">

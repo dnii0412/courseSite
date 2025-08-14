@@ -10,12 +10,16 @@ type AdminTopbarProps = {
 
 export function AdminTopbar({ title, actions, children }: AdminTopbarProps) {
 	return (
-    <div className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-sand-200">
-      <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-3 flex items-center justify-between">
-        <h1 className="text-lg md:text-2xl font-semibold tracking-tight text-ink-900">{title}</h1>
-        <div className="flex items-center gap-2">{actions}</div>
+    <div className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-gray-200">
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center space-x-4">
+          <h1 className="text-lg font-semibold text-black">{title}</h1>
+        </div>
+        <div className="flex items-center space-x-2">
+          {actions}
+        </div>
       </div>
-      {children ? <div className="mx-auto max-w-[1200px] px-4 md:px-6 pb-3 text-sm text-ink-500">{children}</div> : null}
+      {children && <div className="px-4 pb-3 text-sm text-gray-500">{children}</div>}
     </div>
 	)
 }

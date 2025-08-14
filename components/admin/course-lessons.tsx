@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
-import { Plus, Upload } from 'lucide-react'
+import { Plus, Upload, Edit, Trash } from 'lucide-react'
 import { startBunnyUpload } from '@/lib/bunny/uploader'
 
 interface Lesson {
   _id?: string
   title: string
+  description: string
   duration: number
   preview?: boolean
 }
@@ -115,12 +116,18 @@ export function CourseLessons({ course, onChanged, variant = 'default' }: { cour
     <Card className={variant === 'compact' ? 'border-0 bg-transparent shadow-none' : undefined}>
       <CardContent className={variant === 'compact' ? 'pt-0 px-0' : 'pt-4'}>
         {/* Add Lesson Form */}
-        <div className={variant === 'compact' ? 'rounded-xl overflow-hidden bg-white divide-y divide-sand-100' : 'space-y-3'}>
+        <div className={variant === 'compact' ? 'rounded-xl overflow-hidden bg-white divide-y divide-gray-100' : 'space-y-3'}>
           {lessons.map((l, idx) => (
-            <div key={l._id || idx} className={variant === 'compact' ? 'flex items-center justify-between px-3 py-3 hover:bg-sand-50 transition-colors' : 'flex items-center justify-between p-2 border rounded'}>
-              <div>
-                <div className="font-medium">{idx + 1}. {l.title}</div>
-                <div className="text-xs text-gray-500">{l.duration} минут</div>
+            <div key={l._id || idx} className={variant === 'compact' ? 'flex items-center justify-between px-3 py-3 hover:bg-gray-50 transition-colors' : 'flex items-center justify-between p-2 border rounded'}>
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs text-gray-700">
+                  {idx + 1}
+                </div>
+                <div>
+                  <h4 className="font-medium text-black">{l.title}</h4>
+                  <p className="text-sm text-gray-600">{l.description}</p>
+                  <div className="text-xs text-gray-500">{l.duration} минут</div>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button size="sm" variant="outline" onClick={async () => {

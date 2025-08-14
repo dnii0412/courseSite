@@ -29,29 +29,35 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-sand-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-ink-900">Админ нэвтрэх</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="text-sm text-ink-700">Нэр</label>
-              <Input value={identifier} onChange={(e)=>setIdentifier(e.target.value)} required />
-            </div>
-            <div>
-              <label className="text-sm text-ink-700">Нууц үг</label>
-              <Input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} required />
-            </div>
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Нэвтэрч байна...' : 'Нэвтрэх'}
-            </Button>
-            <p className="text-xs text-ink-500 text-center">Энгийн хэрэглэгчид <Link className="underline" href="/auth/login">/auth/login</Link> хуудсыг ашиглана.</p>
-          </form>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen flex items-center justify-center bg-white px-4">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-black">Админ хэсэгт нэвтрэх</h2>
+          <p className="mt-2 text-sm text-gray-600">Админ эрхээр нэвтэрнэ үү</p>
+        </div>
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-black">Админ нэвтрэх</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="text-sm text-black">Нэр</label>
+                <Input value={identifier} onChange={(e)=>setIdentifier(e.target.value)} required />
+              </div>
+              <div>
+                <label className="text-sm text-black">Нууц үг</label>
+                <Input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} required />
+              </div>
+              {error && <p className="text-sm text-red-600">{error}</p>}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Нэвтэрч байна...' : 'Нэвтрэх'}
+              </Button>
+              <p className="text-xs text-gray-500 text-center">Энгийн хэрэглэгчид <Link className="underline" href="/auth/login">/auth/login</Link> хуудсыг ашиглана.</p>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

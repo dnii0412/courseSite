@@ -118,7 +118,7 @@ export default function AdminBillingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-sand-50 p-6">
+      <div className="min-h-screen bg-white p-6">
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
@@ -133,12 +133,12 @@ export default function AdminBillingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-sand-50 p-6">
+    <div className="min-h-screen bg-white p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-ink-900">Cost Guard</h1>
-          <p className="text-ink-600 mt-2">Monitor and control your MongoDB Atlas spending</p>
+          <h1 className="text-3xl font-bold text-black">Cost Guard</h1>
+          <p className="text-gray-600 mt-2">Monitor and control your MongoDB Atlas spending</p>
         </div>
 
         {/* Atlas Connection Banner */}
@@ -186,7 +186,7 @@ export default function AdminBillingPage() {
                 </div>
               </div>
               {settings && (
-                <p className="text-sm text-ink-500">
+                <p className="text-sm text-gray-500">
                   Last updated: {formatDate(settings.updatedAt)}
                 </p>
               )}
@@ -207,10 +207,10 @@ export default function AdminBillingPage() {
             <CardContent className="space-y-4">
               {billingData ? (
                 <>
-                  <div className="text-3xl font-bold text-ink-900">
+                  <div className="text-3xl font-bold text-gray-900">
                     ${billingData.amountUsd.toFixed(2)}
                   </div>
-                  <div className="text-sm text-ink-500 space-y-1">
+                  <div className="text-sm text-gray-500 space-y-1">
                     <p>Period: {formatDate(billingData.periodStart)} - {formatDate(billingData.periodEnd)}</p>
                     <p>Last sync: {formatDate(billingData.fetchedAt)}</p>
                   </div>
@@ -238,9 +238,9 @@ export default function AdminBillingPage() {
                 </>
               ) : (
                 <div className="text-center py-8">
-                  <AlertTriangle className="w-12 h-12 text-ink-400 mx-auto mb-4" />
-                  <p className="text-ink-500">Not connected</p>
-                  <p className="text-sm text-ink-400 mt-1">
+                  <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">Not connected</p>
+                  <p className="text-sm text-gray-400 mt-1">
                     Configure Atlas API keys to view live billing data
                   </p>
                 </div>
@@ -281,7 +281,7 @@ export default function AdminBillingPage() {
                 </code>
               </div>
             </div>
-            <div className="text-sm text-ink-600">
+            <div className="text-sm text-gray-600">
               <p>• The system will automatically check billing daily at 9 AM UTC</p>
               <p>• Alerts are created when spending reaches 80% and 100% of your budget</p>
               <p>• Budget changes are saved immediately and persist across sessions</p>

@@ -124,7 +124,7 @@ export default function AdminPaymentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-sand-50">
+    <div className="min-h-screen bg-white">
       <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
@@ -132,11 +132,11 @@ export default function AdminPaymentsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-ink-500">Нийт</p>
-                  <p className="text-2xl font-bold text-ink-900">{stats.total}</p>
+                  <p className="text-sm font-medium text-gray-600">Нийт</p>
+                  <p className="text-2xl font-bold text-black">{stats.total}</p>
                 </div>
-                <div className="p-2 bg-sand-100 rounded-lg">
-                  <User className="w-4 h-4 text-ink-900" />
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <User className="w-4 h-4 text-black" />
                 </div>
               </div>
             </CardContent>
@@ -145,8 +145,8 @@ export default function AdminPaymentsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-ink-500">Амжилттай</p>
-                  <p className="text-2xl font-bold text-ink-900">{stats.completed}</p>
+                  <p className="text-sm font-medium text-gray-600">Амжилттай</p>
+                  <p className="text-2xl font-bold text-black">{stats.completed}</p>
                 </div>
                 <div className="p-2 rounded-lg" style={{background:'#E8F7F1'}}>
                   <BookOpen className="w-4 h-4" style={{color:'#1EA97C'}} />
@@ -158,8 +158,8 @@ export default function AdminPaymentsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-ink-500">Хүлээгдэж буй</p>
-                  <p className="text-2xl font-bold text-ink-900">{stats.pending}</p>
+                  <p className="text-sm font-medium text-gray-600">Хүлээгдэж буй</p>
+                  <p className="text-2xl font-bold text-black">{stats.pending}</p>
                 </div>
                 <div className="p-2 rounded-lg" style={{background:'#FFF6E6'}}>
                   <Clock className="w-4 h-4" style={{color:'#C28313'}} />
@@ -171,8 +171,8 @@ export default function AdminPaymentsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-ink-500">Амжилтгүй</p>
-                  <p className="text-2xl font-bold text-ink-900">{stats.failed}</p>
+                  <p className="text-sm font-medium text-gray-600">Амжилтгүй</p>
+                  <p className="text-2xl font-bold text-black">{stats.failed}</p>
                 </div>
                 <div className="p-2 rounded-lg" style={{background:'#FFEDEB'}}>
                   <AlertTriangle className="w-4 h-4" style={{color:'#C2392A'}} />
@@ -187,7 +187,7 @@ export default function AdminPaymentsPage() {
               <CardTitle>Төлбөрүүд</CardTitle>
               <div className="flex items-center space-x-2 mt-4 md:mt-0">
                 <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-ink-500" />
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
                   <Input 
                     placeholder="Хэрэглэгч, курс хайх..." 
                     className="pl-8"
@@ -196,7 +196,7 @@ export default function AdminPaymentsPage() {
                   />
                 </div>
                 <select 
-                  className="border border-sand-200 rounded-xl px-3 py-2 text-sm bg-white text-ink-700"
+                  className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white text-gray-700"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -231,29 +231,29 @@ export default function AdminPaymentsPage() {
                   </div>
                 ) : (
                   filteredPayments.map((payment) => (
-                    <div key={payment._id} className="flex flex-col md:flex-row items-center justify-between p-4 border border-sand-200 rounded-2xl hover:bg-sand-50">
+                    <div key={payment._id} className="flex flex-col md:flex-row items-center justify-between p-4 border border-gray-200 rounded-2xl hover:bg-gray-50">
                       <div className="flex items-center space-x-4">
                         <div className="flex-1">
                           <div className="flex items-center space-x-2">
-                            <User className="w-4 h-4 text-ink-500" />
+                            <User className="w-4 h-4 text-gray-500" />
                             <p className="text-sm font-medium leading-none">
                               {payment.userDisplayName}
                             </p>
                             {payment.user?.email && (
-                              <span className="text-xs text-ink-500">
+                              <span className="text-xs text-gray-500">
                                 ({payment.user.email})
                               </span>
                             )}
                           </div>
                           <div className="flex items-center space-x-2 mt-1">
-                            <BookOpen className="w-4 h-4 text-ink-500" />
-                            <p className="text-sm text-ink-500">
+                            <BookOpen className="w-4 h-4 text-gray-500" />
+                            <p className="text-sm text-gray-500">
                               {payment.courseDisplayName}
                             </p>
                           </div>
                           <div className="flex items-center space-x-2 mt-1">
-                            <Clock className="w-4 h-4 text-ink-500" />
-                            <p className="text-xs text-ink-500">
+                            <Clock className="w-4 h-4 text-gray-500" />
+                            <p className="text-xs text-gray-500">
                               {payment.timeSinceCreated} өмнө
                             </p>
                           </div>
@@ -264,12 +264,12 @@ export default function AdminPaymentsPage() {
                           <p className="text-sm font-medium">
                             ₮{payment.amount?.toLocaleString() || 0}
                           </p>
-                          <p className="text-xs text-ink-500">
+                          <p className="text-xs text-gray-500">
                             {payment.currency || 'MNT'}
                           </p>
                         </div>
                         {getStatusBadge(payment.status, payment.isExpired)}
-                        <div className="text-sm text-ink-500">
+                        <div className="text-sm text-gray-500">
                           {payment.createdAt ? formatDate(payment.createdAt) : ''}
                         </div>
                       </div>

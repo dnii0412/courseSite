@@ -56,7 +56,7 @@
   }
 
   body {
-    @apply bg-[color:var(--tw-color-sand-50)] text-[color:var(--tw-color-ink-700)];
+    @apply text-[color:var(--tw-color-ink-700)];
   }
 }
 

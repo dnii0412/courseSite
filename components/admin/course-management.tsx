@@ -506,40 +506,33 @@ export function CourseManagement() {
                 const expanded = !!expandedIds[cid]
                 return (
                 <Collapsible key={cid} open={expanded} onOpenChange={(open) => setExpandedIds(prev => ({ ...prev, [cid]: open }))}>
-                  <div className="p-4 border border-sand-200 rounded-2xl">
+                  <div className="p-4 border border-gray-200 rounded-2xl">
                     <CollapsibleTrigger asChild>
-                      <div 
+                      <div
                         className="flex items-center justify-between cursor-pointer select-none"
                         role="button"
                         aria-expanded={expanded}
                       >
                         <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-sand-100 rounded-xl flex items-center justify-center">
-                            <BookOpen className="w-6 h-6 text-ink-900" />
+                          <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                            <BookOpen className="w-6 h-6 text-gray-600" />
                           </div>
-                          <div className="flex-1">
-                            <h3 className="font-medium text-ink-900">{course.title}</h3>
-                            <p className="text-sm text-ink-500 line-clamp-1">{course.description}</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-semibold text-black truncate">{course.title}</h3>
+                            <p className="text-sm text-gray-600 mt-1">{course.description}</p>
                             <div className="flex items-center space-x-4 mt-2">
-                              <span className="text-sm text-ink-500">Багш: {typeof course.instructor === 'string' ? course.instructor : course.instructor?.name}</span>
-                              <span className="text-sm text-ink-500">{Array.isArray(course.lessons) ? course.lessons.length : course.lessons || 0} хичээл</span>
-                              <span className="text-sm text-ink-500">{course.studentsCount || course.students || 0} сурагч</span>
+                              <span className="text-sm text-gray-500">Үнэ: ${course.price}</span>
+                              <span className="text-sm text-gray-500">Хичээл: {Array.isArray(course.lessons) ? course.lessons.length : 0}</span>
+                              <span className="text-sm text-gray-500">Сурагчид: {course.studentsCount || 0}</span>
                             </div>
                           </div>
                         </div>
                         <div className="flex items-center space-x-4" onClick={(e) => e.stopPropagation()}>
-                          <div className="text-right">
-                            <p className="font-medium">₮{course.price?.toLocaleString?.() ?? course.price}</p>
-                            <p className="text-sm text-ink-500">{course.category}</p>
-                          </div>
-                          {course.status && (
-                            <Badge className={`bg-${course.status === 'active' ? 'green' : course.status === 'draft' ? 'yellow' : 'gray'}-100 text-${course.status === 'active' ? 'green' : course.status === 'draft' ? 'yellow' : 'gray'}-800`}>
-                              {course.status === 'active' ? 'Идэвхтэй' : course.status === 'draft' ? 'Ноорог' : 'Архивласан'}
-                            </Badge>
-                          )}
-                          <Button variant="ghost" size="sm" aria-label="Expand">
-                            <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-                          </Button>
+                          <span className="text-lg font-bold text-black">${course.price}</span>
+                          <Badge variant={course.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                            {course.status === 'active' ? 'Идэвхтэй' : course.status === 'draft' ? 'Ноорог' : 'Идэвхгүй'}
+                          </Badge>
+                          <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${expanded ? 'rotate-180' : ''}`} />
                         </div>
                       </div>
                     </CollapsibleTrigger>
