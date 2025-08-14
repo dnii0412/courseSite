@@ -5,6 +5,9 @@ import { Filters } from '@/components/courses/Filters'
 import { SortSelect } from '@/components/courses/SortSelect'
 import { SkeletonCard } from '@/components/courses/SkeletonCard'
 import { getCourses } from '@/lib/api/courses'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Play, CheckCircle } from 'lucide-react'
 
 interface CoursesPageProps {
   searchParams: {

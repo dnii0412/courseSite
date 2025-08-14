@@ -9,7 +9,7 @@ import { compare } from 'bcryptjs'
 // Extend NextAuth types to include role
 declare module "next-auth" {
   interface User {
-    role?: string
+    role: string
     oauthProvider?: string
     oauthId?: string
   }
@@ -26,7 +26,7 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
   interface JWT {
-    role?: string
+    role: string
     oauthProvider?: string
     oauthId?: string
   }
@@ -52,6 +52,7 @@ const authOptions = {
           name: profile.name,
           email: profile.email,
           image: profile.picture?.data?.url,
+          role: 'USER'
         }
       }
     }),
@@ -100,10 +101,6 @@ const authOptions = {
   },
   callbacks: {
     async jwt({ token, user, account }: { token: any; user: any; account: any }) {
-      console.log('JWT callback - Token:', token)
-      console.log('JWT callback - User:', user)
-      console.log('JWT callback - Account:', account)
-
       if (user) {
         token.role = user.role || 'USER'
         token.id = user.id
@@ -111,14 +108,10 @@ const authOptions = {
           token.oauthProvider = account.provider
           token.oauthId = account.providerAccountId
         }
-        console.log('JWT callback - Updated token:', token)
       }
       return token
     },
     async session({ session, token }: { session: any; token: any }) {
-      console.log('Session callback - Session:', session)
-      console.log('Session callback - Token:', token)
-
       if (token) {
         session.user.id = token.id || token.sub!
         session.user.role = token.role as string
@@ -127,20 +120,13 @@ const authOptions = {
           (session.user as any).oauthProvider = token.oauthProvider;
           (session.user as any).oauthId = token.oauthId;
         }
-        console.log('Session callback - Updated session:', session)
       }
       return session
     },
     async signIn({ user, account, profile }: { user: any; account: any; profile?: any }) {
-      console.log('SignIn callback - User:', user)
-      console.log('SignIn callback - Account:', account)
-      console.log('SignIn callback - Profile:', profile)
-
       if (account?.provider === 'google' || account?.provider === 'facebook') {
         try {
           await connectDB()
-          console.log('OAuth signIn callback - Provider:', account.provider)
-          console.log('OAuth signIn callback - User:', user)
 
           // For Facebook users, we might not have email access
           // Use the profile ID as a fallback identifier
@@ -167,7 +153,6 @@ const authOptions = {
             })
 
             await newUser.save()
-            console.log('New OAuth user created:', newUser.email)
 
             // Update the user object with the MongoDB _id
             user.id = newUser._id.toString()
@@ -177,15 +162,12 @@ const authOptions = {
               existingUser.oauthProvider = account.provider
               existingUser.oauthId = account.providerAccountId
               await existingUser.save()
-              console.log('Updated existing user with OAuth info:', existingUser.email)
             }
 
             // Use the existing user's MongoDB _id
             user.id = existingUser._id.toString()
           }
 
-          console.log('OAuth signIn callback - Final user object:', user)
-          console.log('OAuth signIn callback - Success, user ID:', user.id)
           return true
         } catch (error) {
           console.error('Error during OAuth sign in:', error)
@@ -196,20 +178,19 @@ const authOptions = {
       return true
     },
     async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
-      console.log('Redirect callback - URL:', url, 'Base URL:', baseUrl)
+      // Handle OAuth redirects from register page
+      if (url.includes('from=register')) {
+        return `${baseUrl}/onboarding?from=register`
+      }
 
-      // If the URL is relative, make it absolute
-      if (url.startsWith('/')) {
+      // Handle returnUrl for login flows
+      if (url.startsWith('/') && !url.startsWith('/api')) {
         return `${baseUrl}${url}`
       }
 
-      // If the URL is on the same domain, allow it
-      if (url.startsWith(baseUrl)) {
-        return url
-      }
-
-      // Default redirect to dashboard after successful OAuth
-      return `${baseUrl}/dashboard`
+      // Default redirect to courses for successful auth
+      if (url.startsWith(baseUrl)) return url
+      else return `${baseUrl}/courses`
     }
   },
   session: {

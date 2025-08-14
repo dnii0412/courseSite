@@ -228,6 +228,9 @@ export const MediaLibrary = forwardRef<MediaLibraryHandle, MediaLibraryProps>(fu
           </div>
         </div>
       )}
+      <Badge variant="secondary" className="bg-blue-600 text-white">
+        {filteredMedia.length} items
+      </Badge>
 
       {/* Media and Upload Container */}
       <div className="bg-white p-4 rounded-lg shadow-md">

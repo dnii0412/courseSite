@@ -34,6 +34,11 @@ const userSchema = new mongoose.Schema<IUser>({
     type: String,
     required: false // Optional for OAuth users
   },
+  role: {
+    type: String,
+    enum: ['USER', 'ADMIN'],
+    default: 'USER'
+  },
   oauthProvider: {
     type: String,
     required: false
@@ -41,11 +46,6 @@ const userSchema = new mongoose.Schema<IUser>({
   oauthId: {
     type: String,
     required: false
-  },
-  role: {
-    type: String,
-    enum: ['USER', 'ADMIN'],
-    default: 'USER'
   },
   image: {
     type: String,

@@ -30,9 +30,6 @@ interface CourseOverviewProps {
   course: Course
 }
 
-export function CourseOverview({ course }: CourseOverviewProps) {
-  const { data: session } = useSession()
-  const [currentLesson, setCurrentLesson] = useState<string | null>(null)
 
   useEffect(() => {
     // Find the first incomplete lesson or set to first lesson
@@ -85,13 +82,6 @@ export function CourseOverview({ course }: CourseOverviewProps) {
                 {course.completedLessons} / {course.lessons.length} хичээл
               </span>
             </div>
-            <Progress value={progressPercentage} className="mb-4" />
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>{Math.round(progressPercentage)}% дууссан</span>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  <span>{Math.round(course.totalDuration / 60)} цаг</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <BookOpen className="w-4 h-4" />
@@ -130,13 +120,6 @@ export function CourseOverview({ course }: CourseOverviewProps) {
               return (
                 <div
                   key={lesson._id}
-                  className={`
-                    flex items-center justify-between p-4 rounded-lg border transition-colors
-                    ${isCurrentLesson ? 'border-blue-200 bg-blue-50' : 'border-gray-200'}
-                    ${isCompleted ? 'bg-green-50 border-green-200' : ''}
-                    ${isLocked ? 'bg-gray-50 border-gray-200' : 'hover:bg-gray-50 cursor-pointer'}
-                  `}
-                  onClick={() => !isLocked && handleLessonClick(lesson._id)}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`
@@ -165,11 +148,6 @@ export function CourseOverview({ course }: CourseOverviewProps) {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {isLocked ? (
-                      <Lock className="w-4 h-4 text-gray-400" />
-                    ) : isCompleted ? (
-                      <CheckCircle className="w-4 h-4 text-green-600" />
                     ) : (
                       <Play className="w-4 h-4 text-blue-600" />
                     )}

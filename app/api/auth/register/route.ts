@@ -51,9 +51,9 @@ export async function POST(request: NextRequest) {
     await newUser.save()
 
     return NextResponse.json(
-      { 
+      {
         message: 'Бүртгэл амжилттай үүслээ',
-        userId: newUser._id 
+        userId: newUser._id
       },
       { status: 201 }
     )

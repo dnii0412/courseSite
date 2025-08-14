@@ -33,7 +33,6 @@ interface CourseDetailsProps {
 export function CourseDetails({ course }: CourseDetailsProps) {
   const { data: session } = useSession()
   const [isEnrolled, setIsEnrolled] = useState(false)
-  const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(true)
 
   useEffect(() => {
     const checkEnrollment = async () => {

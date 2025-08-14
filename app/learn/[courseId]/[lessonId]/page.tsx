@@ -1,68 +1,28 @@
-import { VideoPlayer } from '@/components/video/video-player'
-import { LessonSidebar } from '@/components/learn/lesson-sidebar'
-import { QuizModal } from '@/components/quiz/quiz-modal'
-import { connectDB } from '@/lib/mongodb'
-import { Course } from '@/lib/models/course'
-import { Lesson } from '@/lib/models/lesson'
-import { notFound, redirect } from 'next/navigation'
-import { getUserFromCookies } from '@/lib/auth'
-import { hasCourseAccess } from '@/lib/utils/access'
+import { getLesson } from '@/lib/api/lessons'
+import { notFound } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'
-
-interface LearnPageProps {
+interface LessonPageProps {
   params: {
     courseId: string
     lessonId: string
   }
 }
 
-export default async function LearnPage({ params }: LearnPageProps) {
-  await connectDB()
-  const [course, lesson] = await Promise.all([
-    Course.findById(params.courseId).populate('lessons').lean().then((d) => JSON.parse(JSON.stringify(d))),
-    Lesson.findById(params.lessonId).lean().then((d) => JSON.parse(JSON.stringify(d))),
-  ])
+export default async function LessonPage({ params }: LessonPageProps) {
+  const lesson = await getLesson(params.lessonId)
 
-  if (!course || !lesson) {
+  if (!lesson) {
     notFound()
   }
 
-  // Server-side access control: only allow users who purchased/enrolled
-  const currentUser = getUserFromCookies()
-  if (!currentUser) {
-    redirect(`/auth/login?next=/learn/${params.courseId}/${params.lessonId}`)
-  }
-
-  const allowed = await hasCourseAccess(currentUser.userId, params.courseId)
-  if (!allowed) {
-    redirect(`/courses/${params.courseId}`)
-  }
-
   return (
-    <div className="min-h-screen bg-gray-900">
-
-      
-      <div className="flex">
-        <div className="flex-1">
-          <VideoPlayer 
-            videoUrl={lesson.videoUrl}
-            title={lesson.title}
-            courseId={params.courseId}
-            lessonId={params.lessonId}
-          />
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">{lesson.title}</h1>
+        <div className="prose max-w-none">
+          {lesson.content}
         </div>
-        
-        <LessonSidebar 
-          course={course}
-          currentLessonId={params.lessonId}
-        />
       </div>
-
-      <QuizModal 
-        lessonId={params.lessonId}
-        quiz={lesson.quiz}
-      />
     </div>
   )
 }

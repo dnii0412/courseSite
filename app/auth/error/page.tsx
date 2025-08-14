@@ -96,6 +96,8 @@ export default function AuthErrorPage() {
             <div className="h-8 bg-gray-200 rounded mb-2"></div>
             <div className="h-4 bg-gray-200 rounded mb-6"></div>
             <div className="h-11 bg-gray-200 rounded mb-3"></div>
+
+            
             <div className="h-11 bg-gray-200 rounded"></div>
           </div>
           <p className="mt-4 text-sm text-gray-600">Уншиж байна...</p>

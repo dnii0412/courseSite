@@ -32,3 +32,6 @@ export async function getCourseById(id: string) {
     return null
   }
 }
+
+// Export getCourse as an alias for getCourseById for compatibility
+export const getCourse = getCourseById

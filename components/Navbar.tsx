@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
+import { Menu, X, User, ChevronDown } from 'lucide-react'
 
 export type NavItem = { name: string; href: string }
 
@@ -111,8 +112,8 @@ export default function Navbar({
                   key={item.href}
                   href={item.href}
                   className={`relative text-sm transition-colors ${active
-                      ? 'text-slate-900 dark:text-slate-50 after:absolute after:inset-x-0 after:-bottom-2 after:h-0.5 after:bg-sky-600 after:rounded'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                    ? 'text-slate-900 dark:text-slate-50 after:absolute after:inset-x-0 after:-bottom-2 after:h-0.5 after:bg-sky-600 after:rounded'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
                     } focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 rounded`}
                 >
                   {item.name}
@@ -202,11 +203,7 @@ export default function Navbar({
               className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
             >
               <span className="sr-only">Цэс нээх</span>
-              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
+              <Menu className="h-6 w-6" />
             </button>
           </div>
         </div>
@@ -239,10 +236,7 @@ export default function Navbar({
               aria-label="Цэс хаах"
               className="p-2 rounded-md text-slate-700 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
             >
-              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              <X className="h-6 w-6" />
             </button>
           </div>
 
@@ -255,8 +249,8 @@ export default function Navbar({
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                   className={`block px-3 py-2 rounded-lg text-base ${active
-                      ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white'
-                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                    ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white'
+                    : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
                     }`}
                 >
                   {item.name}
@@ -304,8 +298,7 @@ export default function Navbar({
           </div>
         </div>
       </div>
-    </div>
-    </header >
+    </header>
   )
 }
 

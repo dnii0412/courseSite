@@ -3,14 +3,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Users, 
-  BookOpen, 
-  DollarSign, 
-  TrendingUp, 
-  Plus, 
-  UserPlus, 
-  FileText, 
+import {
+  Users,
+  BookOpen,
+  DollarSign,
+  TrendingUp,
+  Plus,
+  UserPlus,
+  FileText,
   Settings,
   Clock,
   Eye
@@ -80,15 +80,15 @@ export default function AdminPage() {
         const totalRevenue = payments
           .filter((p: any) => p.status === 'completed')
           .reduce((sum: number, p: any) => sum + (p.amount || 0), 0)
-        
+
         // Get recent enrollments (this month)
         const currentMonth = new Date().getMonth()
         const currentYear = new Date().getFullYear()
         const recentEnrollments = payments.filter((p: any) => {
           if (!p.createdAt) return false
           const paymentDate = new Date(p.createdAt)
-          return paymentDate.getMonth() === currentMonth && 
-                 paymentDate.getFullYear() === currentYear
+          return paymentDate.getMonth() === currentMonth &&
+            paymentDate.getFullYear() === currentYear
         }).length
 
         setStats({
@@ -100,7 +100,7 @@ export default function AdminPage() {
 
         // Set recent users (last 5)
         setRecentUsers(users.slice(-5).reverse())
-        
+
         // Set recent courses (last 5)
         setRecentCourses(courses.slice(-5).reverse())
 
@@ -193,7 +193,7 @@ export default function AdminPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-ink-500">Нийт хэрэглэгч</p>
-                  <p className="text-3xl font-bold text-ink-900">{stats.recentEnrollments}</p>
+                  <p className="text-3xl font-bold text-ink-900">{stats.totalUsers}</p>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-xl">
                   <Users className="w-6 h-6 text-blue-600" />
@@ -222,7 +222,7 @@ export default function AdminPage() {
                 <div>
                   <p className="text-sm font-medium text-ink-500">Нийт орлого</p>
                   <p className="text-3xl font-bold text-ink-900">₮{stats.totalRevenue?.toLocaleString() || 0}</p>
-                  
+
                 </div>
                 <div className="p-3 bg-yellow-100 rounded-xl">
                   <DollarSign className="w-6 h-6 text-yellow-600" />
@@ -231,7 +231,19 @@ export default function AdminPage() {
             </CardContent>
           </Card>
 
-          
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-ink-500">Энэ сарын бүртгэл</p>
+                  <p className="text-3xl font-bold text-ink-900">{stats.recentEnrollments}</p>
+                </div>
+                <div className="p-3 bg-purple-100 rounded-xl">
+                  <TrendingUp className="w-6 h-6 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Quick Actions and Recent Activities */}
@@ -241,23 +253,23 @@ export default function AdminPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-base text-ink-900">Quick Actions</CardTitle>
             </CardHeader>
-                      <CardContent className="pt-0 px-6 pb-6">
-            <div className="grid grid-cols-2 gap-4">
-              {quickActions.map((action, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  className="h-auto p-4 flex flex-col items-center text-center hover:shadow-md transition-shadow min-h-[120px]"
-                  onClick={() => window.location.href = action.href}
-                >
-                  <div className={`p-3 rounded-lg mb-3 ${action.color}`}>
-                    <action.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="font-medium text-ink-900 text-sm">{action.title}</div>
-                </Button>
-              ))}
-            </div>
-          </CardContent>
+            <CardContent className="pt-0 px-6 pb-6">
+              <div className="grid grid-cols-2 gap-4">
+                {quickActions.map((action, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    className="h-auto p-4 flex flex-col items-center text-center hover:shadow-md transition-shadow min-h-[120px]"
+                    onClick={() => window.location.href = action.href}
+                  >
+                    <div className={`p-3 rounded-lg mb-3 ${action.color}`}>
+                      <action.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="font-medium text-ink-900 text-sm">{action.title}</div>
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
           </Card>
 
           {/* Recent Activities with Tabs */}
@@ -267,12 +279,11 @@ export default function AdminPage() {
             </CardHeader>
             <CardContent className="pt-0 px-6 pb-6">
               <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
-                <button 
-                  className={`px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
-                    activeTab === 'users' 
-                      ? 'bg-white text-primary shadow-sm ring-1 ring-gray-200' 
-                      : 'text-ink-600 hover:text-ink-800 hover:bg-white/50'
-                  }`}
+                <button
+                  className={`px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${activeTab === 'users'
+                    ? 'bg-white text-primary shadow-sm ring-1 ring-gray-200'
+                    : 'text-ink-600 hover:text-ink-800 hover:bg-white/50'
+                    }`}
                   onClick={() => setActiveTab('users')}
                 >
                   <div className="flex items-center space-x-2">
@@ -280,12 +291,11 @@ export default function AdminPage() {
                     <span>New Users</span>
                   </div>
                 </button>
-                <button 
-                  className={`px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
-                    activeTab === 'payments' 
-                      ? 'bg-white text-primary shadow-sm ring-1 ring-gray-200' 
-                      : 'text-ink-600 hover:text-ink-800 hover:bg-white/50'
-                  }`}
+                <button
+                  className={`px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${activeTab === 'payments'
+                    ? 'bg-white text-primary shadow-sm ring-1 ring-gray-200'
+                    : 'text-ink-600 hover:text-ink-800 hover:bg-white/50'
+                    }`}
                   onClick={() => setActiveTab('payments')}
                 >
                   <div className="flex items-center space-x-2">
@@ -294,7 +304,7 @@ export default function AdminPage() {
                   </div>
                 </button>
               </div>
-              
+
               {activeTab === 'users' && (
                 <div className="space-y-4">
                   {recentUsers.length === 0 ? (
@@ -327,7 +337,7 @@ export default function AdminPage() {
                   </Button>
                 </div>
               )}
-              
+
               {activeTab === 'payments' && (
                 <div className="space-y-4">
                   {recentPayments.length === 0 ? (
@@ -345,8 +355,8 @@ export default function AdminPage() {
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Badge 
-                            variant={payment.status === 'completed' ? 'default' : 'secondary'} 
+                          <Badge
+                            variant={payment.status === 'completed' ? 'default' : 'secondary'}
                             className="text-xs"
                           >
                             {payment.status || 'pending'}
@@ -363,7 +373,7 @@ export default function AdminPage() {
                   </Button>
                 </div>
               )}
-              
+
             </CardContent>
           </Card>
         </div>

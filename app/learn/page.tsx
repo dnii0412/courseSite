@@ -1,106 +1,53 @@
-"use client"
+'use client'
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { CourseCard } from '@/components/courses/course-card'
-import { Button } from '@/components/ui/button'
-import { BookOpen } from 'lucide-react'
-import Link from 'next/link'
-
-interface Course {
-  _id: string
-  title: string
-  description: string
-  category?: string
-  duration?: number
-  instructor?: {
-    name: string
-  }
-  lessons?: any[]
-}
+import { useEffect } from 'react'
 
 export default function LearnPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [courses, setCourses] = useState<Course[]>([])
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    console.log('Learn page useEffect - status:', status, 'session:', session)
-    
-    if (status === 'loading') return
-
-    if (!session?.user) {
-      console.log('No session found, redirecting to login')
-      router.push('/auth/login?callbackUrl=/learn')
-      return
+    if (status === 'unauthenticated') {
+      router.push('/auth/login')
     }
+  }, [status, router])
 
-    console.log('Session found, fetching enrolled courses')
-    fetchEnrolledCourses()
-  }, [session, status, router])
-
-  const fetchEnrolledCourses = async () => {
-    try {
-      setIsLoading(true)
-      const response = await fetch('/api/users/enrollments')
-      if (response.ok) {
-        const data = await response.json()
-        setCourses(data)
-      }
-    } catch (error) {
-      console.error('Error fetching enrolled courses:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  if (status === 'loading' || isLoading) {
+  if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Уншиж байна...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
       </div>
     )
   }
 
-  if (!session?.user) {
-    return null // Will redirect in useEffect
+  if (!session) {
+    return null
   }
+
+  // Mock courses data - replace with actual API call
+  const courses = []
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Миний курсууд</h1>
-          <p className="text-gray-600">Таны худалдан авч, бүртгүүлсэн сургалтууд</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            My Learning Dashboard
+          </h1>
+          <p className="text-gray-600">
+            Track your progress and continue where you left off.
+          </p>
         </div>
 
         {courses.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <div className="w-16 h-16 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
-                <BookOpen className="w-8 h-8 text-gray-400" />
-              </div>
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Та одоогоор ямар нэг курс эзэмшээгүй байна
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Хамгийн түрүүнд курсийн хуудас руу орж худалдан авалт хийж бүртгүүлнэ үү.
-            </p>
-            <Button asChild>
-              <Link href="/courses">Курсууд харах</Link>
-            </Button>
+            <p className="text-gray-500">No courses enrolled yet.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => (
-              <CourseCard key={course._id} course={course} />
-            ))}
+            {/* Course cards would go here */}
           </div>
         )}
       </div>
