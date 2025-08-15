@@ -227,7 +227,7 @@ export const MediaGrid = ({ slug }: MediaGridProps) => {
     );
   }
 
-  console.log('Render check - layout:', layout, 'media:', media, 'media.length:', media.length);
+  // Render check - layout and media data loaded
   if (!layout || !media.length) {
     return (
       <div className="w-full h-[90vh] flex items-center justify-center">

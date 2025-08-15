@@ -3,9 +3,10 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { ThemeProvider } from '@/components/theme-provider'
-import Navbar from '@/components/Navbar'
+import { Navbar } from '@/components/navbar/navbar'
 import SessionProviderClient from '@/components/providers/session-provider'
 import { PasswordToggleProvider } from '@/components/providers/password-toggle-provider'
+import { SocialToggleButton } from '@/components/ui/social-toggle-button'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -39,6 +40,7 @@ export default function RootLayout({
               <Navbar />
               {children}
               <Toaster />
+              <SocialToggleButton />
             </ThemeProvider>
           </PasswordToggleProvider>
         </SessionProviderClient>

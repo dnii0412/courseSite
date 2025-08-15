@@ -1,38 +1,91 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/mongodb'
-import { User } from '@/lib/models/user'
-import { Course } from '@/lib/models/course'
-import { Order } from '@/lib/models/order'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth-config'
 
-export async function GET(request: NextRequest) {
+// In a real application, this would be stored in a database
+// For now, we'll use a simple in-memory storage
+let statsData = [
+  {
+    id: '1',
+    title: 'Нийт сурагч',
+    value: '3,200+',
+    description: 'Идэвхтэй суралцаж буй сурагчид',
+    icon: 'Users',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100'
+  },
+  {
+    id: '2',
+    title: 'Дундаж үнэлгээ',
+    value: '4.8/5',
+    description: 'Сурагчдын сэтгэгдэл',
+    icon: 'Star',
+    color: 'text-yellow-600',
+    bgColor: 'bg-yellow-100'
+  },
+  {
+    id: '3',
+    title: 'Хичээл дуусгасан',
+    value: '15,000+',
+    description: 'Амжилттай төгссөн хичээлүүд',
+    icon: 'Trophy',
+    color: 'text-green-600',
+    bgColor: 'bg-green-100'
+  }
+]
+
+export async function GET() {
   try {
-    await connectDB()
-
-    const [usersCount, coursesCount, enrollmentsCount, revenueAgg, ordersAgg] = await Promise.all([
-      User.countDocuments({}),
-      Course.countDocuments({}),
-      // Derive total enrollments by summing user.enrolledCourses lengths
-      User.aggregate([
-        { $project: { count: { $size: { $ifNull: ['$enrolledCourses', []] } } } },
-        { $group: { _id: null, total: { $sum: '$count' } } },
-      ]).then((r: any[]) => r?.[0]?.total || 0),
-      Order.aggregate([
-        { $match: { status: 'completed' } },
-        { $group: { _id: null, total: { $sum: '$amount' } } }
-      ]),
-      Order.aggregate([
-        { $group: { _id: '$status', count: { $sum: 1 } } }
-      ])
-    ])
-
-    const revenue = revenueAgg?.[0]?.total || 0
-    const ordersByStatus = ordersAgg.reduce((acc: any, cur: any) => {
-      acc[cur._id || 'unknown'] = cur.count
-      return acc
-    }, {})
-
-    return NextResponse.json({ usersCount, coursesCount, enrollmentsCount, revenue, ordersByStatus })
+    return NextResponse.json({
+      success: true,
+      stats: statsData
+    })
   } catch (error) {
-    return NextResponse.json({ error: 'Серверийн алдаа' }, { status: 500 })
+    console.error('Error fetching stats:', error)
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch stats' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Check if user is authenticated (optional for demo)
+    // const session = await getServerSession(authOptions)
+    // if (!session) {
+    //   return NextResponse.json(
+    //     { success: false, error: 'Unauthorized' },
+    //     { status: 401 }
+    //   )
+    // }
+
+    const body = await request.json()
+    const { stats } = body
+
+    if (!stats || !Array.isArray(stats)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid stats data' },
+        { status: 400 }
+      )
+    }
+
+    // Update the stats data
+    statsData = stats
+
+    // In a real application, you would save this to a database
+    // await db.stats.updateMany({}, { $set: { stats } })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Stats updated successfully',
+      stats: statsData
+    })
+  } catch (error) {
+    console.error('Error updating stats:', error)
+    return NextResponse.json(
+      { success: false, error: 'Failed to update stats' },
+      { status: 500 }
+    )
   }
 }

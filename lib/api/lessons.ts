@@ -12,3 +12,6 @@ export async function getLessonById(id: string) {
     return null
   }
 }
+
+// Alias for backward compatibility
+export const getLesson = getLessonById

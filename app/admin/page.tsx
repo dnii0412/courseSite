@@ -13,7 +13,8 @@ import {
   FileText,
   Settings,
   Clock,
-  Eye
+  Eye,
+  Star
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -163,6 +164,20 @@ export default function AdminPage() {
       icon: Settings,
       href: '/admin/settings',
       color: 'bg-purple-500'
+    },
+    {
+      title: 'Статистик тохиргоо',
+      description: 'Нүүр хуудасны статистик удирдах',
+      icon: TrendingUp,
+      href: '/admin/stats-settings',
+      color: 'bg-cyan-500'
+    },
+    {
+      title: 'Яагаад бид? Тохиргоо',
+      description: 'Нүүр хуудасны онцлогуудыг засварлах',
+      icon: Star,
+      href: '/admin/why-us-settings',
+      color: 'bg-pink-500'
     }
   ]
 

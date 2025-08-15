@@ -145,7 +145,7 @@ export default function Navbar({
                 </Link>
                 <Link
                   href="/auth/register"
-                  className="bg-neutral-900 text-white hover:bg-neutral-800 rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+                  className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                 >
                   Бүртгүүлэх
                 </Link>
@@ -278,7 +278,7 @@ export default function Navbar({
                 <Link
                   href="/auth/register"
                   onClick={() => setMobileOpen(false)}
-                  className="w-full text-center bg-neutral-900 text-white hover:bg-neutral-800 px-3 py-2 rounded-xl transition-colors"
+                  className="w-full text-center bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-xl transition-colors"
                 >
                   Бүртгүүлэх
                 </Link>

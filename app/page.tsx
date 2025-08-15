@@ -1,7 +1,7 @@
 import { Footer } from '@/components/layout/footer'
 import { HeroSection } from '@/components/landing/hero-section'
-import { StatsSection } from '@/components/landing/stats-section'
 import { GridFeatureSection } from '@/components/landing/grid-feature-section'
+import { StatsSection } from '@/components/landing/stats-section'
 import { WhyUsSection } from '@/components/landing/why-us-section'
 
 export default function HomePage() {
@@ -9,9 +9,12 @@ export default function HomePage() {
     <div className="min-h-screen bg-white">
       <main>
         <HeroSection />
-        <StatsSection />
+        
         <GridFeatureSection />
+
         <WhyUsSection />
+
+        <StatsSection />
       </main>
 
       <Footer />

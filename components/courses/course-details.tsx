@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Clock, Users, BookOpen, Star, Play, CheckCircle } from 'lucide-react'
-import { PaymentModal } from '@/components/payments/payment-modal'
+import PaymentModal from '@/components/payments/payment-modal'
 
 interface CourseDetailsProps {
   course: {

@@ -81,26 +81,20 @@ export function HeroSection() {
               </div>
 
               {/* Enhanced Media Player Preview */}
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl md:rounded-2xl p-4 md:p-6 mb-5 md:mb-8">
-                <div className="aspect-video bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg md:rounded-xl flex items-center justify-center cursor-pointer hover:from-blue-500/30 hover:to-purple-500/30 transition-all duration-300 border border-gray-200" onClick={handleVideoClick}>
-                  <Play className="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 text-blue-600" />
-                </div>
-                <p className="text-xs md:text-sm text-gray-600 mt-2 md:mt-3 text-center font-medium">Click to preview</p>
-              </div>
+              <div className="bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 rounded-xl md:rounded-2xl p-4 md:p-6 mb-6 md:mb-8 border border-gray-100 shadow-sm">
+                <div className="aspect-[21/9] bg-gradient-to-br from-blue-500/10 via-purple-500/15 to-indigo-500/10 rounded-lg md:rounded-xl flex items-center justify-center cursor-pointer hover:from-blue-500/20 hover:via-purple-500/25 hover:to-indigo-500/20 transition-all duration-500 border border-gray-200/30 hover:border-blue-300/50 shadow-lg hover:shadow-xl hover:shadow-blue-500/10" onClick={handleVideoClick}>
+                  <div className="relative group">
+                    {/* Animated background glow */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-xl group-hover:blur-2xl group-hover:from-blue-400/30 group-hover:to-purple-400/30 transition-all duration-500 scale-150 group-hover:scale-200"></div>
 
-              {/* Course Info */}
-              <div className="grid grid-cols-2 gap-2 md:gap-3 mb-5 md:mb-8">
-                <div className="bg-gray-50 rounded-lg p-2 md:p-3 text-center">
-                  <p className="text-xs md:text-sm text-gray-700 font-medium">Machine Learning</p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-2 md:p-3 text-center">
-                  <p className="text-xs md:text-sm text-gray-700 font-medium">Neural Networks</p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-2 md:p-3 text-center">
-                  <p className="text-xs md:text-sm text-gray-700 font-medium">Deep Learning</p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-2 md:p-3 text-center">
-                  <p className="text-xs md:text-sm text-gray-700 font-medium">AI Applications</p>
+                    {/* Play button with enhanced styling */}
+                    <div className="relative z-10 bg-white/90 backdrop-blur-sm rounded-full p-3 md:p-4 shadow-lg group-hover:shadow-xl group-hover:shadow-blue-500/20 transition-all duration-300 group-hover:scale-110">
+                      <Play className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 text-blue-600 drop-shadow-lg" />
+                    </div>
+
+                    {/* Subtle pulse animation */}
+                    <div className="absolute inset-0 rounded-full bg-blue-400/20 animate-pulse scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  </div>
                 </div>
               </div>
 
@@ -111,6 +105,8 @@ export function HeroSection() {
           </div>
         </div>
       </div>
+
+
 
       {/* Payment Requirement Modal */}
       {showPaymentModal && (

@@ -1,4 +1,4 @@
-import { getLesson } from '@/lib/api/lessons'
+import { getLessonById } from '@/lib/api/lessons'
 import { notFound } from 'next/navigation'
 
 interface LessonPageProps {
@@ -9,7 +9,7 @@ interface LessonPageProps {
 }
 
 export default async function LessonPage({ params }: LessonPageProps) {
-  const lesson = await getLesson(params.lessonId)
+  const lesson = await getLessonById(params.lessonId)
 
   if (!lesson) {
     notFound()
@@ -26,3 +26,5 @@ export default async function LessonPage({ params }: LessonPageProps) {
     </div>
   )
 }
+
+

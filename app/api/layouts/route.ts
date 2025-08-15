@@ -8,45 +8,45 @@ import mongoose from 'mongoose';
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
-    
+
     // Check if the Layout collection exists, if not return appropriate response
     try {
       const collections = await mongoose.connection.db?.listCollections().toArray();
       const layoutCollectionExists = collections?.some(col => col.name === 'layouts');
-      
+
       if (!layoutCollectionExists) {
-        console.log('Layout collection does not exist yet');
+        // Layout collection does not exist yet
         const { searchParams } = new URL(request.url);
         const slug = searchParams.get('slug');
-        
+
         if (slug) {
           return NextResponse.json(
             { success: false, error: 'Layout not found' },
             { status: 404 }
           );
         }
-        
+
         return NextResponse.json({ success: true, data: [] });
       }
     } catch (collectionError) {
       console.log('Could not check collections, assuming they exist');
     }
-    
+
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');
     const admin = searchParams.get('admin');
-    
+
     if (slug) {
       // Get specific layout by slug
       const layout = await Layout.findOne({ slug });
-      
+
       if (!layout) {
         return NextResponse.json(
           { success: false, error: 'Layout not found' },
           { status: 404 }
         );
       }
-      
+
       // If not admin, only return published layouts
       if (admin !== 'true') {
         if (!layout.published) {
@@ -56,10 +56,10 @@ export async function GET(request: NextRequest) {
           );
         }
       }
-      
+
       return NextResponse.json({ success: true, data: layout });
     }
-    
+
     // No slug provided
     // If admin=true, list all (admin only). Otherwise, return latest published layout
     if (admin === 'true') {
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       const layouts = await Layout.find().sort({ createdAt: -1 });
       return NextResponse.json({ success: true, data: layouts });
     }
-    
+
     const latest = await Layout.findOne({ published: true }).sort({ updatedAt: -1 });
     if (!latest) {
       return NextResponse.json(
@@ -83,25 +83,25 @@ export async function GET(request: NextRequest) {
       );
     }
     return NextResponse.json({ success: true, data: latest });
-    
+
   } catch (error) {
     console.error('Error fetching layouts:', error);
-    
+
     // If it's a collection doesn't exist error, return appropriate response
     if (error instanceof Error && error.message.includes('collection')) {
       const { searchParams } = new URL(request.url);
       const slug = searchParams.get('slug');
-      
+
       if (slug) {
         return NextResponse.json(
           { success: false, error: 'Layout not found' },
           { status: 404 }
         );
       }
-      
+
       return NextResponse.json({ success: true, data: [] });
     }
-    
+
     return NextResponse.json(
       { success: false, error: 'Failed to fetch layouts' },
       { status: 500 }
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
     }
 
     await connectDB();
-    
+
     const body = await request.json();
     const { slug, items, breakpoints, published } = body;
 
@@ -176,7 +176,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     await connectDB();
-    
+
     const body = await request.json();
     const { id, items, breakpoints, published } = body;
 
