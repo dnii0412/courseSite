@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession, signIn, signOut } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -22,13 +22,18 @@ export default function AdminLoginPage() {
     const checkAdminStatus = async () => {
       if (status === 'loading') return
       
+      console.log('Admin login page - Session status:', status)
+      console.log('Admin login page - Session data:', session)
+      
       if (session?.user?.email) {
         try {
           const response = await fetch('/api/users/me')
           if (response.ok) {
             const user = await response.json()
+            console.log('Admin login page - User data:', user)
             if (user.role === 'ADMIN') {
               const next = searchParams.get('next') || '/admin'
+              console.log('Admin login page - Redirecting existing admin to:', next)
               router.push(next)
             }
           }
@@ -54,49 +59,91 @@ export default function AdminLoginPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      console.log('Attempting login with:', email)
+      
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
       })
 
-      if (response.ok) {
+      console.log('SignIn result:', result)
+
+      if (result?.error) {
+        toast({
+          title: "Алдаа",
+          description: "Имэйл эсвэл нууц үг буруу байна",
+          variant: "destructive",
+        })
+      } else if (result?.ok) {
+        console.log('Login successful, checking admin role...')
+        
+        // Wait a bit for the session to be established
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
         // Check if user has admin role after login
-        const userResponse = await fetch('/api/users/me')
-        if (userResponse.ok) {
-          const user = await userResponse.json()
-          if (user.role === 'ADMIN') {
-            toast({
-              title: "Амжилттай",
-              description: "Админ хэсэгт нэвтэрлээ",
-            })
-            const next = searchParams.get('next') || '/admin'
-            router.push(next)
+        try {
+          const userResponse = await fetch('/api/users/me')
+          console.log('User response status:', userResponse.status)
+          
+          if (userResponse.ok) {
+            const user = await userResponse.json()
+            console.log('User data:', user)
+            
+            if (user.role === 'ADMIN') {
+              toast({
+                title: "Амжилттай",
+                description: "Админ хэсэгт нэвтэрлээ",
+              })
+              
+              // Force redirect to admin panel using window.location
+              const next = searchParams.get('next') || '/admin'
+              console.log('Redirecting to admin panel:', next)
+              
+              // Try router.push first, then fallback to window.location
+              try {
+                router.push(next)
+                // If router.push doesn't work, use window.location as fallback
+                setTimeout(() => {
+                  if (window.location.pathname !== next) {
+                    console.log('Router push failed, using window.location fallback')
+                    window.location.href = next
+                  }
+                }, 2000)
+              } catch (redirectError) {
+                console.error('Router redirect failed, using window.location:', redirectError)
+                window.location.href = next
+              }
+              
+            } else {
+              toast({
+                title: "Алдаа",
+                description: "Та админ эрхгүй байна",
+                variant: "destructive",
+              })
+              // Sign out the user since they don't have admin access
+              await signOut({ redirect: false })
+            }
           } else {
+            const errorText = await userResponse.text()
+            console.error('User API error:', errorText)
             toast({
               title: "Алдаа",
-              description: "Та админ эрхгүй байна",
+              description: "Хэрэглэгчийн мэдээлэл олдсонгүй",
               variant: "destructive",
             })
           }
-        } else {
+        } catch (error) {
+          console.error('Error checking user role:', error)
           toast({
             title: "Алдаа",
-            description: "Хэрэглэгчийн мэдээлэл олдсонгүй",
+            description: "Хэрэглэгчийн мэдээлэл шалгахад алдаа гарлаа",
             variant: "destructive",
           })
         }
-      } else {
-        const data = await response.json()
-        toast({
-          title: "Алдаа",
-          description: data.error || "Нэвтрэхэд алдаа гарлаа",
-          variant: "destructive",
-        })
       }
     } catch (error) {
+      console.error('Login error:', error)
       toast({
         title: "Алдаа",
         description: "Серверийн алдаа гарлаа",

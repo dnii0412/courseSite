@@ -4,6 +4,10 @@ import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useToast } from '@/hooks/use-toast'
 
 interface PaymentModalProps {
   courseId: string
@@ -12,6 +16,13 @@ interface PaymentModalProps {
   onSuccess?: () => void
 }
 
+export function PaymentModal({ courseId, courseTitle, price, onSuccess }: PaymentModalProps) {
+  const { data: session } = useSession()
+  const { toast } = useToast()
+  const [isOpen, setIsOpen] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState('qpay')
+  const [phoneNumber, setPhoneNumber] = useState('')
 
   const handlePayment = async () => {
     if (!session?.user) {

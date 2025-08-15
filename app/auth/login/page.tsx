@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { GoogleLoginButton, FacebookLoginButton } from '@/components/auth/GoogleButtons'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -24,8 +24,31 @@ export default function LoginPage() {
   const [apiError, setApiError] = useState('')
   const [hasSubmitted, setHasSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [oauthProviders, setOauthProviders] = useState<string[]>([])
   const { isPasswordVisible, setIsPasswordVisible } = usePasswordToggle()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/'
+
+  useEffect(() => {
+    // Fetch OAuth provider availability from server
+    const fetchProviders = async () => {
+      try {
+        const response = await fetch('/api/auth/providers')
+        if (response.ok) {
+          const providers = await response.json()
+          const availableProviders = []
+          if (providers.google?.enabled) availableProviders.push('google')
+          if (providers.facebook?.enabled) availableProviders.push('facebook')
+          setOauthProviders(availableProviders)
+        }
+      } catch (error) {
+        console.error('Failed to fetch OAuth providers:', error)
+      }
+    }
+
+    fetchProviders()
+  }, [])
 
   // Custom resolver that only validates when hasSubmitted is true
   const customResolver = (values: any) => {
@@ -65,8 +88,8 @@ export default function LoginPage() {
       if (result?.error) {
         setApiError('Имэйл эсвэл нууц үг буруу байна')
       } else {
-        // Redirect to courses page after successful login
-        router.push('/courses')
+        // Redirect to callbackUrl or courses page after successful login
+        router.push(callbackUrl)
       }
     } catch (error) {
       setApiError('Серверийн алдаа')
@@ -132,20 +155,28 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">Эсвэл</span>
-              </div>
-            </div>
+            {oauthProviders.length > 0 && (
+              <>
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-gray-300" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-gray-500">Эсвэл</span>
+                  </div>
+                </div>
 
-            <GoogleLoginButton />
+                {oauthProviders.includes('google') && (
+                  <GoogleLoginButton returnUrl={callbackUrl} />
+                )}
 
-            <div className="mt-4">
-              <FacebookLoginButton />
-            </div>
+                {oauthProviders.includes('facebook') && (
+                  <div className="mt-4">
+                    <FacebookLoginButton returnUrl={callbackUrl} />
+                  </div>
+                )}
+              </>
+            )}
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">

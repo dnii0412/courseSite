@@ -38,24 +38,27 @@ const authOptions = {
       clientId: process.env.AUTH_GOOGLE_ID || "",
       clientSecret: process.env.AUTH_GOOGLE_SECRET || "",
     }),
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID || "",
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "",
-      authorization: {
-        params: {
-          scope: 'public_profile'
+    // Only include Facebook provider if credentials are configured
+    ...(process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET ? [
+      FacebookProvider({
+        clientId: process.env.FACEBOOK_CLIENT_ID,
+        clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+        authorization: {
+          params: {
+            scope: 'public_profile,email'
+          }
+        },
+        profile(profile) {
+          return {
+            id: profile.id,
+            name: profile.name,
+            email: profile.email,
+            image: profile.picture?.data?.url,
+            role: 'USER'
+          }
         }
-      },
-      profile(profile) {
-        return {
-          id: profile.id,
-          name: profile.name,
-          email: profile.email,
-          image: profile.picture?.data?.url,
-          role: 'USER'
-        }
-      }
-    }),
+      })
+    ] : []),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -156,6 +159,9 @@ const authOptions = {
 
             // Update the user object with the MongoDB _id
             user.id = newUser._id.toString()
+            
+            // For new OAuth users, we want them to go through onboarding
+            // The redirect callback will handle this
           } else {
             // Update existing user's OAuth info if needed
             if (!existingUser.oauthProvider || !existingUser.oauthId) {
@@ -179,7 +185,7 @@ const authOptions = {
     },
     async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
       // Handle OAuth redirects from register page
-      if (url.includes('from=register')) {
+      if (url.includes('from=register') || url.includes('onboarding')) {
         return `${baseUrl}/onboarding?from=register`
       }
 
@@ -189,8 +195,11 @@ const authOptions = {
       }
 
       // Default redirect to courses for successful auth
-      if (url.startsWith(baseUrl)) return url
-      else return `${baseUrl}/courses`
+      if (url.startsWith(baseUrl)) {
+        return url
+      } else {
+        return `${baseUrl}/courses`
+      }
     }
   },
   session: {

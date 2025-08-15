@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Session } from "next-auth";
@@ -81,8 +81,30 @@ export function MobileMenu({
     const [open, setOpen] = useState(false);
     const pathname = usePathname();
 
+    // Close menu when clicking outside
+    const handleBackdropClick = () => {
+        setOpen(false);
+    };
+
+    // Prevent body scroll when menu is open
+    useEffect(() => {
+        if (open) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.overflowX = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+            document.body.style.overflowX = 'unset';
+        }
+        
+        return () => {
+            document.body.style.overflow = 'unset';
+            document.body.style.overflowX = 'unset';
+        };
+    }, [open]);
+
     return (
         <>
+            {/* Menu Button */}
             <button
                 aria-label="Menu"
                 onClick={() => setOpen((v) => !v)}
@@ -90,40 +112,73 @@ export function MobileMenu({
             >
                 ☰
             </button>
+            
+            {/* Mobile Menu - Render at root level */}
             {open && (
-                <div className="absolute left-0 right-0 top-16 z-50 border-b bg-white p-4 shadow md:hidden">
-                    <nav className="flex flex-col gap-3">
-                        {links.map((l) => (
-                            <Link
-                                key={l.href}
-                                href={l.href}
-                                className={`text-base ${pathname === l.href ? "font-semibold text-gray-900" : "text-gray-600"}`}
-                                onClick={() => setOpen(false)}
-                            >
-                                {l.label}
-                            </Link>
-                        ))}
-                    </nav>
-                    <div className="mt-4 border-t pt-4">
-                        {!session?.user ? (
-                            <div className="flex gap-2">
-                                <Link href="/auth/login" onClick={() => setOpen(false)} className="rounded-lg border px-3 py-1.5 text-sm">
-                                    Sign In
-                                </Link>
-                                <Link href="/auth/register" onClick={() => setOpen(false)} className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white">
-                                    Sign Up
-                                </Link>
-                            </div>
-                        ) : (
+                <>
+                    {/* Backdrop */}
+                    <div 
+                        className="fixed inset-0 bg-black/20 z-40 md:hidden"
+                        onClick={handleBackdropClick}
+                        style={{ width: '100vw', height: '100vh' }}
+                    />
+                    
+                    {/* Menu Content */}
+                    <div 
+                        className="fixed top-16 left-0 z-50 border-b bg-white p-4 shadow md:hidden"
+                        style={{ 
+                            width: '100vw',
+                            maxWidth: '100vw',
+                            transform: 'none', 
+                            transition: 'none',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {/* Close Button */}
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900">Menu</h3>
                             <button
-                                onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
-                                className="w-full rounded-lg border px-3 py-1.5 text-sm text-left hover:bg-gray-50"
+                                onClick={() => setOpen(false)}
+                                className="p-2 hover:bg-gray-100 rounded-lg"
+                                aria-label="Close menu"
                             >
-                                Sign out
+                                ✕
                             </button>
-                        )}
+                        </div>
+                        
+                        <nav className="flex flex-col gap-3">
+                            {links.map((l) => (
+                                <Link
+                                    key={l.href}
+                                    href={l.href}
+                                    className={`text-base py-2 px-3 rounded-lg hover:bg-gray-50 ${pathname === l.href ? "font-semibold text-gray-900 bg-blue-50" : "text-gray-600"}`}
+                                    onClick={() => setOpen(false)}
+                                >
+                                    {l.label}
+                                </Link>
+                            ))}
+                        </nav>
+                        <div className="mt-4 border-t pt-4">
+                            {!session?.user ? (
+                                <div className="flex gap-2">
+                                    <Link href="/auth/login" onClick={() => setOpen(false)} className="rounded-lg border px-3 py-1.5 text-sm">
+                                        Sign In
+                                    </Link>
+                                    <Link href="/auth/register" onClick={() => setOpen(false)} className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white">
+                                        Sign Up
+                                    </Link>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
+                                    className="w-full rounded-lg border px-3 py-1.5 text-sm text-left hover:bg-gray-50"
+                                >
+                                    Sign out
+                                </button>
+                            )}
+                        </div>
                     </div>
-                </div>
+                </>
             )}
         </>
     );

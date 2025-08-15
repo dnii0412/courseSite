@@ -21,18 +21,18 @@ function OnboardingContent() {
       return
     }
 
-    // If user already has a role, redirect them
-    if (session.user?.role) {
-      router.push('/dashboard')
+    // If user already has a role and is not coming from register, redirect them to courses
+    if (session.user?.role && !fromRegister) {
+      router.push('/courses')
     }
-  }, [session, status, router])
+  }, [session, status, router, fromRegister])
 
   const handleCompleteOnboarding = async () => {
     setIsLoading(true)
     try {
       // Here you could update the user's profile or complete onboarding
-      // For now, just redirect to dashboard
-      router.push('/dashboard')
+      // For OAuth users, redirect to courses page
+      router.push('/courses')
     } catch (error) {
       console.error('Onboarding error:', error)
     } finally {
