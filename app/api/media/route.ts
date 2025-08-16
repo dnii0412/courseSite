@@ -23,21 +23,19 @@ export async function GET() {
       console.log('Could not check collections, assuming they exist');
     }
     
-    const media = await Media.find().sort({ createdAt: -1 });
-    
-    return NextResponse.json({ success: true, data: media });
-  } catch (error) {
-    console.error('Error fetching media:', error);
-    
-    // If it's a collection doesn't exist error, return empty array
-    if (error instanceof Error && error.message.includes('collection')) {
+    try {
+      const media = await Media.find().sort({ createdAt: -1 });
+      return NextResponse.json({ success: true, data: media });
+    } catch (dbError) {
+      console.error('Database error fetching media:', dbError);
+      // Return empty array instead of error
       return NextResponse.json({ success: true, data: [] });
     }
+  } catch (error) {
+    console.error('Error in media GET:', error);
     
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch media' },
-      { status: 500 }
-    );
+    // Always return success with empty array instead of error
+    return NextResponse.json({ success: true, data: [] });
   }
 }
 

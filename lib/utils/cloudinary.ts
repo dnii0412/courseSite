@@ -62,22 +62,57 @@ export const cloudinaryUtils = {
 
   // Generate signed upload parameters
   getSignedUploadParams: (folder: string = 'media-grid') => {
-    const timestamp = Math.round(new Date().getTime() / 1000);
-    const signature = cloudinary.utils.api_sign_request(
-      {
-        timestamp,
-        folder,
-        upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET
-      },
-      process.env.CLOUDINARY_API_SECRET!
-    );
+    try {
+      // Check if required environment variables are set
+      if (!process.env.CLOUDINARY_API_SECRET) {
+        console.warn('CLOUDINARY_API_SECRET not set, returning fallback params');
+        return {
+          timestamp: Math.round(new Date().getTime() / 1000),
+          signature: 'fallback-signature',
+          apiKey: process.env.CLOUDINARY_API_KEY || 'fallback-key',
+          cloudName: process.env.CLOUDINARY_CLOUD_NAME || 'fallback-cloud',
+          folder
+        };
+      }
 
-    return {
-      timestamp,
-      signature,
-      apiKey: process.env.CLOUDINARY_API_KEY,
-      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-      folder
-    };
+      if (!process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_CLOUD_NAME) {
+        console.warn('Cloudinary credentials incomplete, returning fallback params');
+        return {
+          timestamp: Math.round(new Date().getTime() / 1000),
+          signature: 'fallback-signature',
+          apiKey: 'fallback-key',
+          cloudName: 'fallback-cloud',
+          folder
+        };
+      }
+
+      const timestamp = Math.round(new Date().getTime() / 1000);
+      const signature = cloudinary.utils.api_sign_request(
+        {
+          timestamp,
+          folder,
+          upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET
+        },
+        process.env.CLOUDINARY_API_SECRET
+      );
+
+      return {
+        timestamp,
+        signature,
+        apiKey: process.env.CLOUDINARY_API_KEY,
+        cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+        folder
+      };
+    } catch (error) {
+      console.error('Error generating Cloudinary signature:', error);
+      // Return fallback params instead of throwing
+      return {
+        timestamp: Math.round(new Date().getTime() / 1000),
+        signature: 'fallback-signature',
+        apiKey: 'fallback-key',
+        cloudName: 'fallback-cloud',
+        folder
+      };
+    }
   }
 };

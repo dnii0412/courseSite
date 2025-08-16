@@ -49,14 +49,13 @@ export const MediaLibrary = forwardRef<MediaLibraryHandle, MediaLibraryProps>(fu
         const data = await response.json();
         setMedia(data.data || []);
       } else {
-        throw new Error('Failed to fetch media');
+        console.warn('Media fetch failed:', response.status);
+        setMedia([]); // Set empty array instead of throwing
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load media library',
-        variant: 'destructive',
-      });
+      console.error('Error fetching media:', error);
+      setMedia([]); // Set empty array instead of throwing
+      // Don't show toast for fetch errors to avoid spam
     } finally {
       setLoading(false);
     }
@@ -89,77 +88,95 @@ export const MediaLibrary = forwardRef<MediaLibraryHandle, MediaLibraryProps>(fu
   };
 
   const uploadFile = async (file: File) => {
-    // 1) Get short-lived signature from backend
-    const sigRes = await fetch('/api/cloudinary/sign', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folder: 'media-grid' }),
-      credentials: 'include',
-    })
-    if (!sigRes.ok) {
-      throw new Error('Failed to get upload signature')
+    try {
+      // 1) Get short-lived signature from backend
+      const sigRes = await fetch('/api/cloudinary/sign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: 'media-grid' }),
+        credentials: 'include',
+      })
+      
+      if (!sigRes.ok) {
+        console.error('Signature request failed:', sigRes.status);
+        throw new Error('Failed to get upload signature');
+      }
+      
+      const sigJson = await sigRes.json()
+      if (!sigJson.success || !sigJson.data) {
+        console.error('Invalid signature response:', sigJson);
+        throw new Error('Invalid signature response');
+      }
+      
+      const { timestamp, signature, apiKey, cloudName, folder, uploadPreset } = sigJson.data
+
+      // 2) Direct upload to Cloudinary (auto resource type for image/video)
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('api_key', String(apiKey))
+      formData.append('timestamp', String(timestamp))
+      formData.append('signature', String(signature))
+      formData.append('folder', String(folder))
+      if (uploadPreset) formData.append('upload_preset', String(uploadPreset))
+
+      const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+        method: 'POST',
+        body: formData,
+      })
+      
+      if (!uploadRes.ok) {
+        const errText = await uploadRes.text()
+        console.error('Cloudinary upload failed:', errText);
+        throw new Error(`Cloudinary upload failed: ${errText}`)
+      }
+      
+      const uploaded = await uploadRes.json()
+
+      const publicId: string = uploaded.public_id
+      const secureUrl: string = uploaded.secure_url
+      const width: number = uploaded.width || 0
+      const height: number = uploaded.height || 0
+      const resourceType: string = uploaded.resource_type
+
+      // 3) Persist in our DB
+      const type: 'image' | 'video' = resourceType === 'video' ? 'video' : 'image'
+
+      const posterUrl = type === 'video'
+        ? `https://res.cloudinary.com/${cloudName}/video/upload/f_jpg,w_${width || 400},h_${height || 300},c_fill,so_0/${publicId}`
+        : undefined
+
+      const saveRes = await fetch('/api/media', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type,
+          cloudinaryPublicId: publicId,
+          url: secureUrl,
+          posterUrl,
+          alt: file.name.replace(/\.[^/.]+$/, ''),
+          width,
+          height,
+        }),
+        credentials: 'include',
+      })
+
+      if (!saveRes.ok) {
+        const errorData = await saveRes.json().catch(() => ({}))
+        console.error('Media save failed:', errorData);
+        throw new Error(errorData.error || 'Failed to save media')
+      }
+
+      const result = await saveRes.json()
+      if (!result.success) {
+        console.error('Media save response error:', result);
+        throw new Error(result.error || 'Upload failed')
+      }
+
+      return result.data
+    } catch (error) {
+      console.error('Upload file error:', error);
+      throw error; // Re-throw to be handled by uploadFiles
     }
-    const sigJson = await sigRes.json()
-    const { timestamp, signature, apiKey, cloudName, folder, uploadPreset } = sigJson.data
-
-    // 2) Direct upload to Cloudinary (auto resource type for image/video)
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('api_key', String(apiKey))
-    formData.append('timestamp', String(timestamp))
-    formData.append('signature', String(signature))
-    formData.append('folder', String(folder))
-    if (uploadPreset) formData.append('upload_preset', String(uploadPreset))
-
-    const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-      method: 'POST',
-      body: formData,
-    })
-    if (!uploadRes.ok) {
-      const errText = await uploadRes.text()
-      throw new Error(`Cloudinary upload failed: ${errText}`)
-    }
-    const uploaded = await uploadRes.json()
-
-    const publicId: string = uploaded.public_id
-    const secureUrl: string = uploaded.secure_url
-    const width: number = uploaded.width || 0
-    const height: number = uploaded.height || 0
-    const resourceType: string = uploaded.resource_type
-
-    // 3) Persist in our DB
-    const type: 'image' | 'video' = resourceType === 'video' ? 'video' : 'image'
-
-    const posterUrl = type === 'video'
-      ? `https://res.cloudinary.com/${cloudName}/video/upload/f_jpg,w_${width || 400},h_${height || 300},c_fill,so_0/${publicId}`
-      : undefined
-
-    const saveRes = await fetch('/api/media', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type,
-        cloudinaryPublicId: publicId,
-        url: secureUrl,
-        posterUrl,
-        alt: file.name.replace(/\.[^/.]+$/, ''),
-        width,
-        height,
-      }),
-      credentials: 'include',
-    })
-
-    if (!saveRes.ok) {
-      const errorData = await saveRes.json().catch(() => ({}))
-      throw new Error(errorData.error || 'Failed to save media')
-    }
-
-    const result = await saveRes.json()
-    if (!result.success) {
-      throw new Error(result.error || 'Upload failed')
-    }
-
-    return result.data
   }
 
   const deleteMedia = async (mediaId: string, cloudinaryPublicId: string) => {

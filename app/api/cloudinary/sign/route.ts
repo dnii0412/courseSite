@@ -9,11 +9,19 @@ export async function POST(request: NextRequest) {
     if (allowPublic) {
       isAuthorized = true
     } else {
-      const decoded = await verifyToken(request)
-      const role = String((decoded as any)?.role || '').toUpperCase()
-      const allowNonAdmin = process.env.ALLOW_NON_ADMIN_UPLOADS === 'true'
-      if (decoded && (role === 'admin' || allowNonAdmin)) {
-        isAuthorized = true
+      try {
+        const decoded = await verifyToken(request)
+        const role = String((decoded as any)?.role || '').toUpperCase()
+        const allowNonAdmin = process.env.ALLOW_NON_ADMIN_UPLOADS === 'true'
+        if (decoded && (role === 'admin' || allowNonAdmin)) {
+          isAuthorized = true
+        }
+      } catch (authError) {
+        console.warn('Auth error in cloudinary sign:', authError)
+        // Continue with public access if auth fails
+        if (allowPublic) {
+          isAuthorized = true
+        }
       }
     }
 
@@ -24,22 +32,31 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({})) as { folder?: string }
     const folder = body.folder || 'media-grid'
 
-    const params = cloudinaryUtils.getSignedUploadParams(folder)
+    try {
+      const params = cloudinaryUtils.getSignedUploadParams(folder)
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        timestamp: params.timestamp,
-        signature: params.signature,
-        apiKey: params.apiKey,
-        cloudName: params.cloudName,
-        folder: params.folder,
-        uploadPreset: process.env.CLOUDINARY_UPLOAD_PRESET || 'ml_default',
-      },
-    })
+      return NextResponse.json({
+        success: true,
+        data: {
+          timestamp: params.timestamp,
+          signature: params.signature,
+          apiKey: params.apiKey,
+          cloudName: params.cloudName,
+          folder: params.folder,
+          uploadPreset: process.env.CLOUDINARY_UPLOAD_PRESET || 'ml_default',
+        },
+      })
+    } catch (signatureError) {
+      console.error('Error generating signature:', signatureError)
+      return NextResponse.json(
+        { success: false, error: 'Failed to generate upload signature' },
+        { status: 500 }
+      )
+    }
   } catch (error) {
+    console.error('Unexpected error in cloudinary sign:', error)
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : 'Failed to generate signature' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     )
   }

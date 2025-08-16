@@ -59,6 +59,7 @@ export function WhyUsSettings() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
+    const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
     useEffect(() => {
         fetchWhyUsData()
@@ -69,11 +70,29 @@ export function WhyUsSettings() {
             const response = await fetch('/api/admin/why-us')
             if (response.ok) {
                 const data = await response.json()
-                setItems(data.data || [])
+                console.log('Fetched why-us data:', data)
+                
+                // Ensure all items have valid IDs
+                const itemsWithIds = (data.data || []).map((item: any, index: number) => ({
+                    ...item,
+                    id: item.id || `item_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`
+                }))
+                
+                console.log('Processed items with IDs:', itemsWithIds)
+                setItems(itemsWithIds)
+                
+                // Set last saved time if we have data
+                if (itemsWithIds.length > 0) {
+                    setLastSaved(new Date())
+                }
+            } else {
+                console.warn('Why-us fetch failed:', response.status)
+                setItems([])
             }
         } catch (error) {
             console.error('Error fetching why-us data:', error)
             toast.error('Failed to fetch data')
+            setItems([])
         } finally {
             setLoading(false)
         }
@@ -81,7 +100,7 @@ export function WhyUsSettings() {
 
     const addNewItem = () => {
         const newItem: WhyUsItem = {
-            id: Date.now().toString(),
+            id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             icon: 'Video',
             title: 'Шинэ онцлог',
             description: 'Шинэ онцлогийн тайлбар',
@@ -121,6 +140,7 @@ export function WhyUsSettings() {
             })
 
             if (response.ok) {
+                setLastSaved(new Date())
                 toast.success('Why us section updated successfully')
             } else {
                 toast.error('Failed to update')
@@ -134,8 +154,17 @@ export function WhyUsSettings() {
     }
 
     const getIconComponent = (iconName: string) => {
-        const icon = availableIcons.find(i => i.value === iconName)
-        return icon ? icon.component : Video
+        try {
+            const icon = availableIcons.find(i => i.value === iconName)
+            if (!icon || !icon.component) {
+                console.warn('Icon not found or invalid:', iconName, icon)
+                return Video // Fallback to Video icon
+            }
+            return icon.component
+        } catch (error) {
+            console.error('Error getting icon component:', error)
+            return Video // Fallback to Video icon
+        }
     }
 
     if (loading) {
@@ -153,6 +182,11 @@ export function WhyUsSettings() {
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900">Яагаад бид? Тохиргоо</h2>
                     <p className="text-gray-600">Нүүр хуудасны онцлогуудыг засварлах</p>
+                    {lastSaved && (
+                        <p className="text-sm text-green-600 mt-1">
+                            ✅ Сүүлд хадгалагдсан: {lastSaved.toLocaleString()}
+                        </p>
+                    )}
                 </div>
                 <div className="flex gap-3">
                     <Button
@@ -167,9 +201,13 @@ export function WhyUsSettings() {
                         <Plus className="w-4 h-4" />
                         Нэмэх
                     </Button>
-                    <Button onClick={saveChanges} disabled={saving} className="flex items-center gap-2">
+                    <Button 
+                        onClick={saveChanges} 
+                        disabled={saving} 
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+                    >
                         <Save className="w-4 h-4" />
-                        {saving ? 'Хадгалж байна...' : 'Хадгалах'}
+                        {saving ? 'Хадгалж байна...' : '💾 Хадгалах'}
                     </Button>
                 </div>
             </div>
@@ -183,6 +221,15 @@ export function WhyUsSettings() {
                     <CardContent>
                         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
                             {items.filter(item => item.enabled).map((item) => {
+                                // Debug logging for preview
+                                console.log('Rendering preview item:', { id: item.id, title: item.title })
+                                
+                                // Ensure item has a valid ID
+                                if (!item.id) {
+                                    console.warn('Preview item missing ID:', item)
+                                    return null
+                                }
+                                
                                 const IconComponent = getIconComponent(item.icon)
                                 return (
                                     <Card key={item.id} className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-white">
@@ -209,119 +256,133 @@ export function WhyUsSettings() {
 
             {/* Editable Items */}
             <div className="grid gap-6">
-                {items.map((item, index) => (
-                    <Card key={item.id} className="border-l-4 border-blue-500">
-                        <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <CardTitle className="flex items-center gap-3">
-                                    <span className="text-sm text-gray-500">#{index + 1}</span>
-                                    <Input
-                                        value={item.title}
-                                        onChange={(e) => updateItem(item.id, 'title', e.target.value)}
-                                        placeholder="Гарчиг"
-                                        className="max-w-xs"
-                                    />
-                                </CardTitle>
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => toggleItem(item.id)}
-                                        className={item.enabled ? 'text-green-600' : 'text-gray-400'}
-                                    >
-                                        {item.enabled ? 'Идэвхтэй' : 'Идэвхгүй'}
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => removeItem(item.id)}
-                                        className="text-red-600 hover:text-red-700"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
+                {items.map((item, index) => {
+                    // Debug logging
+                    console.log('Rendering item:', { id: item.id, title: item.title, index })
+                    
+                    // Ensure item has a valid ID
+                    if (!item.id) {
+                        console.warn('Item missing ID:', item)
+                        return null
+                    }
+                    
+                    return (
+                        <Card key={item.id} className="border-l-4 border-blue-500">
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="flex items-center gap-3">
+                                        <span className="text-sm text-gray-500">#{index + 1}</span>
+                                        <Input
+                                            value={item.title}
+                                            onChange={(e) => updateItem(item.id, 'title', e.target.value)}
+                                            placeholder="Гарчиг"
+                                            className="max-w-xs"
+                                        />
+                                    </CardTitle>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => toggleItem(item.id)}
+                                            className={item.enabled ? 'text-green-600' : 'text-gray-400'}
+                                        >
+                                            {item.enabled ? 'Идэвхтэй' : 'Идэвхгүй'}
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => removeItem(item.id)}
+                                            className="text-red-600 hover:text-red-700"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                    </div>
                                 </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <Label>Тайлбар</Label>
-                                    <Input
-                                        value={item.description}
-                                        onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                                        placeholder="Тайлбар"
-                                    />
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label>Тайлбар</Label>
+                                        <Input
+                                            value={item.description}
+                                            onChange={(e) => updateItem(item.id, 'description', e.target.value)}
+                                            placeholder="Тайлбар"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label>Дүрс</Label>
+                                        <Select value={item.icon} onValueChange={(value) => updateItem(item.id, 'icon', value)}>
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableIcons.map((icon) => (
+                                                    <SelectItem key={icon.value} value={icon.value}>
+                                                        <div className="flex items-center gap-2">
+                                                            {(() => {
+                                                                const IconComponent = icon.component
+                                                                return <IconComponent className="w-4 h-4" />
+                                                            })()}
+                                                            {icon.label}
+                                                        </div>
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
-                                <div>
-                                    <Label>Дүрс</Label>
-                                    <Select value={item.icon} onValueChange={(value) => updateItem(item.id, 'icon', value)}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availableIcons.map((icon) => (
-                                                <SelectItem key={icon.value} value={icon.value}>
-                                                    <div className="flex items-center gap-2">
-                                                        <icon.component className="w-4 h-4" />
-                                                        {icon.label}
-                                                    </div>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                    <Label>Өнгө</Label>
-                                    <Select value={item.color} onValueChange={(value) => updateItem(item.id, 'color', value)}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availableColors.map((color) => (
-                                                <SelectItem key={color.value} value={color.value}>
-                                                    {color.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <Label>Өнгө</Label>
+                                        <Select value={item.color} onValueChange={(value) => updateItem(item.id, 'color', value)}>
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableColors.map((color) => (
+                                                    <SelectItem key={color.value} value={color.value}>
+                                                        {color.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label>Дэвсгэр өнгө</Label>
+                                        <Select value={item.bgColor} onValueChange={(value) => updateItem(item.id, 'bgColor', value)}>
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableBgColors.map((color) => (
+                                                    <SelectItem key={color.value} value={color.value}>
+                                                        {color.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label>Дүрсний өнгө</Label>
+                                        <Select value={item.iconColor} onValueChange={(value) => updateItem(item.id, 'iconColor', value)}>
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableIconColors.map((color) => (
+                                                    <SelectItem key={color.value} value={color.value}>
+                                                        {color.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
-                                <div>
-                                    <Label>Дэвсгэр өнгө</Label>
-                                    <Select value={item.bgColor} onValueChange={(value) => updateItem(item.id, 'bgColor', value)}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availableBgColors.map((color) => (
-                                                <SelectItem key={color.value} value={color.value}>
-                                                    {color.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label>Дүрсний өнгө</Label>
-                                    <Select value={item.iconColor} onValueChange={(value) => updateItem(item.id, 'iconColor', value)}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availableIconColors.map((color) => (
-                                                <SelectItem key={color.value} value={color.value}>
-                                                    {color.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                            </CardContent>
+                        </Card>
+                    )
+                })}
             </div>
 
             {items.length === 0 && (

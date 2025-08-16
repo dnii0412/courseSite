@@ -43,6 +43,7 @@ export function StatsSettings() {
     const [stats, setStats] = useState<StatCard[]>([])
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
     useEffect(() => {
         fetchStats()
@@ -53,12 +54,26 @@ export function StatsSettings() {
             const response = await fetch('/api/admin/stats')
             if (response.ok) {
                 const data = await response.json()
-                setStats(data.stats || [])
+                console.log('Fetched stats data:', data)
+                
+                // Ensure all stats have valid IDs
+                const statsWithIds = (data.stats || []).map((stat: any, index: number) => ({
+                    ...stat,
+                    id: stat.id || `stat_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`
+                }))
+                
+                console.log('Processed stats with IDs:', statsWithIds)
+                setStats(statsWithIds)
+                
+                // Set last saved time if we have data
+                if (statsWithIds.length > 0) {
+                    setLastSaved(new Date())
+                }
             } else {
                 // Load default stats if API fails
-                setStats([
+                const defaultStats = [
                     {
-                        id: '1',
+                        id: `stat_1_${Date.now()}_1`,
                         title: 'Нийт сурагч',
                         value: '3,200+',
                         description: 'Идэвхтэй суралцаж буй сурагчид',
@@ -67,7 +82,7 @@ export function StatsSettings() {
                         bgColor: 'bg-blue-100'
                     },
                     {
-                        id: '2',
+                        id: `stat_2_${Date.now()}_2`,
                         title: 'Дундаж үнэлгээ',
                         value: '4.8/5',
                         description: 'Сурагчдын сэтгэгдэл',
@@ -76,7 +91,7 @@ export function StatsSettings() {
                         bgColor: 'bg-yellow-100'
                     },
                     {
-                        id: '3',
+                        id: `stat_3_${Date.now()}_3`,
                         title: 'Хичээл дуусгасан',
                         value: '15,000+',
                         description: 'Амжилттай төгссөн хичээлүүд',
@@ -85,7 +100,7 @@ export function StatsSettings() {
                         bgColor: 'bg-green-100'
                     },
                     {
-                        id: '4',
+                        id: `stat_4_${Date.now()}_4`,
                         title: 'Амжилтын хувь',
                         value: '94%',
                         description: 'Сурагчдын амжилттай төгсөлт',
@@ -94,7 +109,7 @@ export function StatsSettings() {
                         bgColor: 'bg-purple-100'
                     },
                     {
-                        id: '5',
+                        id: `stat_5_${Date.now()}_5`,
                         title: 'Хурдтай өсөлт',
                         value: '+127%',
                         description: 'Энэ жилийн өсөлт',
@@ -103,7 +118,7 @@ export function StatsSettings() {
                         bgColor: 'bg-red-100'
                     },
                     {
-                        id: '6',
+                        id: `stat_6_${Date.now()}_6`,
                         title: 'Гэрчилгээ',
                         value: '12,500+',
                         description: 'Олгосон гэрчилгээнүүд',
@@ -111,7 +126,8 @@ export function StatsSettings() {
                         color: 'text-indigo-600',
                         bgColor: 'bg-indigo-100'
                     }
-                ])
+                ]
+                setStats(defaultStats)
             }
         } catch (error) {
             console.error('Error fetching stats:', error)
@@ -122,7 +138,7 @@ export function StatsSettings() {
 
     const addNewStat = () => {
         const newStat: StatCard = {
-            id: Date.now().toString(),
+            id: `stat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             title: 'Шинэ статистик',
             value: '0',
             description: 'Тайлбар оруулна уу',
@@ -166,6 +182,7 @@ export function StatsSettings() {
             })
 
             if (response.ok) {
+                setLastSaved(new Date())
                 toast.success('Статистик амжилттай хадгалагдлаа')
             } else {
                 toast.error('Хадгалахад алдаа гарлаа')
@@ -192,137 +209,163 @@ export function StatsSettings() {
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900">Статистик тохиргоо</h2>
                     <p className="text-gray-600">Нүүр хуудасны статистик хэсгийг удирдах</p>
+                    {lastSaved && (
+                        <p className="text-sm text-green-600 mt-1">
+                            ✅ Сүүлд хадгалагдсан: {lastSaved.toLocaleString()}
+                        </p>
+                    )}
                 </div>
                 <div className="flex gap-3">
                     <Button onClick={addNewStat} variant="outline">
                         <Plus className="w-4 h-4 mr-2" />
                         Шинэ статистик
                     </Button>
-                    <Button onClick={saveStats} disabled={saving}>
+                    <Button 
+                        onClick={saveStats} 
+                        disabled={saving}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                    >
                         <Save className="w-4 h-4 mr-2" />
-                        {saving ? 'Хадгалж байна...' : 'Хадгалах'}
+                        {saving ? 'Хадгалж байна...' : '💾 Хадгалах'}
                     </Button>
                 </div>
             </div>
 
             <div className="grid gap-6">
-                {stats.map((stat, index) => (
-                    <Card key={stat.id}>
-                        <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <CardTitle className="text-lg">Статистик #{index + 1}</CardTitle>
-                                <Button
-                                    onClick={() => removeStat(stat.id)}
-                                    variant="destructive"
-                                    size="sm"
-                                >
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Устгах
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor={`title-${stat.id}`}>Гарчиг</Label>
-                                    <Input
-                                        id={`title-${stat.id}`}
-                                        value={stat.title}
-                                        onChange={(e) => updateStat(stat.id, 'title', e.target.value)}
-                                        placeholder="Жишээ: Нийт сурагч"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor={`value-${stat.id}`}>Утга</Label>
-                                    <Input
-                                        id={`value-${stat.id}`}
-                                        value={stat.value}
-                                        onChange={(e) => updateStat(stat.id, 'value', e.target.value)}
-                                        placeholder="Жишээ: 3,200+"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor={`description-${stat.id}`}>Тайлбар</Label>
-                                <Input
-                                    id={`description-${stat.id}`}
-                                    value={stat.description}
-                                    onChange={(e) => updateStat(stat.id, 'description', e.target.value)}
-                                    placeholder="Жишээ: Идэвхтэй суралцаж буй сурагчид"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor={`icon-${stat.id}`}>Зураг</Label>
-                                    <Select
-                                        value={stat.icon}
-                                        onValueChange={(value) => updateStat(stat.id, 'icon', value)}
+                {stats.map((stat, index) => {
+                    // Debug logging
+                    console.log('Rendering stat:', { id: stat.id, title: stat.title, index })
+                    
+                    // Ensure stat has a valid ID
+                    if (!stat.id) {
+                        console.warn('Stat missing ID:', stat)
+                        return null
+                    }
+                    
+                    return (
+                        <Card key={stat.id}>
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-lg">Статистик #{index + 1}</CardTitle>
+                                    <Button
+                                        onClick={() => removeStat(stat.id)}
+                                        variant="destructive"
+                                        size="sm"
                                     >
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availableIcons.map((iconOption) => {
-                                                const IconComponent = iconOption.icon
-                                                return (
-                                                    <SelectItem key={iconOption.value} value={iconOption.value}>
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        Устгах
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor={`title-${stat.id}`}>Гарчиг</Label>
+                                        <Input
+                                            id={`title-${stat.id}`}
+                                            value={stat.title}
+                                            onChange={(e) => updateStat(stat.id, 'title', e.target.value)}
+                                            placeholder="Жишээ: Нийт сурагч"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor={`value-${stat.id}`}>Утга</Label>
+                                        <Input
+                                            id={`value-${stat.id}`}
+                                            value={stat.value}
+                                            onChange={(e) => updateStat(stat.id, 'value', e.target.value)}
+                                            placeholder="Жишээ: 3,200+"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor={`description-${stat.id}`}>Тайлбар</Label>
+                                    <Input
+                                        id={`description-${stat.id}`}
+                                        value={stat.description}
+                                        onChange={(e) => updateStat(stat.id, 'description', e.target.value)}
+                                        placeholder="Жишээ: Идэвхтэй суралцаж буй сурагчид"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor={`icon-${stat.id}`}>Зураг</Label>
+                                        <Select
+                                            value={stat.icon}
+                                            onValueChange={(value) => updateStat(stat.id, 'icon', value)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableIcons.map((iconOption) => {
+                                                    return (
+                                                        <SelectItem key={iconOption.value} value={iconOption.value}>
+                                                            <div className="flex items-center gap-2">
+                                                                {(() => {
+                                                                    const IconComponent = iconOption.icon
+                                                                    return <IconComponent className="w-4 h-4" />
+                                                                })()}
+                                                                {iconOption.label}
+                                                            </div>
+                                                        </SelectItem>
+                                                    )
+                                                })}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor={`color-${stat.id}`}>Өнгө</Label>
+                                        <Select
+                                            value={stat.color}
+                                            onValueChange={(value) => updateStat(stat.id, 'color', value)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableColors.map((colorOption) => (
+                                                    <SelectItem key={colorOption.value} value={colorOption.value}>
                                                         <div className="flex items-center gap-2">
-                                                            <IconComponent className="w-4 h-4" />
-                                                            {iconOption.label}
+                                                            <div className={`w-4 h-4 rounded-full ${colorOption.bgColor}`}></div>
+                                                            {colorOption.label}
                                                         </div>
                                                     </SelectItem>
-                                                )
-                                            })}
-                                        </SelectContent>
-                                    </Select>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor={`color-${stat.id}`}>Өнгө</Label>
-                                    <Select
-                                        value={stat.color}
-                                        onValueChange={(value) => updateStat(stat.id, 'color', value)}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availableColors.map((colorOption) => (
-                                                <SelectItem key={colorOption.value} value={colorOption.value}>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className={`w-4 h-4 rounded-full ${colorOption.bgColor}`}></div>
-                                                        {colorOption.label}
-                                                    </div>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            {/* Preview */}
-                            <div className="border-t pt-4">
-                                <Label className="text-sm text-gray-600">Урьдчилан харах:</Label>
-                                <div className="mt-2 p-4 bg-gray-50 rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-8 h-8 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
-                                            {(() => {
-                                                const IconComponent = availableIcons.find(i => i.value === stat.icon)?.icon || Users
-                                                return <IconComponent className={`w-4 h-4 ${stat.color}`} />
-                                            })()}
-                                        </div>
-                                        <div>
-                                            <div className="font-semibold text-gray-900">{stat.value}</div>
-                                            <div className="text-sm text-gray-600">{stat.title}</div>
+                                {/* Preview */}
+                                <div className="border-t pt-4">
+                                    <Label className="text-sm text-gray-600">Урьдчилан харах:</Label>
+                                    <div className="mt-2 p-4 bg-gray-50 rounded-lg">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-8 h-8 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
+                                                {(() => {
+                                                    const iconOption = availableIcons.find(i => i.value === stat.icon)
+                                                    if (iconOption) {
+                                                        const IconComponent = iconOption.icon
+                                                        return <IconComponent className={`w-4 h-4 ${stat.color}`} />
+                                                    }
+                                                    return null
+                                                })()}
+                                            </div>
+                                            <div>
+                                                <div className="font-semibold text-gray-900">{stat.value}</div>
+                                                <div className="text-sm text-gray-600">{stat.title}</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                            </CardContent>
+                        </Card>
+                    )
+                })}
             </div>
 
             {stats.length === 0 && (

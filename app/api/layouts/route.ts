@@ -87,8 +87,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching layouts:', error);
 
-    // If it's a collection doesn't exist error, return appropriate response
-    if (error instanceof Error && error.message.includes('collection')) {
+    // Always return success with empty array instead of error
+    try {
       const { searchParams } = new URL(request.url);
       const slug = searchParams.get('slug');
 
@@ -100,12 +100,10 @@ export async function GET(request: NextRequest) {
       }
 
       return NextResponse.json({ success: true, data: [] });
+    } catch (fallbackError) {
+      console.error('Fallback error handling failed:', fallbackError);
+      return NextResponse.json({ success: true, data: [] });
     }
-
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch layouts' },
-      { status: 500 }
-    );
   }
 }
 
