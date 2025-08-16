@@ -10,16 +10,18 @@ interface NavLinkProps {
   children: React.ReactNode
   disabled?: boolean
   className?: string
+  onClick?: () => void
 }
 
 export const NavLink = React.memo<NavLinkProps>(({ 
   href, 
   children, 
   disabled = false,
-  className = ""
+  className = "",
+  onClick
 }) => {
   const pathname = usePathname()
-  const isActive = pathname === href
+  const isActive = href === '/' ? pathname === href : pathname.startsWith(href)
 
   if (disabled) {
     return (
@@ -39,6 +41,7 @@ export const NavLink = React.memo<NavLinkProps>(({
       aria-current={isActive ? "page" : undefined}
       data-analytics="nav-link"
       data-analytics-href={href}
+      onClick={onClick}
     >
       {children}
       {isActive && (

@@ -210,7 +210,7 @@ export const MediaGrid = ({ slug }: MediaGridProps) => {
 
   if (loading) {
     return (
-      <div className="w-full h-[90vh] flex items-center justify-center">
+      <div className="hidden md:flex w-full h-[90vh] items-center justify-center">
         <div className="w-12 h-12 border-4 border-gray-300 border-t-[#1B3C53] rounded-full animate-spin"></div>
       </div>
     );
@@ -218,7 +218,7 @@ export const MediaGrid = ({ slug }: MediaGridProps) => {
 
   if (error) {
     return (
-      <div className="w-full h-[90vh] flex items-center justify-center">
+      <div className="hidden md:flex w-full h-[90vh] items-center justify-center">
         <div className="text-center">
           <div className="text-2xl font-bold text-[#1B3C53] mb-2">Layout Not Found</div>
           <div className="text-gray-600">{error}</div>
@@ -230,7 +230,7 @@ export const MediaGrid = ({ slug }: MediaGridProps) => {
   // Render check - layout and media data loaded
   if (!layout || !media.length) {
     return (
-      <div className="w-full h-[90vh] flex items-center justify-center">
+      <div className="hidden md:flex w-full h-[90vh] items-center justify-center">
         <div className="text-center">
           <div className="text-2xl font-bold text-[#1B3C53] mb-2">No Content</div>
           <div className="text-gray-600">This layout has no published content.</div>
@@ -243,12 +243,16 @@ export const MediaGrid = ({ slug }: MediaGridProps) => {
   const mediaMap = new Map(media.map(m => [m._id, m]));
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-8">
+    <div className={`hidden md:block w-full max-w-7xl mx-auto ${isTablet ? 'px-2 py-4' : 'px-4 py-8'}`}>
       <div
-        className="grid gap-4 h-auto"
+        className={`grid h-auto ${isTablet ? 'gap-2' : 'gap-4'}`}
         style={{
-          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-          gridAutoRows: 'minmax(150px, auto)',
+          gridTemplateColumns: isTablet 
+            ? 'repeat(auto-fill, minmax(150px, 1fr))' 
+            : 'repeat(auto-fill, minmax(200px, 1fr))',
+          gridAutoRows: isTablet 
+            ? 'minmax(100px, auto)' 
+            : 'minmax(150px, auto)',
         }}
       >
         {layout.items.map((item) => {

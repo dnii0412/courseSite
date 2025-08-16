@@ -29,7 +29,7 @@ import { mainNavItems, userNavItems, getI18nText } from "@/lib/nav"
 
 export function Navbar() {
   const [scrolled, setScrolled] = React.useState(false)
-  const [language, setLanguage] = React.useState<'mn' | 'en'>('mn')
+  const language: 'mn' | 'en' = 'mn' // Fixed language
   const { data: session } = useSession()
   const pathname = usePathname()
 
@@ -41,20 +41,6 @@ export function Navbar() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  // Load language from localStorage
-  React.useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') as 'mn' | 'en'
-    if (savedLanguage) {
-      setLanguage(savedLanguage)
-    }
-  }, [])
-
-  const handleLanguageToggle = () => {
-    const newLanguage = language === 'mn' ? 'en' : 'mn'
-    setLanguage(newLanguage)
-    localStorage.setItem('language', newLanguage)
-  }
 
   // Don't show navbar on admin pages
   if (pathname.startsWith('/admin')) {
@@ -83,7 +69,7 @@ export function Navbar() {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex lg:items-center lg:space-x-6">
+          <nav className="max-md:hidden flex items-center space-x-6">
             {mainNavItems.map((item) => (
               <NavLink
                 key={item.href}
@@ -104,12 +90,16 @@ export function Navbar() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="relative h-9 w-9 rounded-full"
+                    className="relative h-9 w-9 rounded-full max-md:hidden flex items-center justify-center p-0 overflow-hidden"
                     data-analytics="user-menu"
                   >
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={session.user?.image || ''} alt={session.user?.name || ''} />
-                      <AvatarFallback>
+                    <Avatar className="h-9 w-9 flex items-center justify-center">
+                      <AvatarImage 
+                        src={session.user?.image || ''} 
+                        alt={session.user?.name || ''} 
+                        className="w-full h-full object-cover"
+                      />
+                      <AvatarFallback className="flex items-center justify-center w-full h-full text-sm font-medium">
                         {session.user?.name?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
@@ -152,7 +142,7 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="hidden md:flex items-center space-x-2">
+              <div className="max-md:hidden flex items-center space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -177,10 +167,7 @@ export function Navbar() {
             )}
 
             {/* Mobile Navigation */}
-            <MobileNav
-              language={language}
-              onLanguageToggle={handleLanguageToggle}
-            />
+            <MobileNav />
           </div>
         </div>
       </div>
