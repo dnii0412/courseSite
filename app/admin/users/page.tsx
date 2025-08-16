@@ -57,7 +57,9 @@ export default function AdminUsersPage() {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch('/api/users')
+        const res = await fetch('/api/users', {
+          credentials: 'include'
+        })
         console.log('Users API response status:', res.status)
         
         if (!res.ok) {
@@ -102,14 +104,16 @@ export default function AdminUsersPage() {
         body: JSON.stringify({
           name: selectedUser.name,
           email: selectedUser.email,
-          role: selectedUser.role,
         }),
+        credentials: 'include'
       })
       if (!res.ok) throw new Error('Хэрэглэгч засахэд алдаа гарлаа')
       setShowEditDialog(false)
       setSelectedUser(null)
       // Refresh users list
-      const res2 = await fetch('/api/users')
+      const res2 = await fetch('/api/users', {
+        credentials: 'include'
+      })
       if (res2.ok) {
         const response = await res2.json()
         const users = response.data || []
@@ -129,12 +133,15 @@ export default function AdminUsersPage() {
     try {
       const res = await fetch(`/api/users/${selectedUser._id}`, {
         method: 'DELETE',
+        credentials: 'include'
       })
       if (!res.ok) throw new Error('Хэрэглэгч устгахад алдаа гарлаа')
       setShowDeleteDialog(false)
       setSelectedUser(null)
       // Refresh users list
-      const res2 = await fetch('/api/users')
+      const res2 = await fetch('/api/users', {
+        credentials: 'include'
+      })
       if (res2.ok) {
         const response = await res2.json()
         const users = response.data || []
@@ -158,7 +165,9 @@ export default function AdminUsersPage() {
           <CreateUserForm onClose={async (created) => {
             setShowCreateDialog(false)
             if (created) {
-              const res = await fetch('/api/users')
+              const res = await fetch('/api/users', {
+                credentials: 'include'
+              })
               if (res.ok) {
                 const response = await res.json()
                 const users = response.data || []
@@ -204,31 +213,15 @@ export default function AdminUsersPage() {
                     onChange={e => setSelectedUser({ ...selectedUser, email: e.target.value })}
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-role">Эрх</Label>
-                  <Select
-                    value={selectedUser.role}
-                    onValueChange={val => setSelectedUser({ ...selectedUser, role: val })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="student">Сурагч</SelectItem>
-                      <SelectItem value="instructor">Багш</SelectItem>
-                      <SelectItem value="admin">Админ</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 {/* Show user's courses */}
                 {Array.isArray(selectedUser.enrolledCourses) && selectedUser.enrolledCourses.length > 0 && (
                   <div className="grid gap-2">
                     <Label>Худалдан авсан курсууд</Label>
                     <div className="flex flex-wrap gap-2">
                       {selectedUser.enrolledCourses.map((c: any) => (
-                        <span key={typeof c === 'string' ? c : c._id} className="px-2 py-1 text-xs rounded bg-gray-100">
+                        <Badge key={typeof c === 'string' ? c : c._id} variant="outline" className="text-xs">
                           {typeof c === 'string' ? c : c.title}
-                        </span>
+                        </Badge>
                       ))}
                     </div>
                   </div>
@@ -237,7 +230,9 @@ export default function AdminUsersPage() {
                 <AddCourseDropdown
                   userId={selectedUser._id}
                   onAdded={async () => {
-                    const res = await fetch(`/api/users/${selectedUser._id}`)
+                    const res = await fetch(`/api/users/${selectedUser._id}`, {
+                      credentials: 'include'
+                    })
                     if (res.ok) setSelectedUser(await res.json())
                   }}
                 />
@@ -318,12 +313,16 @@ export default function AdminUsersPage() {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      {getRoleBadge(user.role)}
+                      {user.role === 'admin' && getRoleBadge(user.role)}
                       {user.status && getStatusBadge(user.status)}
                     </div>
                     {Array.isArray(user.enrolledCourses) && user.enrolledCourses.length > 0 && (
-                      <div className="text-xs text-gray-600">
-                        Курсууд: {user.enrolledCourses.map((c: any) => typeof c === 'string' ? c : c.title).join(', ')}
+                      <div className="flex flex-wrap gap-2">
+                        {user.enrolledCourses.map((c: any) => (
+                          <Badge key={typeof c === 'string' ? c : c._id} variant="outline" className="text-xs">
+                            {typeof c === 'string' ? c : c.title}
+                          </Badge>
+                        ))}
                       </div>
                     )}
 

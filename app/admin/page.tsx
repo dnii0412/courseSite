@@ -338,7 +338,7 @@ export default function AdminPage() {
                         </div>
                         <div className="flex items-center space-x-2">
                           <Badge variant="secondary" className="text-xs">
-                            {user.role || 'user'}
+                            {user.role || 'student'}
                           </Badge>
                           <Button variant="ghost" size="sm" onClick={() => window.location.href = `/admin/users/${user._id}`}>
                             <Eye className="w-4 h-4" />

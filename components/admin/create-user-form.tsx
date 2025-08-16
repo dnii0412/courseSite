@@ -18,7 +18,8 @@ export function CreateUserForm({ onClose }: { onClose: (created: boolean) => voi
       const res = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name, email, password }),
+        credentials: 'include'
       })
       if (!res.ok) throw new Error('Хэрэглэгч үүсгэхэд алдаа гарлаа')
       onClose(true)

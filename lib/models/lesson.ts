@@ -37,9 +37,9 @@ const lessonSchema = new mongoose.Schema({
     required: false,
     default: 0
   },
-  course: {
+  subcourse: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Course',
+    ref: 'Subcourse',
     required: true
   },
   preview: {

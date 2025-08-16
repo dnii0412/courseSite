@@ -19,7 +19,7 @@ async function createAdminUser() {
     const db = client.db();
     
     // Check if admin user already exists
-    const existingAdmin = await db.collection('users').findOne({ role: 'ADMIN' });
+    const existingAdmin = await db.collection('users').findOne({ role: 'admin' });
     if (existingAdmin) {
       console.log('Admin user already exists:', existingAdmin.email);
       return;
@@ -31,7 +31,7 @@ async function createAdminUser() {
       name: 'Admin User',
       email: 'admin@newera.mn',
       password: hashedPassword,
-      role: 'ADMIN',
+      role: 'admin',
       createdAt: new Date(),
       updatedAt: new Date()
     };

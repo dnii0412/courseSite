@@ -6,7 +6,7 @@ export interface IUser {
   email: string;
   phone?: string; // Phone number
   password?: string; // Optional for OAuth users
-  role: 'USER' | 'ADMIN';
+  role: 'student' | 'instructor' | 'admin';
   enrolledCourses?: mongoose.Types.ObjectId[];
   oauthProvider?: string; // Google, Facebook, etc.
   oauthId?: string; // OAuth provider's user ID
@@ -36,8 +36,8 @@ const userSchema = new mongoose.Schema<IUser>({
   },
   role: {
     type: String,
-    enum: ['USER', 'ADMIN'],
-    default: 'USER'
+    enum: ['student', 'instructor', 'admin'],
+    default: 'student'
   },
   oauthProvider: {
     type: String,

@@ -23,13 +23,13 @@ export async function POST(req: NextRequest) {
       // Check if current user is admin
       await connectDB()
       const currentUser = await User.findOne({ email: session.user.email })
-      if (!currentUser || currentUser.role !== 'ADMIN') {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      if (!currentUser || currentUser.role !== 'admin') {
+        return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
       }
     }
 
     await connectDB()
-    const user = await User.findOneAndUpdate({ email }, { role: 'ADMIN' }, { new: true })
+    const user = await User.findOneAndUpdate({ email }, { role: 'admin' }, { new: true })
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
     return NextResponse.json({ success: true, user: { id: user._id, email: user.email, role: user.role } })
   } catch (e) {

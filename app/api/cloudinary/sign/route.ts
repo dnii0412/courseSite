@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       const decoded = await verifyToken(request)
       const role = String((decoded as any)?.role || '').toUpperCase()
       const allowNonAdmin = process.env.ALLOW_NON_ADMIN_UPLOADS === 'true'
-      if (decoded && (role === 'ADMIN' || allowNonAdmin)) {
+      if (decoded && (role === 'admin' || allowNonAdmin)) {
         isAuthorized = true
       }
     }

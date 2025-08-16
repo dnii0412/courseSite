@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       const decoded = await verifyToken(request);
       const role = String((decoded as any)?.role || '').toUpperCase();
       const allowNonAdmin = process.env.ALLOW_NON_ADMIN_UPLOADS === 'true';
-      if (decoded && (role === 'ADMIN' || allowNonAdmin)) {
+      if (decoded && (role === 'admin' || allowNonAdmin)) {
         isAuthorized = true
       }
     }
@@ -116,7 +116,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const decoded = await verifyToken(request);
     const role = String((decoded as any)?.role || '').toUpperCase();
-    if (!decoded || role !== 'ADMIN') {
+    if (!decoded || role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }

@@ -13,7 +13,7 @@ export async function requireAdmin(request: NextRequest) {
     await connectDB()
     const user = await User.findById(decoded.userId).select('role').lean() as { role: string } | null
     
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || user.role !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
@@ -31,7 +31,7 @@ export async function isAdmin(request: NextRequest): Promise<boolean> {
     await connectDB()
     const user = await User.findById(decoded.userId).select('role').lean() as { role: string } | null
     
-    return user?.role === 'ADMIN'
+    return user?.role === 'admin'
   } catch (error) {
     return false
   }

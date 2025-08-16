@@ -43,9 +43,9 @@ const courseSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed, // allow ObjectId or string
     required: true
   },
-  lessons: [{
+  subcourses: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Lesson'
+    ref: 'Subcourse'
   }],
   requirements: [String],
   whatYouWillLearn: [String],

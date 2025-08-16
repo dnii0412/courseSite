@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
     if (admin === 'true') {
       const decoded = await verifyToken(request as any);
       const role = String((decoded as any)?.role || '').toUpperCase();
-      if (!decoded || role !== 'ADMIN') {
+      if (!decoded || role !== 'admin') {
         return NextResponse.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
   try {
     const decoded = await verifyToken(request as any);
     const role = String((decoded as any)?.role || '').toUpperCase();
-    if (!decoded || role !== 'ADMIN') {
+    if (!decoded || role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -168,7 +168,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const decoded = await verifyToken(request as any);
     const role = String((decoded as any)?.role || '').toUpperCase();
-    if (!decoded || role !== 'ADMIN') {
+    if (!decoded || role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }

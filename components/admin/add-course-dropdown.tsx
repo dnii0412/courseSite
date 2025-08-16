@@ -18,7 +18,9 @@ export function AddCourseDropdown({ userId, onAdded }: { userId: string; onAdded
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const res = await fetch('/api/courses?all=true')
+        const res = await fetch('/api/courses?all=true', {
+          credentials: 'include'
+        })
         if (res.ok) {
           const json = await res.json()
           const list = Array.isArray(json) ? json : (json?.data ?? [])
@@ -36,7 +38,8 @@ export function AddCourseDropdown({ userId, onAdded }: { userId: string; onAdded
       const res = await fetch(`/api/users/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ $addToSet: { enrolledCourses: selected } })
+        body: JSON.stringify({ $addToSet: { enrolledCourses: selected } }),
+        credentials: 'include'
       })
       if (res.ok) {
         onAdded()

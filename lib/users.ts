@@ -2,7 +2,7 @@
 import { connectDB } from '@/lib/mongodb'
 import { User } from '@/lib/models/user'
 
-type CreateUserParams = { name: string; email: string; passwordHash: string; role?: 'USER' | 'ADMIN' }
+type CreateUserParams = { name: string; email: string; passwordHash: string; role?: 'student' | 'instructor' | 'admin' }
 
 export async function findUserByEmail(email: string) {
   try {
@@ -13,7 +13,7 @@ export async function findUserByEmail(email: string) {
   }
 }
 
-export async function createUser({ name, email, passwordHash, role = 'USER' }: CreateUserParams) {
+export async function createUser({ name, email, passwordHash, role = 'student' }: CreateUserParams) {
   await connectDB()
   const user = await User.create({ name, email, password: passwordHash, role })
   return { id: String(user._id), name: user.name, email: user.email, role: user.role }

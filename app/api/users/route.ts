@@ -11,8 +11,10 @@ async function checkAdminAuth(request: NextRequest) {
   try {
     // Check custom admin session
     const adminSession = request.cookies.get('admin-session')?.value
+    
     if (adminSession) {
       const decoded = verify(adminSession, process.env.NEXTAUTH_SECRET || 'fallback-secret') as any
+      
       if (decoded?.isAdmin) {
         return { isAdmin: true, userId: decoded.userId }
       }
@@ -49,9 +51,9 @@ export async function GET(request: NextRequest) {
       console.log('Could not check collections, assuming they exist')
     }
     
-    const users = await User.find({ role: { $ne: 'ADMIN' } })
+    const users = await User.find({})
       .sort({ createdAt: -1 })
-      .select('name email createdAt enrolledCourses')
+      .select('name email createdAt enrolledCourses role')
       .populate('enrolledCourses', 'title')
       .lean()
     return NextResponse.json({ success: true, data: users })

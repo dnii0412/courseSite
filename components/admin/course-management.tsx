@@ -10,8 +10,9 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, Edit, Trash2, Search, Eye, BookOpen, ChevronDown } from 'lucide-react'
-import { CourseLessons } from '@/components/admin/course-lessons'
+import { SubcourseManagement } from '@/components/admin/subcourse-management'
 import { AdminCourseDetailsInline } from '@/components/admin/course-details-inline'
+import { AddLessonWithSubcourse } from '@/components/admin/add-lesson-with-subcourse'
 import { Switch } from '@/components/ui/switch'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -27,7 +28,7 @@ interface Course {
   category: string
   level?: string
   language?: string
-  lessons?: number | any[]
+  subcourses?: any[]
   students?: number
   studentsCount?: number
   createdAt?: string
@@ -218,10 +219,10 @@ export function CourseManagement() {
                   onChange={e => setSelectedCourse({ ...selectedCourse, description: e.target.value })} 
                 />
               </div>
-              {/* Lessons section */}
+              {/* Subcourses section */}
               <div className="grid gap-2">
-                <Label>Хичээлүүд</Label>
-                <CourseLessons course={selectedCourse} onChanged={() => fetchCourses()} />
+                <Label>Дэд хичээлүүд</Label>
+                <SubcourseManagement courseId={selectedCourse._id || ''} onChanged={() => fetchCourses()} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
@@ -522,7 +523,7 @@ export function CourseManagement() {
                             <p className="text-sm text-gray-600 mt-1">{course.description}</p>
                             <div className="flex items-center space-x-4 mt-2">
                               <span className="text-sm text-gray-500">Үнэ: ${course.price}</span>
-                              <span className="text-sm text-gray-500">Хичээл: {Array.isArray(course.lessons) ? course.lessons.length : 0}</span>
+                              <span className="text-sm text-gray-500">Дэд хичээл: {Array.isArray(course.subcourses) ? course.subcourses.length : 0}</span>
                               <span className="text-sm text-gray-500">Сурагчид: {course.studentsCount || 0}</span>
                             </div>
                           </div>
@@ -537,7 +538,18 @@ export function CourseManagement() {
                       </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent className="data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden">
-                      <AdminCourseDetailsInline courseId={cid} onChanged={fetchCourses} />
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <AdminCourseDetailsInline courseId={cid} onChanged={fetchCourses} />
+                        
+                        {/* Subcourses Section */}
+                        <div className="mt-6 pt-4 border-t border-gray-200">
+                          <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-md font-semibold text-gray-800">Дэд хичээлүүд</h4>
+                            <AddLessonWithSubcourse courseId={cid} onChanged={fetchCourses} />
+                          </div>
+                          <SubcourseManagement courseId={cid} onChanged={fetchCourses} />
+                        </div>
+                      </div>
                     </CollapsibleContent>
                   </div>
                 </Collapsible>

@@ -13,7 +13,7 @@ async function checkAdminAuth(request: NextRequest) {
     const session = await getServerSession(authOptions)
     if (session?.user) {
       const user = await User.findById(session.user.id).select('role')
-      if (user?.role === 'ADMIN') {
+      if (user?.role === 'admin') {
         return { isAdmin: true, userId: session.user.id }
       }
     }

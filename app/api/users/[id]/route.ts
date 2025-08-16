@@ -15,7 +15,7 @@ async function checkAdminAuth(request: NextRequest) {
       // Check if user has admin role
       await connectDB()
       const user = await User.findById(session.user.id).select('role')
-      if (user?.role === 'ADMIN') {
+      if (user?.role === 'admin') {
         return { isAdmin: true, userId: session.user.id }
       }
     }

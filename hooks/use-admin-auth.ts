@@ -26,7 +26,7 @@ export function useAdminAuth() {
           const response = await fetch('/api/users/me')
           if (response.ok) {
             const user = await response.json()
-            if (user.role === 'ADMIN') {
+            if (user.role === 'admin') {
               setIsAdmin(true)
             } else {
               setIsAdmin(false)

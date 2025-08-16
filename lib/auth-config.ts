@@ -54,7 +54,7 @@ const authOptions = {
             name: profile.name,
             email: profile.email,
             image: profile.picture?.data?.url,
-            role: 'USER'
+            role: 'student'
           }
         }
       })
@@ -88,7 +88,7 @@ const authOptions = {
             id: user._id.toString(),
             email: user.email,
             name: user.name,
-            role: user.role || 'USER'
+            role: user.role || 'student'
           }
         } catch (error) {
           console.error('Auth error:', error)
@@ -105,7 +105,7 @@ const authOptions = {
   callbacks: {
     async jwt({ token, user, account }: { token: any; user: any; account: any }) {
       if (user) {
-        token.role = user.role || 'USER'
+        token.role = user.role || 'student'
         token.id = user.id
         if (account?.provider) {
           token.oauthProvider = account.provider
@@ -148,7 +148,7 @@ const authOptions = {
             const newUser = new User({
               name: user.name || `Facebook User ${account.providerAccountId}`,
               email: user.email || `fb_${account.providerAccountId}@facebook.com`,
-              role: 'USER',
+              role: 'student',
               oauthProvider: account.provider,
               oauthId: account.providerAccountId,
               // Set a default password for OAuth users (they won't use it)

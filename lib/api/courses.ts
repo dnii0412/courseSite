@@ -30,19 +30,28 @@ export async function getCourseById(id: string) {
   }
 }
 
-export async function getCourseWithLessons(id: string) {
+export async function getCourseWithSubcourses(id: string) {
   try {
     await connectDB()
     const course = await Course.findById(id)
-      .populate('lessons', 'title duration videoStatus order')
+      .populate({
+        path: 'subcourses',
+        populate: {
+          path: 'lessons',
+          select: 'title duration videoStatus order'
+        }
+      })
       .lean()
     
     return JSON.parse(JSON.stringify(course))
   } catch (error) {
-    console.error('Get course with lessons error:', error)
+    console.error('Get course with subcourses error:', error)
     return null
   }
 }
+
+// Alias for backward compatibility
+export const getCourseWithLessons = getCourseWithSubcourses
 
 // Alias for backward compatibility
 export const getCourse = getCourseById

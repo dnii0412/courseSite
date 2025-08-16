@@ -28,11 +28,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user has admin role
-    if (user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      )
+    if (user.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
     // Handle OAuth users (no password verification needed)

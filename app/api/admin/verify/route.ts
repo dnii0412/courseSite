@@ -38,11 +38,8 @@ export async function GET(request: NextRequest) {
     await connectDB()
     const user = await User.findById(decoded.userId).select('role email name')
 
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'User no longer has admin access' },
-        { status: 403 }
-      )
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
     return NextResponse.json({

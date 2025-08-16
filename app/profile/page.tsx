@@ -268,7 +268,7 @@ export default function ProfilePage() {
                 <CardDescription>{profile?.email || session.user.email}</CardDescription>
                 {profile?.role && (
                   <Badge variant="secondary" className="mt-2">
-                    {profile.role === 'ADMIN' ? 'Админ' : 'Хэрэглэгч'}
+                    {profile.role === 'admin' ? 'Админ' : profile.role === 'instructor' ? 'Багш' : 'Сурагч'}
                   </Badge>
                 )}
               </CardHeader>

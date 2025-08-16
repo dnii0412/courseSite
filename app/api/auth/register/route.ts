@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       email,
       phone,
       password: hashedPassword,
-      role: 'USER',
+      role: 'student',
       createdAt: new Date(),
       updatedAt: new Date()
     })
