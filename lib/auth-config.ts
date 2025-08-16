@@ -184,20 +184,32 @@ const authOptions = {
       return true
     },
     async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+      console.log('NextAuth redirect callback - URL:', url, 'BaseURL:', baseUrl)
+      
       // Handle OAuth redirects from register page
       if (url.includes('from=register') || url.includes('onboarding')) {
+        console.log('Redirecting to onboarding')
         return `${baseUrl}/onboarding?from=register`
+      }
+
+      // Handle admin login redirects - prevent redirect to /auth/login
+      if (url.includes('admin') || url.includes('admin/login')) {
+        console.log('Admin redirect detected, going to admin panel')
+        return `${baseUrl}/admin`
       }
 
       // Handle returnUrl for login flows
       if (url.startsWith('/') && !url.startsWith('/api')) {
+        console.log('Handling returnUrl redirect')
         return `${baseUrl}${url}`
       }
 
       // Default redirect to courses for successful auth
       if (url.startsWith(baseUrl)) {
+        console.log('Staying on same base URL')
         return url
       } else {
+        console.log('Default redirect to courses')
         return `${baseUrl}/courses`
       }
     }

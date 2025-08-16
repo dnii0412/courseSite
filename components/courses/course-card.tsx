@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Image from 'next/image'
 import Link from 'next/link'
-import { CreditCard } from 'lucide-react'
+import { CreditCard, Play, CheckCircle } from 'lucide-react'
 
 interface CourseCardProps {
   course: {
@@ -31,6 +31,36 @@ export function CourseCard({ course }: CourseCardProps) {
 
   const { data: session } = useSession()
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isEnrolled, setIsEnrolled] = useState(false)
+  const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(true)
+
+  // Check enrollment status when component mounts or session changes
+  useEffect(() => {
+    const checkEnrollment = async () => {
+      if (!session?.user) {
+        setIsEnrolled(false)
+        setIsCheckingEnrollment(false)
+        return
+      }
+
+      try {
+        const response = await fetch(`/api/enrollments/check/${course._id}`)
+        if (response.ok) {
+          const data = await response.json()
+          setIsEnrolled(data.enrolled)
+        } else {
+          setIsEnrolled(false)
+        }
+      } catch (error) {
+        console.error('Error checking enrollment:', error)
+        setIsEnrolled(false)
+      } finally {
+        setIsCheckingEnrollment(false)
+      }
+    }
+
+    checkEnrollment()
+  }, [session, course._id])
 
   const handlePayment = async () => {
     if (!session?.user) {
@@ -133,8 +163,11 @@ export function CourseCard({ course }: CourseCardProps) {
 
           <div className="flex items-center justify-between">
             <span className="text-lg font-bold text-green-600">₮{course.price?.toLocaleString() || 0}</span>
-            {course.isEnrolled && (
-              <span className="text-sm text-blue-600 font-medium">Бүртгэгдсэн</span>
+            {isEnrolled && (
+              <span className="text-sm text-blue-600 font-medium flex items-center gap-1">
+                <CheckCircle className="w-4 h-4" />
+                Бүртгэгдсэн
+              </span>
             )}
           </div>
         </div>
@@ -142,8 +175,35 @@ export function CourseCard({ course }: CourseCardProps) {
 
       <CardFooter className="p-4 pt-0">
         <div className="flex gap-2 w-full">
-          {session?.user ? (
-            // Show Pay Now button for registered users
+          {!session?.user ? (
+            // Show Register button for non-registered users
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={handleEnroll}
+              disabled={isProcessing}
+            >
+              {isProcessing ? 'Бүртгэж байна...' : 'Бүртгүүлэх'}
+            </Button>
+          ) : isCheckingEnrollment ? (
+            // Show loading state while checking enrollment
+            <Button variant="outline" className="flex-1" disabled>
+              Шалгаж байна...
+            </Button>
+          ) : isEnrolled ? (
+            // Show Continue Learning button for enrolled users
+            <Button
+              variant="default"
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              asChild
+            >
+              <Link href={`/learn/${course._id}`}>
+                <Play className="w-4 h-4 mr-2" />
+                Сургалтаа үргэлжлүүлэх
+              </Link>
+            </Button>
+          ) : (
+            // Show Pay Now button for non-enrolled users
             <Button
               variant="default"
               className="flex-1 bg-green-600 hover:bg-green-700"
@@ -158,16 +218,6 @@ export function CourseCard({ course }: CourseCardProps) {
                   Төлбөр төлөх
                 </>
               )}
-            </Button>
-          ) : (
-            // Show Register button for non-registered users
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={handleEnroll}
-              disabled={isProcessing}
-            >
-              {isProcessing ? 'Бүртгэж байна...' : 'Бүртгүүлэх'}
             </Button>
           )}
           <Button asChild variant="outline" className="flex-1">

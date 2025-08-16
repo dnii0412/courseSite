@@ -1,7 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth-config'
 import { connectDB } from '@/lib/mongodb'
 import { Lesson } from '@/lib/models/lesson'
-import { verifyToken } from '@/lib/auth'
+import { User } from '@/lib/models/user'
+import { verify } from 'jsonwebtoken'
+
+// Helper function to check admin authentication
+async function checkAdminAuth(request: NextRequest) {
+  try {
+    // First check NextAuth session
+    const session = await getServerSession(authOptions)
+    if (session?.user) {
+      const user = await User.findById(session.user.id).select('role')
+      if (user?.role === 'ADMIN') {
+        return { isAdmin: true, userId: session.user.id }
+      }
+    }
+    
+    // Check custom admin session if NextAuth failed
+    const adminSession = request.cookies.get('admin-session')?.value
+    if (adminSession) {
+      try {
+        const decoded = verify(adminSession, process.env.NEXTAUTH_SECRET || 'fallback-secret') as any
+        if (decoded?.isAdmin) {
+          return { isAdmin: true, userId: decoded.userId }
+        }
+      } catch (error) {
+        console.error('Error verifying admin session:', error)
+      }
+    }
+    
+    return { isAdmin: false, userId: null }
+  } catch (error) {
+    console.error('Error checking admin auth:', error)
+    return { isAdmin: false, userId: null }
+  }
+}
 
 export async function PUT(
   request: NextRequest,
@@ -10,16 +45,10 @@ export async function PUT(
   try {
     await connectDB()
     
-    const user = await verifyToken(request)
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Нэвтрэх шаардлагатай' },
-        { status: 401 }
-      )
-    }
-
-    // Only admins can update lessons
-    if (user.role !== 'ADMIN') {
+    // Check admin authentication
+    const { isAdmin } = await checkAdminAuth(request)
+    
+    if (!isAdmin) {
       return NextResponse.json(
         { error: 'Зөвхөн админ хэрэглэгч хичээл засах боломжтой' },
         { status: 403 }
@@ -74,16 +103,10 @@ export async function DELETE(
   try {
     await connectDB()
     
-    const user = await verifyToken(request)
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Нэвтрэх шаардлагатай' },
-        { status: 401 }
-      )
-    }
-
-    // Only admins can delete lessons
-    if (user.role !== 'ADMIN') {
+    // Check admin authentication
+    const { isAdmin } = await checkAdminAuth(request)
+    
+    if (!isAdmin) {
       return NextResponse.json(
         { error: 'Зөвхөн админ хэрэглэгч хичээл устгах боломжтой' },
         { status: 403 }

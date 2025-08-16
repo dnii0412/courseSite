@@ -15,6 +15,10 @@ interface Lesson {
   description: string
   duration: number
   preview?: boolean
+  videoUrl?: string
+  videoId?: string
+  videoStatus?: string
+  videoFile?: string
 }
 
 export function CourseLessons({ course, onChanged, variant = 'default' }: { course: any, onChanged: () => void, variant?: 'default' | 'compact' }) {
@@ -39,29 +43,10 @@ export function CourseLessons({ course, onChanged, variant = 'default' }: { cour
     load()
   }, [course?._id])
 
-  const handleAdd = async () => {
-    if (!course?._id || !title || !duration) return
-    const res = await fetch(`/api/lessons`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, duration: Number(duration), courseId: course._id })
-    })
-    if (res.ok) {
-      setTitle('')
-      setDuration('')
-      onChanged()
-      // reload lessons
-      const r = await fetch(`/api/courses/${course._id}`)
-      if (r.ok) {
-        const data = await r.json()
-        const c = data.course || data
-        setLessons(c.lessons || [])
-      }
-    }
-  }
+
 
   const handleUpload = async (file: File) => {
-    if (!file) return
+    if (!file || !course?._id || !title || !duration) return
 
     try {
       setUploading(true)
@@ -73,18 +58,78 @@ export function CourseLessons({ course, onChanged, variant = 'default' }: { cour
         return
       }
 
+      // Step 1: Create the lesson first
+      console.log('Creating lesson with video...')
+      const lessonRes = await fetch(`/api/lessons`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          title, 
+          duration: Number(duration), 
+          courseId: course._id,
+          videoFile: file.name // Store the filename for reference
+        })
+      })
+
+      if (!lessonRes.ok) {
+        throw new Error('Failed to create lesson')
+      }
+
+      const lessonData = await lessonRes.json()
+      const lessonId = lessonData.lesson?._id || lessonData._id
+
+      console.log('Lesson created:', lessonId)
+
+      // Step 2: Upload video and get URL
       const videoId = await startBunnyUpload(file, file.name, {
         onProgress: setUploadProgress,
-        onSuccess: (id) => {
-          console.log('Immediate success for video:', id)
-          setUploading(false)
-          setUploadProgress(0)
+        onSuccess: async (id) => {
+          console.log('Video upload success, getting final URL...')
           
-          // Show immediate success message (like old implementation)
-          alert('Видео амжилттай байршуулагдлаа! Одоо 1-2 минутын дараа харах боломжтой.')
-          
-          // Refresh lessons
-          if (onChanged) onChanged()
+          try {
+            // Step 3: Get the final video URL from Bunny.net
+            const videoUrl = `https://iframe.mediadelivery.net/embed/480986/${id}`
+            
+            // Step 4: Update the lesson with the video URL
+            const updateRes = await fetch(`/api/lessons/${lessonId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                videoUrl: videoUrl,
+                videoId: id,
+                videoStatus: 'uploaded'
+              })
+            })
+
+            if (updateRes.ok) {
+              console.log('Lesson updated with video URL:', videoUrl)
+              setUploading(false)
+              setUploadProgress(0)
+              setTitle('')
+              setDuration('')
+              setSelectedFile(null)
+              
+              // Show success message
+              alert('Видео амжилттай байршуулагдлаа! Одоо харах боломжтой.')
+              
+              // Refresh lessons
+              if (onChanged) onChanged()
+              
+              // Also reload lessons locally
+              const r = await fetch(`/api/courses/${course._id}`)
+              if (r.ok) {
+                const data = await r.json()
+                const c = data.course || data
+                setLessons(c.lessons || [])
+              }
+            } else {
+              console.error('Failed to update lesson with video URL')
+              alert('Видео байршуулагдлаа, гэхдээ холбох үед алдаа гарлаа. Админтай холбогдоно уу.')
+            }
+          } catch (error) {
+            console.error('Error updating lesson with video URL:', error)
+            alert('Видео байршуулагдлаа, гэхдээ холбох үед алдаа гарлаа. Админтай холбогдоно уу.')
+          }
         },
         onError: (error) => {
           console.error('Bunny upload failed:', error)
@@ -99,6 +144,8 @@ export function CourseLessons({ course, onChanged, variant = 'default' }: { cour
           }
         }
       })
+
+      return videoId
     } catch (error) {
       console.error('Upload error:', error)
       setUploading(false)
@@ -127,6 +174,20 @@ export function CourseLessons({ course, onChanged, variant = 'default' }: { cour
                   <h4 className="font-medium text-black">{l.title}</h4>
                   <p className="text-sm text-gray-600">{l.description}</p>
                   <div className="text-xs text-gray-500">{l.duration} минут</div>
+                  {l.videoUrl && (
+                    <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                      <span>✅</span>
+                      <a href={l.videoUrl} target="_blank" rel="noopener noreferrer" className="underline">
+                        Видео харах
+                      </a>
+                    </div>
+                  )}
+                  {l.videoFile && !l.videoUrl && (
+                    <div className="text-xs text-yellow-600 flex items-center gap-1 mt-1">
+                      <span>⏳</span>
+                      Видео байршуулж байна...
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -200,7 +261,7 @@ export function CourseLessons({ course, onChanged, variant = 'default' }: { cour
                 onClick={() => selectedFile && handleUpload(selectedFile)}
                 disabled={uploading || !selectedFile || !title || !duration}
               >
-                {uploading ? 'Байршуулж байна...' : 'Видео байршуулах'}
+                {uploading ? 'Хичээл үүсгэж байна...' : 'Хичээл + Видео үүсгэх'}
               </Button>
             </div>
           </div>

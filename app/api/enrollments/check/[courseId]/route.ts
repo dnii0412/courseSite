@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth-config'
 import { connectDB } from '@/lib/mongodb'
 import { User } from '@/lib/models/user'
+import { verify } from 'jsonwebtoken'
 import { verifyToken } from '@/lib/auth'
 
 export async function GET(
@@ -10,8 +13,31 @@ export async function GET(
   try {
     await connectDB()
     
-    const user = await verifyToken(request)
-    if (!user) {
+    // Check authentication - try NextAuth first, then custom admin session
+    let userId: string | null = null
+    
+    // Try NextAuth session
+    const session = await getServerSession(authOptions)
+    if (session?.user?.id) {
+      userId = session.user.id
+    }
+    
+    // If no NextAuth session, try custom admin session
+    if (!userId) {
+      const adminSession = request.cookies.get('admin-session')?.value
+      if (adminSession) {
+        try {
+          const decoded = verify(adminSession, process.env.NEXTAUTH_SECRET || 'fallback-secret') as any
+          if (decoded?.isAdmin) {
+            userId = decoded.userId
+          }
+        } catch (error) {
+          console.error('Error verifying admin session:', error)
+        }
+      }
+    }
+    
+    if (!userId) {
       return NextResponse.json(
         { error: 'Нэвтрэх шаардлагатай' },
         { status: 401 }
@@ -21,8 +47,8 @@ export async function GET(
     const { courseId } = params
 
     // Single source of truth: user's enrolledCourses array
-    const userDoc = (await User.findById(user.userId).select('enrolledCourses').lean()) as any
-    console.log(`🔍 Checking enrollment for user ${user.userId} in course ${courseId}`)
+    const userDoc = (await User.findById(userId).select('enrolledCourses').lean()) as any
+    console.log(`🔍 Checking enrollment for user ${userId} in course ${courseId}`)
     console.log(`👤 User document:`, userDoc)
     console.log(`📚 User's enrolledCourses:`, userDoc?.enrolledCourses)
     

@@ -2,13 +2,19 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { BookOpen, Play, Award, User } from 'lucide-react'
 
 export default function DashboardPage() {
     const { data: session, status } = useSession()
     const router = useRouter()
+    const [dashboardData, setDashboardData] = useState({
+        enrolledCourses: 0,
+        completedLessons: 0,
+        progress: 0
+    })
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
         if (status === 'loading') return
@@ -17,9 +23,47 @@ export default function DashboardPage() {
             router.push('/auth/login')
             return
         }
+
+        fetchDashboardData()
     }, [session, status, router])
 
-    if (status === 'loading') {
+    const fetchDashboardData = async () => {
+        try {
+            setIsLoading(true)
+            
+            // Fetch enrolled courses
+            console.log('🔍 Fetching dashboard data...')
+            const coursesRes = await fetch('/api/users/enrollments')
+            console.log('📚 Courses response status:', coursesRes.status)
+            
+            if (coursesRes.ok) {
+                const coursesData = await coursesRes.json()
+                console.log('📚 Courses data:', coursesData)
+                console.log('📚 Courses count:', coursesData.length)
+                
+                setDashboardData(prev => ({
+                    ...prev,
+                    enrolledCourses: coursesData.length
+                }))
+            } else {
+                console.log('❌ Courses fetch failed:', coursesRes.status)
+            }
+
+            // Fetch user profile for additional data
+            const profileRes = await fetch(`/api/users/${session?.user?.id}`)
+            if (profileRes.ok) {
+                const profileData = await profileRes.json()
+                console.log('👤 Profile data:', profileData)
+                // You can add more dashboard data here if needed
+            }
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    if (status === 'loading' || isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-white">
                 <div className="text-center">
@@ -51,7 +95,7 @@ export default function DashboardPage() {
                             </div>
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-900">Миний сургалтууд</h3>
-                                <p className="text-2xl font-bold text-blue-600">0</p>
+                                <p className="text-2xl font-bold text-blue-600">{dashboardData.enrolledCourses}</p>
                             </div>
                         </div>
                     </div>
@@ -63,7 +107,7 @@ export default function DashboardPage() {
                             </div>
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-900">Дууссан хичээлүүд</h3>
-                                <p className="text-2xl font-bold text-green-600">0</p>
+                                <p className="text-2xl font-bold text-green-600">{dashboardData.completedLessons}</p>
                             </div>
                         </div>
                     </div>
@@ -75,7 +119,7 @@ export default function DashboardPage() {
                             </div>
                             <div>
                                 <h3 className="text-lg font-semibold text-gray-900">Гүйцэтгэл</h3>
-                                <p className="text-2xl font-bold text-purple-600">0%</p>
+                                <p className="text-2xl font-bold text-purple-600">{dashboardData.progress}%</p>
                             </div>
                         </div>
                     </div>

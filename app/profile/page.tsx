@@ -114,11 +114,32 @@ export default function ProfilePage() {
         })
       }
 
-      // Fetch enrolled courses
-      const coursesRes = await fetch('/api/users/enrollments')
-      if (coursesRes.ok) {
-        const coursesData = await coursesRes.json()
-        setCourses(coursesData)
+      // Fetch enrolled courses using the user's enrolledCourses array
+      const userRes = await fetch(`/api/users/${session?.user?.id}`)
+      if (userRes.ok) {
+        const userData = await userRes.json()
+        if (userData.enrolledCourses && userData.enrolledCourses.length > 0) {
+          // Get course details for each enrolled course
+          const enrolledCourses = []
+          for (const courseId of userData.enrolledCourses) {
+            try {
+              const courseRes = await fetch(`/api/courses/${courseId}`)
+              if (courseRes.ok) {
+                const courseResponse = await courseRes.json()
+                if (courseResponse.success && courseResponse.data) {
+                  enrolledCourses.push({
+                    ...courseResponse.data,
+                    enrolledAt: new Date().toISOString(), // We don't have this info, so use current date
+                    progress: 0 // We don't have progress info yet
+                  })
+                }
+              }
+            } catch (error) {
+              console.error(`Error fetching course ${courseId}:`, error)
+            }
+          }
+          setCourses(enrolledCourses)
+        }
       }
 
       // Fetch payment history

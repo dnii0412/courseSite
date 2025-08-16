@@ -40,19 +40,32 @@ export async function POST(req: Request) {
     // 2) Generate presigned headers for TUS
     const expiresInSeconds = 60 * 10 // valid for 10 minutes
     const expireUnix = Math.floor(Date.now() / 1000) + expiresInSeconds
+    
+    // Generate signature according to Bunny.net documentation
+    // Format: libraryId + apiKey + expireUnix + videoId
     const signaturePayload = `${libraryId}${apiKey}${expireUnix}${videoId}`
     const authorizationSignature = crypto.createHash("sha256").update(signaturePayload).digest("hex")
+    
+    console.log('Signature debug:', {
+      payload: signaturePayload,
+      signature: authorizationSignature,
+      libraryId,
+      videoId,
+      expireUnix
+    })
 
     const uploadConfig = {
-      endpoint: `https://video.bunnycdn.com/tusupload/${videoId}`,
+      // Use direct upload instead of TUS for now
+      endpoint: `https://video.bunnycdn.com/library/${libraryId}/videos/${videoId}`,
       headers: {
-        AuthorizationSignature: authorizationSignature,
-        AuthorizationExpire: expireUnix,
-        LibraryId: Number(libraryId),
-        VideoId: videoId,
+        AccessKey: apiKey,
+        'Content-Type': 'application/octet-stream',
       },
       video: { id: videoId, title, collectionId, thumbnailTime },
+      uploadMethod: 'direct' // Indicate this is a direct upload
     }
+    
+    console.log('Final upload config:', uploadConfig)
 
     console.log('Generated TUS config:', {
       endpoint: uploadConfig.endpoint,

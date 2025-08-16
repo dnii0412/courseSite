@@ -35,7 +35,7 @@ export function CourseDetails({ course }: CourseDetailsProps) {
   const [isEnrolled, setIsEnrolled] = useState(false)
   const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(true)
 
-  useEffect(() => {
+    useEffect(() => {
     const checkEnrollment = async () => {
       if (!session?.user) {
         setIsCheckingEnrollment(false)
@@ -43,13 +43,16 @@ export function CourseDetails({ course }: CourseDetailsProps) {
       }
 
       try {
-        const response = await fetch('/api/users/enrollments')
+        // Use the direct enrollment check API
+        const response = await fetch(`/api/enrollments/check/${course._id}`)
+        console.log('Enrollment check response:', response.status, response.ok)
+        
         if (response.ok) {
-          const enrollments = await response.json()
-          const isEnrolledInCourse = enrollments.some(
-            (enrollment: any) => enrollment.courseId === course._id
-          )
-          setIsEnrolled(isEnrolledInCourse)
+          const data = await response.json()
+          console.log('Enrollment check data:', data)
+          setIsEnrolled(data.enrolled || false)
+        } else {
+          console.log('Enrollment check failed:', response.status)
         }
       } catch (error) {
         console.error('Error checking enrollment:', error)
@@ -135,20 +138,25 @@ export function CourseDetails({ course }: CourseDetailsProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {course.lessons.map((lesson, index) => (
-                    <div key={lesson._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium text-sm">
-                          {index + 1}
+                  {course.lessons.map((lesson, index) => {
+                    // Ensure we have a unique key
+                    const lessonKey = lesson._id || `lesson-${index}`
+                    
+                    return (
+                      <div key={lessonKey} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-medium text-sm">
+                            {index + 1}
+                          </div>
+                          <span className="font-medium">{lesson.title}</span>
                         </div>
-                        <span className="font-medium">{lesson.title}</span>
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Clock className="w-4 h-4" />
+                          <span>{lesson.duration} мин</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Clock className="w-4 h-4" />
-                        <span>{lesson.duration} мин</span>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </CardContent>
             </Card>

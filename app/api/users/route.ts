@@ -4,9 +4,36 @@ import { User } from '@/lib/models/user'
 import '@/lib/models/course'
 import bcrypt from 'bcryptjs'
 import mongoose from 'mongoose'
+import { verify } from 'jsonwebtoken'
 
-export async function GET(_request: NextRequest) {
+// Helper function to check admin authentication
+async function checkAdminAuth(request: NextRequest) {
   try {
+    // Check custom admin session
+    const adminSession = request.cookies.get('admin-session')?.value
+    if (adminSession) {
+      const decoded = verify(adminSession, process.env.NEXTAUTH_SECRET || 'fallback-secret') as any
+      if (decoded?.isAdmin) {
+        return { isAdmin: true, userId: decoded.userId }
+      }
+    }
+
+    return { isAdmin: false, userId: null }
+  } catch (error) {
+    console.error('Error checking admin auth:', error)
+    return { isAdmin: false, userId: null }
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    // Check admin authentication
+    const { isAdmin } = await checkAdminAuth(request)
+
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
+
     await connectDB()
     
     // Check if the User collection exists, if not return empty array
@@ -42,6 +69,13 @@ export async function GET(_request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check admin authentication
+    const { isAdmin } = await checkAdminAuth(request)
+
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
+
     await connectDB()
     const { name, email, password } = await request.json()
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { useAdminAuth } from '@/hooks/use-admin-auth'
+import { useSession } from 'next-auth/react'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { Menu } from 'lucide-react'
 
@@ -11,18 +11,51 @@ export default function AdminSectionLayout({ children }: { children: React.React
 	const [mobileOpen, setMobileOpen] = useState(false)
     const pathname = usePathname()
     const isLogin = pathname === '/admin/login'
-    const { isAdmin, isLoading } = useAdminAuth()
+    const [isAdmin, setIsAdmin] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
     const router = useRouter()
 
-    // Redirect non-admin users
+    // Check custom admin session
     useEffect(() => {
-        if (isLoading) return // Still loading
-        
-        if (!isAdmin && !isLogin) {
-            // Not admin, redirect to login
-            router.push('/admin/login')
+        const checkAdminSession = async () => {
+            try {
+                console.log('Checking admin session...')
+                
+                // Since the cookie is httpOnly, we can't check it client-side
+                // We need to call the verification API directly
+                const response = await fetch('/api/admin/verify', {
+                    method: 'GET',
+                    credentials: 'include'
+                })
+                
+                console.log('Admin session verification response:', response.status)
+                
+                if (response.ok) {
+                    console.log('Admin session verified successfully')
+                    setIsAdmin(true)
+                } else {
+                    console.log('Admin session verification failed')
+                    setIsAdmin(false)
+                    if (!isLogin) {
+                        router.push('/admin/login')
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking admin session:', error)
+                setIsAdmin(false)
+                if (!isLogin) {
+                    router.push('/admin/login')
+                }
+            } finally {
+                setIsLoading(false)
+            }
         }
-    }, [isAdmin, isLoading, isLogin, router])
+
+        // Add a small delay to ensure cookies are properly set
+        const timeoutId = setTimeout(checkAdminSession, 100)
+        
+        return () => clearTimeout(timeoutId)
+    }, [isLogin, router])
 
     // Show loading while checking authentication
     if (isLoading) {

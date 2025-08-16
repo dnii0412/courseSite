@@ -16,29 +16,47 @@ export async function GET(request: NextRequest) {
 
     await connectDB()
     
-    // Get user enrollments
-    const enrollments = await Enrollment.find({ userId: session.user.id })
-      .populate('courseId')
-      .sort({ createdAt: -1 })
+    // Get user's enrolled courses directly from User model
+    const user = await User.findById(session.user.id).select('enrolledCourses').lean() as any
+    console.log('🔍 User data:', user)
+    
+    if (!user) {
+      console.log('❌ User not found')
+      return NextResponse.json([])
+    }
+    
+    if (!user.enrolledCourses || !Array.isArray(user.enrolledCourses) || user.enrolledCourses.length === 0) {
+      console.log('❌ No enrolled courses found')
+      return NextResponse.json([])
+    }
+    
+    console.log('✅ Found enrolled courses:', user.enrolledCourses)
 
-    // Transform the data to match the expected format
-    const courses = enrollments.map(enrollment => {
-      const course = enrollment.courseId as any
-      return {
-        _id: course._id,
-        title: course.title,
-        description: course.description,
-        price: course.price,
-        image: course.image,
-        category: course.category,
-        level: course.level,
-        duration: course.duration,
-        lessons: course.lessons || 0,
-        rating: course.rating || 0,
-        enrolledAt: enrollment.createdAt,
-        progress: enrollment.progress || 0
+    // Get course details for each enrolled course
+    const courses = []
+    for (const courseId of user.enrolledCourses) {
+      try {
+        const course = await Course.findById(courseId).lean() as any
+        if (course) {
+          courses.push({
+            _id: course._id,
+            title: course.title,
+            description: course.description,
+            price: course.price,
+            image: course.image,
+            category: course.category,
+            level: course.level,
+            duration: course.duration,
+            lessons: course.lessons?.length || 0,
+            rating: course.rating || 0,
+            enrolledAt: new Date(), // We don't have this info, so use current date
+            progress: 0 // We don't have progress info yet
+          })
+        }
+      } catch (error) {
+        console.error(`Error fetching course ${courseId}:`, error)
       }
-    })
+    }
 
     return NextResponse.json(courses)
   } catch (error) {

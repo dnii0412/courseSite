@@ -34,12 +34,19 @@ export function CourseOverview({ course }: CourseOverviewProps) {
   const { data: session } = useSession()
   const [currentLesson, setCurrentLesson] = useState<string | null>(null)
 
+  // Debug logging
+  console.log('CourseOverview render:', { 
+    courseId: course._id, 
+    lessonsCount: course.lessons?.length,
+    lessons: course.lessons?.map(l => ({ id: l._id, title: l.title })),
+    currentLesson,
+    completedLessons: course.completedLessons,
+    totalDuration: course.totalDuration
+  })
+
   useEffect(() => {
-    // Find the first incomplete lesson or set to first lesson
-    const firstIncompleteLesson = course.lessons.find(lesson => !lesson.isCompleted)
-    if (firstIncompleteLesson) {
-      setCurrentLesson(firstIncompleteLesson._id)
-    } else if (course.lessons.length > 0) {
+    // Always set to first lesson if available, regardless of completion status
+    if (course.lessons && course.lessons.length > 0) {
       setCurrentLesson(course.lessons[0]._id)
     }
   }, [course.lessons])
@@ -99,7 +106,7 @@ export function CourseOverview({ course }: CourseOverviewProps) {
           </CardContent>
         </Card>
 
-        {/* Continue Learning Button */}
+        {/* Start/Continue Learning Button */}
         {currentLesson && (
           <Button
             onClick={handleContinueLearning}
@@ -107,7 +114,7 @@ export function CourseOverview({ course }: CourseOverviewProps) {
             size="lg"
           >
             <Play className="w-4 h-4 mr-2" />
-            Сургалтаа үргэлжлүүлэх
+            {course.completedLessons > 0 ? 'Сургалтаа үргэлжлүүлэх' : 'Сургалт эхлэх'}
           </Button>
         )}
       </div>
@@ -119,14 +126,17 @@ export function CourseOverview({ course }: CourseOverviewProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {course.lessons.map((lesson, index) => {
+            {course.lessons && Array.isArray(course.lessons) ? course.lessons.map((lesson, index) => {
               const isCurrentLesson = lesson._id === currentLesson
               const isCompleted = lesson.isCompleted
               const isLocked = lesson.isLocked
 
+              // Ensure we have a unique key
+              const lessonKey = lesson._id || `lesson-${index}`
+
               return (
                 <div
-                  key={lesson._id}
+                  key={lessonKey}
                   className={`p-4 rounded-lg border cursor-pointer transition-colors ${isCurrentLesson ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
                   onClick={() => !isLocked && handleLessonClick(lesson._id)}
                 >
@@ -158,7 +168,11 @@ export function CourseOverview({ course }: CourseOverviewProps) {
                   </div>
                 </div>
               )
-            })}
+            }) : (
+              <div className="text-center py-4 text-gray-500">
+                Хичээл олдсонгүй
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

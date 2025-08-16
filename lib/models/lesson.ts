@@ -8,11 +8,25 @@ const lessonSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true
+    required: false,
+    default: ''
   },
   videoUrl: {
     type: String,
-    required: true
+    required: false
+  },
+  videoId: {
+    type: String,
+    required: false
+  },
+  videoStatus: {
+    type: String,
+    enum: ['pending', 'uploading', 'uploaded', 'failed'],
+    default: 'pending'
+  },
+  videoFile: {
+    type: String,
+    required: false
   },
   duration: {
     type: Number,
@@ -20,7 +34,8 @@ const lessonSchema = new mongoose.Schema({
   },
   order: {
     type: Number,
-    required: true
+    required: false,
+    default: 0
   },
   course: {
     type: mongoose.Schema.Types.ObjectId,

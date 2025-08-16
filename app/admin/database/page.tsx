@@ -1,5 +1,5 @@
 "use client"
-import { AdminSidebar } from '@/components/admin/admin-sidebar'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -170,250 +170,237 @@ export default function AdminDatabasePage() {
   }, [])
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        <AdminSidebar />
+      <div className="p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Өгөгдлийн сан удирдлага
+          </h1>
+          <p className="text-gray-600">
+            MongoDB өгөгдлийн сангийн төлөв, нөөц, аюулгүй байдлын удирдлага
+          </p>
+        </div>
 
-        <div className="flex-1 p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Өгөгдлийн сан удирдлага
-            </h1>
-            <p className="text-gray-600">
-              MongoDB өгөгдлийн сангийн төлөв, нөөц, аюулгүй байдлын удирдлага
-            </p>
-          </div>
-
-          <div className="grid gap-6">
-            {/* Database Overview */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    MongoDB Collections
-                  </CardTitle>
-                  <Database className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm text-muted-foreground">
-                    {live?.mongo?.stats?.db || '—'} • {live?.mongo?.collections?.length ?? 0} collections
-                    {live?.lastUpdated && <span className="ml-2">• {new Date(live.lastUpdated).toLocaleTimeString()}</span>}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Bunny Videos
-                  </CardTitle>
-                  <Server className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{live?.bunny?.videosCount ?? 0}</div>
-                  <p className="text-xs text-muted-foreground">Library: {live?.bunny?.libraryId || '—'}</p>
-                  {live?.bunny?.totalSizeBytes != null && (
-                    <p className="text-xs text-muted-foreground">Total size: {live.bunny.totalSizeBytes} bytes</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Mongo Stats
-                  </CardTitle>
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xs text-muted-foreground break-words">
-                    {live?.mongo?.stats ? JSON.stringify(live.mongo.stats) : '—'}
-                  </div>
-                  {live?.mongo?.connections && (
-                    <div className="text-xs text-muted-foreground mt-2">Connections: {JSON.stringify(live.mongo.connections)}</div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Webhook / Errors
-                  </CardTitle>
-                  <Shield className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-muted-foreground break-words">
-                    {live?.mongo?.error || live?.bunny?.error || 'OK'}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Storage Usage */}
+        <div className="grid gap-6">
+          {/* Database Overview */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Хадгалах нөөц</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  MongoDB Collections
+                </CardTitle>
+                <Database className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span>Ашигласан нөөц</span>
-                      <span>{databaseStats.usagePercentage}%</span>
-                    </div>
-                    <Progress value={databaseStats.usagePercentage} className="h-2" />
-                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                      <span>{databaseStats.usedSize} ашигласан</span>
-                      <span>{databaseStats.freeSize} үлдсэн</span>
-                    </div>
-                  </div>
+                <div className="text-sm text-muted-foreground">
+                  {live?.mongo?.stats?.db || '—'} • {live?.mongo?.collections?.length ?? 0} collections
+                  {live?.lastUpdated && <span className="ml-2">• {new Date(live.lastUpdated).toLocaleTimeString()}</span>}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Collections (live) */}
             <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Коллекцууд</CardTitle>
-                  <Button variant="outline" size="sm">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Тохиргоо
-                  </Button>
-                </div>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Bunny Videos
+                </CardTitle>
+                <Server className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {(live?.mongo?.collections || []).map((collection: any) => (
-                    <div key={collection.name} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <HardDrive className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <p className="font-medium">{collection.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {collection.count ?? '—'} баримт • {collection.storageSize ?? '—'} bytes
-                          </p>
-                        </div>
-                      </div>
+                <div className="text-2xl font-bold">{live?.bunny?.videosCount ?? 0}</div>
+                <p className="text-xs text-muted-foreground">Library: {live?.bunny?.libraryId || '—'}</p>
+                {live?.bunny?.totalSizeBytes != null && (
+                  <p className="text-xs text-muted-foreground">Total size: {live.bunny.totalSizeBytes} bytes</p>
+                )}
+              </CardContent>
+            </Card>
 
-                      <div className="flex items-center space-x-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Mongo Stats
+                </CardTitle>
+                <Activity className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-xs text-muted-foreground break-words">
+                  {live?.mongo?.stats ? JSON.stringify(live.mongo.stats) : '—'}
+                </div>
+                {live?.mongo?.connections && (
+                  <div className="text-xs text-muted-foreground mt-2">Connections: {JSON.stringify(live.mongo.connections)}</div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Webhook / Errors
+                </CardTitle>
+                <Shield className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground break-words">
+                  {live?.mongo?.error || live?.bunny?.error || 'OK'}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Storage Usage */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Хадгалах нөөц</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>Ашигласан нөөц</span>
+                    <span>{databaseStats.usagePercentage}%</span>
+                  </div>
+                  <Progress value={databaseStats.usagePercentage} className="h-2" />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>{databaseStats.usedSize} ашигласан</span>
+                    <span>{databaseStats.freeSize} үлдсэн</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Collections */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Collections</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {collections.map((collection) => (
+                  <div key={collection.name} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <HardDrive className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">{collection.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {collection.size} • {collection.documents} documents
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">
+                        {collection.lastModified}
+                      </p>
+                      {getStatusBadge(collection.status)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Operations */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Сүүлийн үйл ажиллагаа</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentOperations.map((operation) => (
+                  <div key={operation.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      {getStatusIcon(operation.status)}
+                      <div>
+                        <p className="font-medium">{operation.operation}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {operation.timestamp} • {operation.duration}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      {operation.size && (
                         <div className="text-right">
-                          <p className="text-sm text-muted-foreground">
-                            {collection.lastModified}
-                          </p>
+                          <p className="text-sm font-medium">{operation.size}</p>
                         </div>
-                        {getStatusBadge(collection.status)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recent Operations */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Сүүлийн үйл ажиллагаа</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentOperations.map((operation) => (
-                    <div key={operation.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        {getStatusIcon(operation.status)}
-                        <div>
-                          <p className="font-medium">{operation.operation}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {operation.timestamp} • {operation.duration}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-4">
-                        {operation.size && (
-                          <div className="text-right">
-                            <p className="text-sm font-medium">{operation.size}</p>
-                          </div>
-                        )}
-                        {getStatusBadge(operation.status)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Backup Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Нөөц хувилбар</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Автомат нөөц хувилбар</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Өдөр бүр 02:00 цагт автоматаар нөөц хувилбар үүсгэх
-                      </p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Сүүлийн нөөц хувилбар</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {databaseStats.lastBackup}
-                      </p>
-                    </div>
-                    <div>
-                      <Label>Дараагийн нөөц хувилбар</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {databaseStats.nextBackup}
-                      </p>
+                      )}
+                      {getStatusBadge(operation.status)}
                     </div>
                   </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        window.location.href = '/api/admin/backup/export'
+          {/* Backup Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Нөөц хувилбар</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Автомат нөөц хувилбар</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Өдөр бүр 02:00 цагт автоматаар нөөц хувилбар үүсгэх
+                    </p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Сүүлийн нөөц хувилбар</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {databaseStats.lastBackup}
+                    </p>
+                  </div>
+                  <div>
+                    <Label>Дараагийн нөөц хувилбар</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {databaseStats.nextBackup}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      window.location.href = '/api/admin/backup/export'
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Нөөц хувилбар татах
+                  </Button>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="file"
+                      accept="application/json"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+                        const text = await file.text()
+                        await fetch('/api/admin/backup/import', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: text,
+                        })
+                        alert('Нөөцөөс сэргээв')
                       }}
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Нөөц хувилбар татах
+                    />
+                    <Button asChild variant="outline">
+                      <span className="cursor-pointer">
+                        <Upload className="w-4 h-4 mr-2" />
+                        Нөөц хувилбар сэргээх
+                      </span>
                     </Button>
-                    <label className="inline-flex items-center">
-                      <input
-                        type="file"
-                        accept="application/json"
-                        className="hidden"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0]
-                          if (!file) return
-                          const text = await file.text()
-                          await fetch('/api/admin/backup/import', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: text,
-                          })
-                          alert('Нөөцөөс сэргээв')
-                        }}
-                      />
-                      <Button asChild variant="outline">
-                        <span className="cursor-pointer">
-                          <Upload className="w-4 h-4 mr-2" />
-                          Нөөц хувилбар сэргээх
-                        </span>
-                      </Button>
-                    </label>
-                  </div>
+                  </label>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

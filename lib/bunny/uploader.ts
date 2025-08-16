@@ -27,17 +27,22 @@ export async function startBunnyUpload(
     }
     
     const { upload } = await createRes.json()
-    const { endpoint, headers, video } = upload
+    const { endpoint, headers, video, uploadMethod } = upload
     
-    console.log('Got TUS credentials:', { endpoint, videoId: video.id })
+    console.log('Got upload credentials:', { endpoint, videoId: video.id, uploadMethod })
     
     // Show immediate success (like old implementation)
     console.log('Video created on Bunny.net, showing success immediately')
     handlers.onSuccess?.(video.id)
     
-    // Step 2: Start TUS upload in background
-    console.log('Starting TUS upload in background...')
-    startTusUpload(file, endpoint, headers, handlers)
+    // Step 2: Start upload in background
+    if (uploadMethod === 'direct') {
+      console.log('Starting direct upload in background...')
+      startDirectUpload(file, endpoint, headers, handlers)
+    } else {
+      console.log('Starting TUS upload in background...')
+      startTusUpload(file, endpoint, headers, handlers)
+    }
     
     return video.id
     
@@ -55,17 +60,19 @@ function startTusUpload(
   headers: any, 
   handlers: Handlers
 ) {
+  console.log('TUS upload config:', { endpoint, headers, fileSize: file.size })
+  
   const upload = new tus.Upload(file, {
     endpoint,
     retryDelays: [0, 3000, 5000, 10000, 20000, 60000, 60000],
     headers,
+    removeFingerprintOnSuccess: true,
     metadata: {
       filetype: file.type,
       title: file.name,
     },
     onError: (error) => {
       console.error('TUS upload error:', error)
-      // Don't call onError since we already showed success
       console.log('TUS upload failed, but video was already created on Bunny.net')
     },
     onProgress: (bytesUploaded, bytesTotal) => {
@@ -92,6 +99,46 @@ function startTusUpload(
     console.error('Error starting TUS upload:', error)
     upload.start()
   })
+}
+
+// Direct upload function
+async function startDirectUpload(
+  file: File,
+  uploadUrl: string,
+  headers: any,
+  handlers: Handlers
+) {
+  try {
+    console.log('Starting direct upload to:', uploadUrl)
+    
+    // Simulate progress for better UX
+    let progress = 0
+    const progressInterval = setInterval(() => {
+      progress += Math.random() * 20
+      if (progress >= 90) {
+        progress = 90
+        clearInterval(progressInterval)
+      }
+      handlers.onProgress?.(Math.min(progress, 90))
+    }, 200)
+    
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: headers,
+      body: file
+    })
+    
+    clearInterval(progressInterval)
+    
+    if (response.ok) {
+      console.log('Direct upload completed successfully!')
+      handlers.onProgress?.(100)
+    } else {
+      console.error('Direct upload failed:', response.status, await response.text())
+    }
+  } catch (error) {
+    console.error('Direct upload error:', error)
+  }
 }
 
 // Simple progress simulation for immediate feedback

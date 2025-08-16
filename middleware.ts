@@ -28,6 +28,11 @@ export function middleware(req: NextRequest) {
     }
   }
 
+  // Allow admin login page to be accessed without session
+  if (pathname === '/admin/login') {
+    return NextResponse.next()
+  }
+
   return NextResponse.next()
 }
 

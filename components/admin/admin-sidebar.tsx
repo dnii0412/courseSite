@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from 'react'
-import { useSession, signOut } from 'next-auth/react'
+import { useState, useEffect } from 'react'
+
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
@@ -80,10 +80,42 @@ const sidebarItems: SidebarItem[] = [
 export function AdminSidebar({ collapsed = false, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
-  const { data: session } = useSession()
+  const [adminUser, setAdminUser] = useState<any>(null)
 
-  const handleLogout = () => {
-    signOut({ callbackUrl: '/auth/login' })
+  // Get admin user info
+  useEffect(() => {
+    const getAdminUser = async () => {
+      try {
+        const response = await fetch('/api/admin/verify', {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setAdminUser(data.user)
+        }
+      } catch (error) {
+        console.error('Error getting admin user:', error)
+      }
+    }
+
+    getAdminUser()
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      // Call custom admin logout API
+      await fetch('/api/admin/logout', {
+        method: 'POST',
+        credentials: 'include'
+      })
+      
+      // Redirect to admin login
+      window.location.href = '/admin/login'
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Fallback redirect
+      window.location.href = '/admin/login'
+    }
   }
 
   if (collapsed !== undefined) {
@@ -125,8 +157,8 @@ export function AdminSidebar({ collapsed = false, onNavigate }: { collapsed?: bo
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-full bg-gray-200" />
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium text-black truncate">{session?.user?.name || 'Админ'}</div>
-                <div className="text-xs text-gray-500 truncate">{session?.user?.email || ''}</div>
+                <div className="text-sm font-medium text-black truncate">{adminUser?.name || 'Админ'}</div>
+                <div className="text-xs text-gray-500 truncate">{adminUser?.email || ''}</div>
               </div>
               <button onClick={handleLogout} className="text-xs text-black hover:underline">Гарах</button>
             </div>
@@ -183,10 +215,10 @@ export function AdminSidebar({ collapsed = false, onNavigate }: { collapsed?: bo
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  {session?.user?.name || 'Admin User'}
+                  {adminUser?.name || 'Admin User'}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {session?.user?.email || 'admin@example.com'}
+                  {adminUser?.email || 'admin@example.com'}
                 </p>
               </div>
             </div>

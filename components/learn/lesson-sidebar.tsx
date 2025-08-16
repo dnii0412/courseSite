@@ -1,17 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, PlayCircle, Lock } from 'lucide-react'
+import { Clock, Play, CheckCircle, Lock, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 
 interface Lesson {
   _id: string
   title: string
   duration: number
-  isCompleted?: boolean
+  videoStatus?: string
+  order: number
 }
 
 interface Course {
@@ -21,109 +22,130 @@ interface Course {
 }
 
 interface LessonSidebarProps {
-  course: Course
+  courseId: string
   currentLessonId: string
+  course: Course
 }
 
-export function LessonSidebar({ course, currentLessonId }: LessonSidebarProps) {
-  const router = useRouter()
-  const [completedLessons, setCompletedLessons] = useState<string[]>([])
+export function LessonSidebar({ courseId, currentLessonId, course }: LessonSidebarProps) {
+  const { data: session } = useSession()
+  const [enrolledCourses, setEnrolledCourses] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Fetch completed lessons for this course
-    const fetchCompletedLessons = async () => {
+    const checkEnrollment = async () => {
+      if (!session?.user?.id) {
+        setIsLoading(false)
+        return
+      }
+
       try {
-        const response = await fetch(`/api/enrollments/check/${course._id}`)
-        if (response.ok) {
-          const data = await response.json()
-          if (data.enrollment?.completedLessons) {
-            setCompletedLessons(data.enrollment.completedLessons.map((l: any) => l.lesson))
-          }
+        const response = await fetch(`/api/enrollments/check/${courseId}`)
+        const data = await response.json()
+        
+        if (data.enrolled) {
+          setEnrolledCourses([courseId])
         }
       } catch (error) {
-        console.error('Error fetching completed lessons:', error)
+        console.error('Error checking enrollment:', error)
+      } finally {
+        setIsLoading(false)
       }
     }
 
-    fetchCompletedLessons()
-  }, [course._id])
+    checkEnrollment()
+  }, [courseId, session?.user?.id])
 
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    return hours > 0 ? `${hours}ч ${mins}м` : `${mins}м`
-  }
-
-  const handleLessonClick = (lessonId: string) => {
-    router.push(`/learn/${course._id}/${lessonId}`)
-  }
+  const isEnrolled = enrolledCourses.includes(courseId)
+  const sortedLessons = course.lessons?.sort((a, b) => a.order - b.order) || []
 
   return (
-    <div className="w-80 bg-white border-l border-gray-200 h-screen overflow-y-auto">
-      <div className="p-4">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+    <Card className="h-fit">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-semibold text-gray-900">
           {course.title}
-        </h2>
-        
+        </CardTitle>
+        <div className="text-sm text-gray-600">
+          {sortedLessons.length} хичээл
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
         <div className="space-y-2">
-          {course.lessons?.map((lesson, index) => {
-            const isCompleted = completedLessons.includes(lesson._id)
-            const isCurrent = lesson._id === currentLessonId
-            
+          {sortedLessons.map((lesson) => {
+            const isCurrentLesson = lesson._id === currentLessonId
+            const hasVideo = lesson.videoStatus === 'uploaded'
+            const canAccess = isEnrolled || lesson.preview
+
             return (
-              <Card 
+              <Link
                 key={lesson._id}
-                className={`cursor-pointer transition-all hover:shadow-md ${
-                  isCurrent ? 'ring-2 ring-blue-500 bg-blue-50' : ''
-                }`}
-                onClick={() => handleLessonClick(lesson._id)}
+                href={`/learn/${courseId}/${lesson._id}`}
+                className={`block p-3 rounded-lg border transition-colors ${
+                  isCurrentLesson
+                    ? 'bg-blue-50 border-blue-200 text-blue-900'
+                    : 'hover:bg-gray-50 border-gray-200'
+                } ${!canAccess ? 'opacity-60' : ''}`}
               >
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3 flex-1">
-                      <div className="flex-shrink-0">
-                        {isCompleted ? (
-                          <CheckCircle className="h-5 w-5 text-green-500" />
-                        ) : (
-                          <PlayCircle className="h-5 w-5 text-gray-400" />
-                        )}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium truncate ${
-                          isCurrent ? 'text-blue-600' : 'text-gray-900'
-                        }`}>
-                          {index + 1}. {lesson.title}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {formatDuration(lesson.duration)}
-                        </p>
-                      </div>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className={`text-sm font-medium truncate ${
+                        isCurrentLesson ? 'text-blue-900' : 'text-gray-900'
+                      }`}>
+                        {lesson.title}
+                      </h4>
+                      {isCurrentLesson && (
+                        <Badge variant="default" className="text-xs">
+                          Одоо
+                        </Badge>
+                      )}
                     </div>
                     
-                    {isCompleted && (
-                      <Badge variant="secondary" className="text-xs">
-                        Дууссан
-                      </Badge>
+                    <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        <span>{lesson.duration} мин</span>
+                      </div>
+                      
+                      {hasVideo ? (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <Play className="w-3 h-3" />
+                          <span>Видео</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 text-yellow-600">
+                          <Clock className="w-3 h-3" />
+                          <span>Хүлээгдэж байна</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 ml-2">
+                    {!canAccess && (
+                      <Lock className="w-4 h-4 text-gray-400" />
+                    )}
+                    {canAccess && (
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </Link>
             )
           })}
         </div>
         
-        <div className="mt-6 p-3 bg-gray-50 rounded-lg">
-          <div className="flex justify-between text-sm text-gray-600 mb-2">
-            <span>Нийт хичээл:</span>
-            <span>{course.lessons?.length || 0}</span>
+        {!isEnrolled && !isLoading && (
+          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="text-sm text-yellow-800">
+              <div className="font-medium mb-1">Курсд бүртгүүлэх</div>
+              <div className="text-xs">
+                Бүх хичээлийг харахын тулд курсд бүртгүүлнэ үү
+              </div>
+            </div>
           </div>
-          <div className="flex justify-between text-sm text-gray-600">
-            <span>Дууссан:</span>
-            <span>{completedLessons.length}</span>
-          </div>
-        </div>
-      </div>
-    </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
