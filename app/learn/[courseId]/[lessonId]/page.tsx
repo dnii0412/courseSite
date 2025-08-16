@@ -1,11 +1,32 @@
-import { getLessonById } from '@/lib/api/lessons'
-import { getCourseWithLessons } from '@/lib/api/courses'
-import { notFound } from 'next/navigation'
+'use client'
+
+import { useEffect, useState } from 'react'
 import { VideoPlayer } from '@/components/video/video-player'
 import { LessonSidebar } from '@/components/learn/lesson-sidebar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Clock, Play, AlertCircle } from 'lucide-react'
+import { Clock, Play, AlertCircle, CheckCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+
+interface Lesson {
+  _id: string
+  title: string
+  description?: string
+  duration?: number
+  videoUrl?: string
+  videoStatus?: string
+  videoId?: string
+  videoFile?: string
+  isCompleted?: boolean
+}
+
+interface Course {
+  _id: string
+  title: string
+  description?: string
+  subcourses?: any[]
+  lessons?: any[]
+}
 
 interface LessonPageProps {
   params: {
@@ -14,14 +35,74 @@ interface LessonPageProps {
   }
 }
 
-export default async function LessonPage({ params }: LessonPageProps) {
-  const [lesson, course] = await Promise.all([
-    getLessonById(params.lessonId),
-    getCourseWithLessons(params.courseId)
-  ])
+export default function LessonPage({ params }: LessonPageProps) {
+  const [lesson, setLesson] = useState<Lesson | null>(null)
+  const [course, setCourse] = useState<Course | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const [lessonRes, courseRes] = await Promise.all([
+          fetch(`/api/lessons/${params.lessonId}`),
+          fetch(`/api/courses/${params.courseId}`)
+        ])
+        
+        if (!lessonRes.ok || !courseRes.ok) {
+          throw new Error('Failed to fetch data')
+        }
+        
+        const lessonData = await lessonRes.json()
+        const courseData = await courseRes.json()
+        
+        setLesson(lessonData.data || lessonData)
+        setCourse(courseData.data || courseData)
+      } catch (err) {
+        setError('Failed to fetch lesson or course data')
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [params.courseId, params.lessonId])
+
+  const handleToggleCompletion = async () => {
+    if (!lesson) return
+    
+    try {
+      const response = await fetch(`/api/lessons/${lesson._id}/complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ completed: !lesson.isCompleted }),
+      })
+
+      if (response.ok) {
+        // Update local state
+        setLesson(prev => prev ? { ...prev, isCompleted: !prev.isCompleted } : null)
+      } else {
+        console.error('Failed to update lesson completion')
+      }
+    } catch (error) {
+      console.error('Error updating lesson completion:', error)
+    }
+  }
+
+  if (loading) {
+    return <div className="text-center py-12">Loading...</div>
+  }
+
+  if (error) {
+    return <div className="text-center py-12 text-red-500">{error}</div>
+  }
 
   if (!lesson || !course) {
-    notFound()
+    return <div className="text-center py-12">Lesson or Course not found.</div>
   }
 
   return (
@@ -29,11 +110,30 @@ export default async function LessonPage({ params }: LessonPageProps) {
       <div className="container mx-auto px-4 py-8">
         {/* Lesson Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{lesson.title}</h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold text-gray-900">{lesson.title}</h1>
+            <Button
+              onClick={handleToggleCompletion}
+              variant={lesson.isCompleted ? "outline" : "default"}
+              className="flex items-center gap-2"
+            >
+              {lesson.isCompleted ? (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  Mark Incomplete
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  Mark Complete
+                </>
+              )}
+            </Button>
+          </div>
           <div className="flex items-center gap-4 text-gray-600">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              <span>{lesson.duration} минут</span>
+              <span>{lesson.duration || 0} минут</span>
             </div>
             {lesson.videoStatus && (
               <Badge 
@@ -68,7 +168,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
             <LessonSidebar 
               courseId={params.courseId}
               currentLessonId={params.lessonId}
-              course={course}
+              course={course as any}
             />
           </div>
           
@@ -148,34 +248,6 @@ export default async function LessonPage({ params }: LessonPageProps) {
                 <CardContent>
                   <div className="prose max-w-none">
                     <p className="text-gray-700">{lesson.description}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Debug Info (remove in production) */}
-            {process.env.NODE_ENV === 'development' && (
-              <Card className="mt-8">
-                <CardHeader>
-                  <CardTitle>Debug Info</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium mb-2">Video Information:</h4>
-                      <div className="text-sm space-y-1">
-                        <div><strong>Video URL:</strong> {lesson.videoUrl || 'None'}</div>
-                        <div><strong>Video ID:</strong> {lesson.videoId || 'None'}</div>
-                        <div><strong>Video Status:</strong> {lesson.videoStatus || 'None'}</div>
-                        <div><strong>Video File:</strong> {lesson.videoFile || 'None'}</div>
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="font-medium mb-2">Full Lesson Data:</h4>
-                      <pre className="text-xs bg-gray-100 p-4 rounded overflow-auto">
-                        {JSON.stringify(lesson, null, 2)}
-                      </pre>
-                    </div>
                   </div>
                 </CardContent>
               </Card>

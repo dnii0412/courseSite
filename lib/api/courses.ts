@@ -1,6 +1,8 @@
 import { connectDB } from '@/lib/mongodb'
 import { Course } from '@/lib/models/course'
-// Ensure Lesson model is registered before we populate it
+// Ensure all models are registered before we populate them
+import '@/lib/models/user'
+import '@/lib/models/subcourse'
 import '@/lib/models/lesson'
 
 export async function getCourses() {

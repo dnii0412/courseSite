@@ -11,14 +11,13 @@ export async function GET(request: NextRequest) {
     
     if (courseId) {
       const subcourses = await Subcourse.find({ course: courseId })
-        .populate('lessons')
+        .populate('lessons', 'title description duration order preview videoUrl videoId videoStatus')
         .sort({ order: 1 })
       return NextResponse.json(subcourses)
     }
     
     const subcourses = await Subcourse.find()
       .populate('course', 'title')
-      .populate('lessons')
       .sort({ order: 1 })
     return NextResponse.json(subcourses)
   } catch (error) {

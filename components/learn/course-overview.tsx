@@ -6,24 +6,31 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Clock, BookOpen, CheckCircle, Play, Lock } from 'lucide-react'
+import { BookOpen, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
-
-interface Lesson {
-  _id: string
-  title: string
-  duration: number
-  isCompleted?: boolean
-  isLocked?: boolean
-}
 
 interface Course {
   _id: string
   title: string
   description: string
-  lessons: Lesson[]
-  totalDuration: number
-  completedLessons: number
+  subcourses?: any[]
+  completedLessons?: number
+  totalDuration?: number
+}
+
+interface Subcourse {
+  _id: string
+  title: string
+  description: string
+  lessons?: any[]
+}
+
+interface Lesson {
+  _id: string
+  title: string
+  description: string
+  isCompleted?: boolean
+  isLocked?: boolean
 }
 
 interface CourseOverviewProps {
@@ -31,151 +38,138 @@ interface CourseOverviewProps {
 }
 
 export function CourseOverview({ course }: CourseOverviewProps) {
-  const { data: session } = useSession()
-  const [currentLesson, setCurrentLesson] = useState<string | null>(null)
-
-  // Debug logging
-  console.log('CourseOverview render:', { 
-    courseId: course._id, 
-    lessonsCount: course.lessons?.length,
-    lessons: course.lessons?.map(l => ({ id: l._id, title: l.title })),
-    currentLesson,
-    completedLessons: course.completedLessons,
-    totalDuration: course.totalDuration
-  })
-
-  useEffect(() => {
-    // Always set to first lesson if available, regardless of completion status
-    if (course.lessons && course.lessons.length > 0) {
-      setCurrentLesson(course.lessons[0]._id)
-    }
-  }, [course.lessons])
-
-  const progressPercentage = course.lessons.length > 0
-    ? (course.completedLessons / course.lessons.length) * 100
+  // Calculate progress percentage
+  const progressPercentage = course.completedLessons && course.totalDuration 
+    ? (course.completedLessons / course.totalDuration) * 100 
     : 0
 
-  const handleLessonClick = (lessonId: string) => {
-    setCurrentLesson(lessonId)
-  }
+  // Get current lesson for continue learning
+  const currentLessonForContinue = course.subcourses?.[0]?.lessons?.[0]?._id
 
   const handleContinueLearning = () => {
-    if (currentLesson) {
-      window.location.href = `/learn/${course._id}/${currentLesson}`
+    if (currentLessonForContinue) {
+      window.location.href = `/learn/${course._id}/${currentLessonForContinue}`
     }
   }
 
-  if (!session?.user) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-600 mb-4">Нэвтрэх шаардлагатай</p>
-        <Button asChild>
-          <Link href="/auth/login">Нэвтрэх</Link>
-        </Button>
-      </div>
-    )
+  const handleLessonClick = (lessonId: string) => {
+    window.location.href = `/learn/${course._id}/${lessonId}`
+  }
+
+  const handleToggleCompletion = async (lessonId: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/lessons/${lessonId}/complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ completed: !currentStatus }),
+      })
+
+      if (response.ok) {
+        // Refresh the page to show updated completion status
+        window.location.reload()
+      } else {
+        console.error('Failed to update lesson completion')
+      }
+    } catch (error) {
+      console.error('Error updating lesson completion:', error)
+    }
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      {/* Course Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">{course.title}</h1>
-        <p className="text-gray-600 mb-6">{course.description}</p>
+    <div className="max-w-4xl mx-auto">
+      {course.subcourses && Array.isArray(course.subcourses) && course.subcourses.length > 0 ? (
+        course.subcourses.map((subcourse: any, subIndex: number) => {
+          if (!subcourse || !subcourse._id) return null
+          
+          const lessonsCount = subcourse.lessons?.length || 0
+          const completedLessons = subcourse.lessons?.filter((l: any) => l.isCompleted)?.length || 0
+          const progressPercentage = lessonsCount > 0 ? Math.round((completedLessons / lessonsCount) * 100) : 0
 
-        {/* Progress Section */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Хичээлийн явц</h3>
-              <span className="text-sm text-gray-600">
-                {course.completedLessons} / {course.lessons.length} хичээл
-              </span>
-            </div>
-            <Progress value={progressPercentage} className="mb-4" />
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                <span>{course.totalDuration} мин</span>
+          return (
+            <div key={subcourse._id} className="mb-8">
+              {/* Module Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Module {subIndex + 1}: {subcourse.title || 'Untitled Module'}
+                </h2>
               </div>
-              <div className="flex items-center gap-1">
-                <BookOpen className="w-4 h-4" />
-                <span>{course.lessons.length} хичээл</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Start/Continue Learning Button */}
-        {currentLesson && (
-          <Button
-            onClick={handleContinueLearning}
-            className="w-full md:w-auto mb-6"
-            size="lg"
-          >
-            <Play className="w-4 h-4 mr-2" />
-            {course.completedLessons > 0 ? 'Сургалтаа үргэлжлүүлэх' : 'Сургалт эхлэх'}
-          </Button>
-        )}
-      </div>
+              {/* Module Content */}
+              <div className="border border-gray-200 rounded-lg p-6">
+                <div className="space-y-4">
+                  {subcourse.lessons && Array.isArray(subcourse.lessons) && subcourse.lessons.length > 0 ? (
+                    subcourse.lessons.map((lesson: any, lessonIndex: number) => {
+                      if (!lesson || !lesson._id) return null
+                      
+                      const isCompleted = lesson.isCompleted
+                      const duration = lesson.duration || 0
 
-      {/* Lessons List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Хичээлүүд</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {course.lessons && Array.isArray(course.lessons) ? course.lessons.map((lesson, index) => {
-              const isCurrentLesson = lesson._id === currentLesson
-              const isCompleted = lesson.isCompleted
-              const isLocked = lesson.isLocked
-
-              // Ensure we have a unique key
-              const lessonKey = lesson._id || `lesson-${index}`
-
-              return (
-                <div
-                  key={lessonKey}
-                  className={`p-4 rounded-lg border cursor-pointer transition-colors ${isCurrentLesson ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
-                  onClick={() => !isLocked && handleLessonClick(lesson._id)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`
-                      w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-                      ${isCompleted ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}
-                    `}>
-                      {isCompleted ? (
-                        <CheckCircle className="w-4 h-4" />
-                      ) : (
-                        index + 1
-                      )}
+                      return (
+                        <div 
+                          key={lesson._id} 
+                          className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                            isCompleted 
+                              ? 'bg-green-50 border border-green-200' 
+                              : 'bg-gray-50 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            
+                            <span className="font-medium text-gray-900">
+                              {lesson.title || `Lesson ${lessonIndex + 1}`}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center space-x-3">
+                            {duration > 0 && (
+                              <span className="text-sm text-gray-600">{duration} min</span>
+                            )}
+                            {isCompleted ? (
+                              <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                                <span className="text-white text-xs">✓</span>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => handleLessonClick(lesson._id)}
+                                className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                              >
+                                <span className="text-white text-sm">▶</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      No lessons available
                     </div>
-                    <div>
-                      <h4 className={`font-medium ${isCompleted ? 'text-green-800' : 'text-gray-900'}`}>
-                        {lesson.title}
-                      </h4>
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Clock className="w-3 h-3" />
-                        <span>{lesson.duration} мин</span>
-                        {isCompleted && (
-                          <Badge variant="secondary" className="text-xs">
-                            Дууссан
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
+                  )}
+                </div>
+                
+                {/* Module Progress Summary */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>{completedLessons}/{lessonsCount} lessons • {progressPercentage}%</span>
                   </div>
                 </div>
-              )
-            }) : (
-              <div className="text-center py-4 text-gray-500">
-                Хичээл олдсонгүй
               </div>
-            )}
+            </div>
+          )
+        })
+      ) : (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+            <BookOpen className="w-8 h-8 text-gray-400" />
           </div>
-        </CardContent>
-      </Card>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Modules Available</h3>
+          <p className="text-gray-600">
+            This course doesn't have any modules yet.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

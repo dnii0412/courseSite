@@ -5,6 +5,7 @@ import { connectDB } from '@/lib/mongodb'
 import { Lesson } from '@/lib/models/lesson'
 import { User } from '@/lib/models/user'
 import { verify } from 'jsonwebtoken'
+import mongoose from 'mongoose'
 
 // Helper function to check admin authentication
 async function checkAdminAuth(request: NextRequest) {
@@ -35,6 +36,37 @@ async function checkAdminAuth(request: NextRequest) {
   } catch (error) {
     console.error('Error checking admin auth:', error)
     return { isAdmin: false, userId: null }
+  }
+}
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await connectDB()
+    
+    const { id } = params
+    const lesson = await Lesson.findById(id).lean()
+    
+    if (!lesson) {
+      return NextResponse.json(
+        { error: 'Lesson not found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: lesson
+    })
+
+  } catch (error) {
+    console.error('Get lesson error:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch lesson' },
+      { status: 500 }
+    )
   }
 }
 
@@ -115,7 +147,7 @@ export async function DELETE(
 
     const { id } = params
 
-    // Find the lesson to get courseId
+    // Find the lesson to get subcourseId
     const lesson = await Lesson.findById(id)
     if (!lesson) {
       return NextResponse.json(
@@ -124,16 +156,19 @@ export async function DELETE(
       )
     }
 
+    console.log(`🗑️ Deleting lesson: ${lesson.title} from subcourse: ${lesson.subcourse}`)
+
     // Delete the lesson
     await Lesson.findByIdAndDelete(id)
 
-    // Remove the lesson from the course
-    await Lesson.updateMany(
-      { course: lesson.course },
+    // Remove the lesson from the subcourse
+    const Subcourse = mongoose.model('Subcourse')
+    await Subcourse.findByIdAndUpdate(
+      lesson.subcourse,
       { $pull: { lessons: id } }
     )
 
-    console.log(`Lesson deleted: ${lesson.title}`)
+    console.log(`✅ Lesson deleted successfully: ${lesson.title}`)
 
     return NextResponse.json({
       message: 'Хичээл амжилттай устгагдлаа'

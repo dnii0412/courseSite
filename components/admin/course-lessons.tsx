@@ -67,7 +67,8 @@ export function CourseLessons({ course, onChanged, variant = 'default' }: { cour
           title, 
           duration: Number(duration), 
           courseId: course._id,
-          videoFile: file.name // Store the filename for reference
+          videoFile: file.name, // Store the filename for reference
+          videoStatus: 'pending' // Set initial status
         })
       })
 
@@ -78,31 +79,30 @@ export function CourseLessons({ course, onChanged, variant = 'default' }: { cour
       const lessonData = await lessonRes.json()
       const lessonId = lessonData.lesson?._id || lessonData._id
 
-      console.log('Lesson created:', lessonId)
+      console.log('✅ Lesson created:', lessonId)
 
       // Step 2: Upload video and get URL
       const videoId = await startBunnyUpload(file, file.name, {
         onProgress: setUploadProgress,
-        onSuccess: async (id) => {
-          console.log('Video upload success, getting final URL...')
+        onSuccess: async (id: string) => {
+          console.log('🎬 Video upload success for lesson:', lessonId)
           
           try {
-            // Step 3: Get the final video URL from Bunny.net
+            // Step 3: Update the lesson with video info (immediate update like working version)
             const videoUrl = `https://iframe.mediadelivery.net/embed/480986/${id}`
             
-            // Step 4: Update the lesson with the video URL
             const updateRes = await fetch(`/api/lessons/${lessonId}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
                 videoUrl: videoUrl,
                 videoId: id,
-                videoStatus: 'uploaded'
+                videoStatus: 'uploaded'  // ← Restore immediate status update
               })
             })
 
             if (updateRes.ok) {
-              console.log('Lesson updated with video URL:', videoUrl)
+              console.log('✅ Lesson updated with video info and status: uploaded')
               setUploading(false)
               setUploadProgress(0)
               setTitle('')
@@ -123,16 +123,16 @@ export function CourseLessons({ course, onChanged, variant = 'default' }: { cour
                 setLessons(c.lessons || [])
               }
             } else {
-              console.error('Failed to update lesson with video URL')
+              console.error('❌ Failed to update lesson with video info')
               alert('Видео байршуулагдлаа, гэхдээ холбох үед алдаа гарлаа. Админтай холбогдоно уу.')
             }
           } catch (error) {
-            console.error('Error updating lesson with video URL:', error)
+            console.error('❌ Error updating lesson with video info:', error)
             alert('Видео байршуулагдлаа, гэхдээ холбох үед алдаа гарлаа. Админтай холбогдоно уу.')
           }
         },
-        onError: (error) => {
-          console.error('Bunny upload failed:', error)
+        onError: (error: unknown) => {
+          console.error('❌ Bunny upload failed:', error)
           setUploading(false)
           setUploadProgress(0)
           
@@ -147,7 +147,7 @@ export function CourseLessons({ course, onChanged, variant = 'default' }: { cour
 
       return videoId
     } catch (error) {
-      console.error('Upload error:', error)
+      console.error('❌ Upload error:', error)
       setUploading(false)
       setUploadProgress(0)
       

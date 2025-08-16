@@ -10,7 +10,6 @@ export async function GET(
   try {
     await connectDB()
     const subcourse = await Subcourse.findById(params.id)
-      .populate('lessons')
       .populate('course', 'title')
     
     if (!subcourse) {

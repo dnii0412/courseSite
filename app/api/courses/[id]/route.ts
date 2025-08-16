@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { Course } from '@/lib/models/course'
+// Ensure all models are registered before we populate them
+import '@/lib/models/user'
+import '@/lib/models/subcourse'
+import '@/lib/models/lesson'
 
 export async function GET(
   request: NextRequest,
@@ -9,11 +13,19 @@ export async function GET(
   try {
     await connectDB()
     
-    const course = await Course.findById(params.id).lean()
+    const course = await Course.findById(params.id)
+      .populate({
+        path: 'subcourses',
+        populate: {
+          path: 'lessons',
+          select: 'title description duration videoStatus order isCompleted isLocked'
+        }
+      })
+      .lean()
     
     if (!course) {
       return NextResponse.json(
-        { success: false, error: 'Course not found' },
+        { error: 'Course not found' },
         { status: 404 }
       )
     }
@@ -22,7 +34,7 @@ export async function GET(
   } catch (error) {
     console.error('Error fetching course:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch course' },
+      { error: 'Failed to fetch course' },
       { status: 500 }
     )
   }

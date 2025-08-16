@@ -11,8 +11,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, Edit, Trash2, Search, Eye, BookOpen, ChevronDown } from 'lucide-react'
 import { SubcourseManagement } from '@/components/admin/subcourse-management'
-import { AdminCourseDetailsInline } from '@/components/admin/course-details-inline'
-import { AddLessonWithSubcourse } from '@/components/admin/add-lesson-with-subcourse'
 import { Switch } from '@/components/ui/switch'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -225,14 +223,7 @@ export function CourseManagement() {
                 <SubcourseManagement courseId={selectedCourse._id || ''} onChanged={() => fetchCourses()} />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-instructor">Багш (нэр)</Label>
-                  <Input 
-                    id="edit-instructor" 
-                    value={typeof selectedCourse.instructor === 'string' ? selectedCourse.instructor : selectedCourse.instructor?.name || ''} 
-                    onChange={e => setSelectedCourse({ ...selectedCourse, instructor: e.target.value })} 
-                  />
-                </div>
+                
                 <div className="grid gap-2">
                   <Label htmlFor="edit-price">Үнэ</Label>
                   <Input 
@@ -243,98 +234,9 @@ export function CourseManagement() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-category">Ангилал</Label>
-                  <Select 
-                    value={selectedCourse.category} 
-                    onValueChange={val => setSelectedCourse({ ...selectedCourse, category: val })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Ангилал сонгох" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="technology">Technology</SelectItem>
-                      <SelectItem value="business">Business</SelectItem>
-                      <SelectItem value="design">Design</SelectItem>
-                      <SelectItem value="marketing">Marketing</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-level">Түвшин</Label>
-                  <Select 
-                    value={selectedCourse.level || 'beginner'} 
-                    onValueChange={val => setSelectedCourse({ ...selectedCourse, level: val })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Түвшин сонгох" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beginner">Эхлэгч</SelectItem>
-                      <SelectItem value="intermediate">Дунд</SelectItem>
-                      <SelectItem value="advanced">Дээд</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-language">Хэл</Label>
-                  <Select 
-                    value={selectedCourse.language || 'mongolian'} 
-                    onValueChange={val => setSelectedCourse({ ...selectedCourse, language: val })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Хэл сонгох" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mongolian">Монгол</SelectItem>
-                      <SelectItem value="english">English</SelectItem>
-                      <SelectItem value="russian">Орос</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-status">Төлөв</Label>
-                  <Select 
-                    value={selectedCourse.status || 'active'} 
-                    onValueChange={val => setSelectedCourse({ ...selectedCourse, status: val })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Төлөв сонгох" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Идэвхтэй</SelectItem>
-                      <SelectItem value="draft">Ноорог</SelectItem>
-                      <SelectItem value="archived">Архивласан</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-published">Нийтлэх</Label>
-                  <div className="flex items-center space-x-2">
-                    <Switch 
-                      id="edit-published" 
-                      checked={selectedCourse.published} 
-                      onCheckedChange={val => setSelectedCourse({ ...selectedCourse, published: val })} 
-                    />
-                    <span>{selectedCourse.published ? 'Тийм' : 'Үгүй'}</span>
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-duration">Үргэлжлэх хугацаа (цаг)</Label>
-                  <Input 
-                    id="edit-duration" 
-                    type="number" 
-                    value={selectedCourse.duration || ''} 
-                    onChange={e => setSelectedCourse({ ...selectedCourse, duration: Number(e.target.value) })} 
-                  />
-                </div>
-              </div>
+              
+              
+              
             </div>
           )}
           <div className="flex justify-end space-x-2">
@@ -388,93 +290,25 @@ export function CourseManagement() {
                   <DialogTitle>Шинэ хичээл нэмэх</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="title">Гарчиг</Label>
-                    <Input id="title" placeholder="Хичээлийн гарчиг" value={newCourse.title} onChange={e => setNewCourse(v => ({ ...v, title: e.target.value }))} />
-                  </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="title">Гарчиг</Label>
+                      <Input id="title" placeholder="Хичээлийн гарчиг" value={newCourse.title} onChange={e => setNewCourse(v => ({ ...v, title: e.target.value }))} />
+                    </div>
+                 
                   <div className="grid gap-2">
                     <Label htmlFor="description">Тайлбар</Label>
                     <Textarea id="description" placeholder="Хичээлийн тайлбар" value={newCourse.description} onChange={e => setNewCourse(v => ({ ...v, description: e.target.value }))} />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="instructor">Багш (нэр)</Label>
-                      <Input id="instructor" placeholder="Багшийн нэр" value={newCourse.instructor} onChange={e => setNewCourse(v => ({ ...v, instructor: e.target.value }))} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="price">Үнэ</Label>
-                      <Input id="price" type="number" placeholder="₮" value={newCourse.price} onChange={e => setNewCourse(v => ({ ...v, price: e.target.value }))} />
-                    </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="price">Үнэ</Label>
+                    <Input id="price" type="number" placeholder="Хичээлийн үнэ" value={newCourse.price} onChange={e => setNewCourse(v => ({ ...v, price: e.target.value }))} />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="category">Ангилал</Label>
-                      <Select value={newCourse.category} onValueChange={val => setNewCourse(v => ({ ...v, category: val }))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Ангилал сонгох" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="technology">Technology</SelectItem>
-                          <SelectItem value="business">Business</SelectItem>
-                          <SelectItem value="design">Design</SelectItem>
-                          <SelectItem value="marketing">Marketing</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="level">Түвшин</Label>
-                      <Select value={newCourse.level} onValueChange={val => setNewCourse(v => ({ ...v, level: val }))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Түвшин сонгох" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="beginner">Эхлэгч</SelectItem>
-                          <SelectItem value="intermediate">Дунд</SelectItem>
-                          <SelectItem value="advanced">Дээд</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="language">Хэл</Label>
-                      <Select value={newCourse.language} onValueChange={val => setNewCourse(v => ({ ...v, language: val }))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Хэл сонгох" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="mongolian">Монгол</SelectItem>
-                          <SelectItem value="english">English</SelectItem>
-                          <SelectItem value="russian">Орос</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="published">Нийтлэх</Label>
-                      <div className="flex items-center space-x-2">
-                        <Switch id="published" checked={newCourse.published} onCheckedChange={val => setNewCourse(v => ({ ...v, published: val }))} />
-                        <span>{newCourse.published ? 'Тийм' : 'Үгүй'}</span>
-                      </div>
-                    </div>
-                  </div>
+                  
                   <div className="grid gap-2">
                     <Label htmlFor="duration">Үргэлжлэх хугацаа (цаг)</Label>
                     <Input id="duration" type="number" placeholder="1" value={newCourse.duration} onChange={e => setNewCourse(v => ({ ...v, duration: e.target.value }))} />
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="status">Төлөв</Label>
-                    <Select value={newCourse.status} onValueChange={val => setNewCourse(v => ({ ...v, status: val }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Төлөв сонгох" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active">Идэвхтэй</SelectItem>
-                        <SelectItem value="draft">Ноорог</SelectItem>
-                        <SelectItem value="archived">Архивласан</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  
                 </div>
                 <div className="flex justify-end space-x-2">
                   <Button variant="outline" onClick={() => setShowDialog(false)}>Цуцлах</Button>
@@ -482,17 +316,7 @@ export function CourseManagement() {
                 </div>
               </DialogContent>
             </Dialog>
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Бүгд</SelectItem>
-                <SelectItem value="active">Идэвхтэй</SelectItem>
-                <SelectItem value="draft">Ноорог</SelectItem>
-                <SelectItem value="archived">Архивласан</SelectItem>
-              </SelectContent>
-            </Select>
+            
           </div>
         </CardHeader>
         <CardContent>
@@ -539,14 +363,10 @@ export function CourseManagement() {
                     </CollapsibleTrigger>
                     <CollapsibleContent className="data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden">
                       <div className="mt-4 pt-4 border-t border-gray-200">
-                        <AdminCourseDetailsInline courseId={cid} onChanged={fetchCourses} />
                         
                         {/* Subcourses Section */}
-                        <div className="mt-6 pt-4 border-t border-gray-200">
-                          <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-md font-semibold text-gray-800">Дэд хичээлүүд</h4>
-                            <AddLessonWithSubcourse courseId={cid} onChanged={fetchCourses} />
-                          </div>
+                        <div className=" pt-4 ">
+                          
                           <SubcourseManagement courseId={cid} onChanged={fetchCourses} />
                         </div>
                       </div>

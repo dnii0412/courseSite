@@ -66,11 +66,6 @@ const sidebarItems: SidebarItem[] = [
     icon: Database,
   },
   {
-    title: 'Нөөц хувилбар',
-    href: '/admin/backup',
-    icon: Cog,
-  },
-  {
     title: 'Тохиргоо',
     href: '/admin/settings',
     icon: Settings,

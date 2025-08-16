@@ -5,7 +5,7 @@ type CreateVideoRes = { guid: string }
 
 export async function POST(req: Request) {
   try {
-    const { title, collectionId, thumbnailTime } = await req.json()
+    const { title, collectionId, thumbnailTime, lessonId } = await req.json()
 
     const libraryId = process.env.BUNNY_LIBRARY_ID!
     const apiKey = process.env.BUNNY_STREAM_API_KEY!
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing Bunny env vars" }, { status: 500 })
     }
 
-    console.log('Creating video with:', { title, libraryId, hasApiKey: !!apiKey })
+    console.log('Creating video with:', { title, libraryId, hasApiKey: !!apiKey, lessonId })
 
     // 1) Create a video object to obtain VideoId (guid)
     const createRes = await fetch(`https://video.bunnycdn.com/library/${libraryId}/videos`, {
@@ -23,7 +23,12 @@ export async function POST(req: Request) {
         "Content-Type": "application/json",
         AccessKey: apiKey,
       },
-      body: JSON.stringify({ title, collectionId, thumbnailTime }),
+      body: JSON.stringify({ 
+        title, 
+        collectionId, 
+        thumbnailTime,
+        metadata: { lessonId } // Store lessonId in video metadata
+      }),
     })
 
     if (!createRes.ok) {

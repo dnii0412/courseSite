@@ -74,6 +74,7 @@ function startTusUpload(
     onError: (error) => {
       console.error('TUS upload error:', error)
       console.log('TUS upload failed, but video was already created on Bunny.net')
+      // Don't update lesson status from here
     },
     onProgress: (bytesUploaded, bytesTotal) => {
       if (bytesTotal > 0) {
@@ -85,6 +86,7 @@ function startTusUpload(
     onSuccess: () => {
       console.log('TUS upload completed successfully!')
       console.log('Video will be processed by Bunny.net in the background')
+      // Don't update lesson status from here
     },
   })
 
@@ -133,11 +135,14 @@ async function startDirectUpload(
     if (response.ok) {
       console.log('Direct upload completed successfully!')
       handlers.onProgress?.(100)
+      // Don't update lesson status from here
     } else {
       console.error('Direct upload failed:', response.status, await response.text())
+      // Don't update lesson status from here
     }
   } catch (error) {
     console.error('Direct upload error:', error)
+    // Don't update lesson status from here
   }
 }
 
