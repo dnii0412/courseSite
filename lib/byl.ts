@@ -59,9 +59,9 @@ export class BylService {
   private token: string
 
   constructor() {
-    this.baseUrl = process.env.BYL_API_BASE_URL || "https://byl.mn/api/v1"
+    this.baseUrl = process.env.BYL_API_URL || "https://byl.mn/api/v1"
     this.projectId = process.env.BYL_PROJECT_ID || ""
-    this.token = process.env.BYL_API_TOKEN || ""
+    this.token = process.env.BYL_ACCESS_TOKEN || ""
   }
 
   private getHeaders(): HeadersInit {
@@ -92,14 +92,24 @@ export class BylService {
   }
 
   async createCheckout(checkoutData: BylCheckoutRequest): Promise<BylCheckout> {
+    console.log(`Byl Checkout URL: ${this.baseUrl}/projects/${this.projectId}/checkouts`)
+    console.log(`Byl Project ID: ${this.projectId}`)
+    console.log(`Byl Token: ${this.token ? 'Set' : 'Not set'}`)
+    console.log(`Byl Checkout Data:`, JSON.stringify(checkoutData, null, 2))
+
     const response = await fetch(`${this.baseUrl}/projects/${this.projectId}/checkouts`, {
       method: "POST",
       headers: this.getHeaders(),
       body: JSON.stringify(checkoutData)
     })
 
+    console.log(`Byl Checkout Response Status: ${response.status}`)
+    console.log(`Byl Checkout Response Headers:`, Object.fromEntries(response.headers.entries()))
+
     if (!response.ok) {
-      throw new Error(`Failed to create Byl checkout: ${response.statusText}`)
+      const errorText = await response.text()
+      console.log(`Byl Checkout Error Response:`, errorText)
+      throw new Error(`Failed to create Byl checkout: ${response.status} ${response.statusText} - ${errorText}`)
     }
 
     const result = await response.json()

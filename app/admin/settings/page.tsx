@@ -34,6 +34,29 @@ interface PlatformSettings {
   qpayApiKey: string
   bunnyApiKey: string
   bunnyVideoLibraryId: string
+  // Content Management
+  stats: {
+    totalStudents: string
+    averageRating: string
+    completedLessons: string
+  }
+  features: {
+    feature1: {
+      title: string
+      description: string
+      icon: string
+    }
+    feature2: {
+      title: string
+      description: string
+      icon: string
+    }
+    feature3: {
+      title: string
+      description: string
+      icon: string
+    }
+  }
 }
 
 export default function AdminSettings() {
@@ -57,7 +80,30 @@ export default function AdminSettings() {
     qpayMerchantId: "",
     qpayApiKey: "",
     bunnyApiKey: "",
-    bunnyVideoLibraryId: ""
+    bunnyVideoLibraryId: "",
+    // Content Management
+    stats: {
+      totalStudents: "0",
+      averageRating: "0.0",
+      completedLessons: "0"
+    },
+    features: {
+      feature1: {
+        title: "Онлайн сургалт",
+        description: "Хугацаатай, хурдан, хүнсэн сургалт",
+        icon: "📚"
+      },
+      feature2: {
+        title: "Харилцах",
+        description: "Харилцах, харилцах, харилцах",
+        icon: "💬"
+      },
+      feature3: {
+        title: "Хувь хүн",
+        description: "Хувь хүн, хувь хүн, хувь хүн",
+        icon: "👥"
+      }
+    }
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -426,6 +472,29 @@ export default function AdminSettings() {
                     onChange={(e) => handleInputChange("facebookPixelId", e.target.value)}
                     placeholder="Enter Facebook Pixel ID"
                   />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Content Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Мэдээллийн нэгдсэн хэсэг
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center py-8">
+                <p className="text-gray-600 mb-4">Статистик болон онцлог шинж чанаруудыг засварлах</p>
+                <div className="flex gap-4 justify-center">
+                  <Button asChild variant="outline">
+                    <a href="/admin/stats">Статистик засвар</a>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <a href="/admin/features">Онцлог шинж чанар</a>
+                  </Button>
                 </div>
               </div>
             </CardContent>

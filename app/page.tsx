@@ -1,48 +1,94 @@
-"use client"
-
-import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import PublicMediaGrid from "@/components/public-media-grid"
 import { Play, Clock, Star, Users, Trophy } from "lucide-react"
 import type { Course } from "@/lib/types"
+import { db } from "@/lib/database"
 
 interface Stats {
-  userCount: number
-  courseCount: number
-  enrollmentCount: number
-  totalRevenue: number
+  totalStudents: number
+  averageRating: string
+  completedLessons: number
 }
 
-export default function HomePage() {
-  const [courses, setCourses] = useState<Course[]>([])
-  const [stats, setStats] = useState<Stats | null>(null)
-  const [loading, setLoading] = useState(true)
+interface PlatformFeatures {
+  feature1: {
+    title: string
+    description: string
+    icon: string
+  }
+  feature2: {
+    title: string
+    description: string
+    icon: string
+  }
+  feature3: {
+    title: string
+    description: string
+    icon: string
+  }
+}
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [coursesRes, statsRes] = await Promise.all([fetch("/api/courses"), fetch("/api/stats")])
+export default async function Home() {
+  // Server-side data fetching
+  let courses: Course[] = []
+  let stats: Stats = {
+    totalStudents: 0,
+    averageRating: "4.8",
+    completedLessons: 0
+  }
+  let features: PlatformFeatures = {
+    feature1: {
+      title: "Хэзээ ч, хаанаас ч",
+      description: "Таны хүссэн цагт, хүссэн газартаас суралцах боломжтой. Интернэт холболттой компьютер, таблет эсвэл утас хүчилтэй.",
+      icon: "🌍"
+    },
+    feature2: {
+      title: "Чанартай агуулга",
+      description: "Мэргэжлийн багш нартай, чанартай видео хичээллүүд. Практик даалгавар, тестүүд болон сертификат.",
+      icon: "🎯"
+    },
+    feature3: {
+      title: "Хувийн хөгжил",
+      description: "Таны хурдад тохируулсан сургалт. Прогресс хяналт, хувийн дэвтэр болон багшийн дэмжлэг.",
+      icon: "📈"
+    }
+  }
 
-        const coursesData = await coursesRes.json()
-        const statsData = await statsRes.json()
-
-        setCourses(coursesData.courses || [])
-        setStats(statsData.stats)
-      } catch (error) {
-  
-      } finally {
-        setLoading(false)
-      }
+  try {
+    // Fetch courses
+    const coursesResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/courses`, { cache: 'no-store' })
+    if (coursesResponse.ok) {
+      const coursesData = await coursesResponse.json()
+      courses = coursesData.courses || []
     }
 
-    fetchData()
-  }, [])
+    // Fetch stats
+    const statsResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/stats`, { cache: 'no-store' })
+    if (statsResponse.ok) {
+      const statsData = await statsResponse.json()
+      stats = statsData.stats
+    }
 
-  const featuredCourse = courses.find((course) => course.title === "AI Course") || courses[0]
+    // Fetch features
+    const featuresResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/features`, { cache: 'no-store' })
+    if (featuresResponse.ok) {
+      const featuresData = await featuresResponse.json()
+      if (featuresData.features) {
+        features = featuresData.features
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error)
+    // Use fallback data if fetching fails
+  }
+
+  // Get featured course only when courses are loaded
+  const featuredCourse = courses.length > 0 ? courses.find((course) => course.title === "AI Course") || courses[0] : null
 
   return (
     <div className="min-h-screen bg-white">
@@ -79,7 +125,7 @@ export default function HomePage() {
           </div>
 
           {/* Featured Course Card */}
-          {featuredCourse && (
+          {featuredCourse ? (
             <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
               <div className="p-8">
                 <div className="mb-6">
@@ -106,60 +152,125 @@ export default function HomePage() {
                 </Button>
               </div>
             </div>
+          ) : (
+            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+              <div className="p-8">
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded mb-6"></div>
+                  <div className="bg-gray-200 rounded-2xl aspect-video mb-6"></div>
+                  <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded mb-6"></div>
+                  <div className="h-12 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </section>
 
+      {/* Media Grid Section */}
+      <PublicMediaGrid />
+
       {/* Features Section */}
-      <section className="bg-gray-50 py-20">
+      <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Манай платформын давуу талууд</h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">Манай платформын давуу талууд</p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Яагаад Бид?</h2>
+            <p className="text-gray-600 text-lg">Манай платформын онцлог шинж чанарууд</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="text-center p-8 border border-gray-100 shadow-lg rounded-2xl bg-white hover:shadow-xl transition-shadow duration-300">
-              <CardContent className="space-y-6 p-0">
-                <div className="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto">
-                  <Play className="w-10 h-10 text-[#5B7FFF]" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Чанартай видео & аудио</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    HD чанартай видео, тод аудио, мөн интерактив элементүүдтэй хичээллүүдээр
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            {features ? (
+              <>
+                <Card className="text-center p-8 border border-gray-100 shadow-lg rounded-2xl bg-white">
+                  <CardContent className="space-y-4 p-0">
+                    <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto">
+                      <span className="text-2xl">{features.feature1?.icon || "📚"}</span>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-1">{features.feature1?.title || "Онлайн сургалт"}</h3>
+                      <p className="text-sm text-gray-500 leading-relaxed">
+                        {features.feature1?.description || "Хугацаатай, хурдан, хүнсэн сургалт"}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <Card className="text-center p-8 border border-gray-100 shadow-lg rounded-2xl bg-white hover:shadow-xl transition-shadow duration-300">
-              <CardContent className="space-y-6 p-0">
-                <div className="w-20 h-20 bg-green-100 rounded-2xl flex items-center justify-center mx-auto">
-                  <span className="text-2xl font-bold text-green-600">₮</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Үнэ хятад & хямд үнэ</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    Өөр өөр төлөвлөгөөтэй, таны хэмжээнд тохирсон үнэтэй сургалтууд
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+                <Card className="text-center p-8 border border-gray-100 shadow-lg rounded-2xl bg-white">
+                  <CardContent className="space-y-4 p-0">
+                    <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto">
+                      <span className="text-2xl">{features.feature2?.icon || "💬"}</span>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-1">{features.feature2?.title || "Харилцах"}</h3>
+                      <p className="text-sm text-gray-500 leading-relaxed">
+                        {features.feature2?.description || "Харилцах, харилцах, харилцах"}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <Card className="text-center p-8 border border-gray-100 shadow-lg rounded-2xl bg-white hover:shadow-xl transition-shadow duration-300">
-              <CardContent className="space-y-6 p-0">
-                <div className="w-20 h-20 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto">
-                  <Users className="w-10 h-10 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Мэргэжлийн багш нар</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    Тус салбарын мэргэжлийн багш нартай, практик туршлагатай сургалтууд
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+                <Card className="text-center p-8 border border-gray-100 shadow-lg rounded-2xl bg-white">
+                  <CardContent className="space-y-4 p-0">
+                    <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto">
+                      <span className="text-2xl">{features.feature3?.icon || "👥"}</span>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-1">{features.feature3?.title || "Хувь хүн"}</h3>
+                      <p className="text-sm text-gray-500 leading-relaxed">
+                        {features.feature3?.description || "Хувь хүн, хувь хүн, хувь хүн"}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              // Fallback to hardcoded features while loading
+              <>
+                <Card className="text-center p-8 border border-gray-100 shadow-lg rounded-2xl bg-white">
+                  <CardContent className="space-y-4 p-0">
+                    <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto">
+                      <Play className="w-8 h-8 text-[#5B7FFF]" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-1">Чанартай видео & аудио</h3>
+                      <p className="text-sm text-gray-500 leading-relaxed">
+                        HD чанартай видео, тод аудио, мөн интерактив элементүүдтэй хичээллүүдээр
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="text-center p-8 border border-gray-100 shadow-lg rounded-2xl bg-white">
+                  <CardContent className="space-y-4 p-0">
+                    <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto">
+                      <span className="text-2xl font-bold text-green-600">₮</span>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-1">Үнэ хятад & хямд үнэ</h3>
+                      <p className="text-sm text-gray-500 leading-relaxed">
+                        Өөр өөр төлөвлөгөөтэй, таны хэмжээнд тохирсон үнэтэй сургалтууд
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="text-center p-8 border border-gray-100 shadow-lg rounded-2xl bg-white">
+                  <CardContent className="space-y-4 p-0">
+                    <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto">
+                      <Users className="w-8 h-8 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-1">Мэргэжлийн багш нар</h3>
+                      <p className="text-sm text-gray-500 leading-relaxed">
+                        Тус салбарын мэргэжлийн багш нартай, практик туршлагатай сургалтууд
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -180,7 +291,7 @@ export default function HomePage() {
                     <Users className="w-8 h-8 text-[#5B7FFF]" />
                   </div>
                   <div>
-                    <div className="text-4xl font-bold text-gray-900 mb-1">100+</div>
+                    <div className="text-4xl font-bold text-gray-900 mb-1">{stats.totalStudents || "100+"}</div>
                     <div className="text-gray-900 font-semibold mb-1">Нийт сурагч</div>
                     <div className="text-sm text-gray-500">Идэвхтэй суралцаж буй суралцагчид</div>
                   </div>
@@ -193,7 +304,7 @@ export default function HomePage() {
                     <Star className="w-8 h-8 text-yellow-500" />
                   </div>
                   <div>
-                    <div className="text-4xl font-bold text-gray-900 mb-1">4.8/5</div>
+                    <div className="text-4xl font-bold text-gray-900 mb-1">{stats.averageRating || "4.8/5"}</div>
                     <div className="text-gray-900 font-semibold mb-1">Дундаж үнэлгээ</div>
                     <div className="text-sm text-gray-500">Суралцагчдын сэтгэгдэл</div>
                   </div>
@@ -206,7 +317,7 @@ export default function HomePage() {
                     <Trophy className="w-8 h-8 text-green-600" />
                   </div>
                   <div>
-                    <div className="text-4xl font-bold text-gray-900 mb-1">15,000+</div>
+                    <div className="text-4xl font-bold text-gray-900 mb-1">{stats.completedLessons || "15,000+"}</div>
                     <div className="text-gray-900 font-semibold mb-1">Хичээл дуусгасан</div>
                     <div className="text-sm text-gray-500">Амжилттай төгссөн хичээллүүд</div>
                   </div>

@@ -300,16 +300,36 @@ export class Database {
   }
 
   async updatePlatformSettings(settings: any) {
-    const client = await this.getClient()
-    const db = client.db("new-era-platform")
-    
-    const result = await db.collection("platform_settings").updateOne(
-      {}, // Update the first (and only) document
-      { $set: { ...settings, updatedAt: new Date() } },
-      { upsert: true } // Create if doesn't exist
-    )
-    
-    return result.modifiedCount > 0 || result.upsertedCount > 0
+    try {
+      const client = await this.getClient()
+      const db = client.db("new-era-platform")
+      
+      console.log("Database: Updating platform settings in collection 'platform_settings'")
+      console.log("Settings to update:", settings)
+      
+      // Filter out _id field to prevent MongoDB immutable field error
+      const { _id, ...settingsWithoutId } = settings
+      const cleanSettings = { ...settingsWithoutId, updatedAt: new Date() }
+      
+      console.log("Clean settings (without _id):", cleanSettings)
+      
+      const result = await db.collection("platform_settings").updateOne(
+        {}, // Update the first (and only) document
+        { $set: cleanSettings },
+        { upsert: true } // Create if doesn't exist
+      )
+      
+      console.log("Database update result:", {
+        modifiedCount: result.modifiedCount,
+        upsertedCount: result.upsertedCount,
+        matchedCount: result.matchedCount
+      })
+      
+      return result.modifiedCount > 0 || result.upsertedCount > 0
+    } catch (error) {
+      console.error("Database error in updatePlatformSettings:", error)
+      throw error
+    }
   }
 
   // Sub-Course operations
@@ -400,17 +420,30 @@ export class Database {
     const layout = await db.collection("media_grid_layouts").findOne({})
     
     if (!layout) {
-      // Return default layout if none exists
-      return {
+      // Create a more appealing default layout
+      const defaultCells = []
+      for (let y = 0; y < 4; y++) {
+        for (let x = 0; x < 6; x++) {
+          defaultCells.push({ x, y })
+        }
+      }
+      
+      // Add some sample media placements to make it look more interesting
+      const sampleLayout = {
         id: "default",
         name: "Main Grid",
         width: 6,
         height: 4,
-        cells: [],
+        cells: defaultCells,
         isPublished: true,
         isLive: false,
         lastSaved: new Date().toISOString()
       }
+      
+      // Save the default layout
+      await this.updateMediaGridLayout(sampleLayout)
+      
+      return sampleLayout
     }
     
     return layout
@@ -433,7 +466,9 @@ export class Database {
   async getAllMediaItems(): Promise<any[]> {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
-    return await db.collection("media_items").find({}).toArray()
+    const mediaItems = await db.collection("media_items").find({}).toArray()
+    
+    return mediaItems
   }
 
   async createMediaItem(mediaItem: any): Promise<ObjectId> {
@@ -588,6 +623,125 @@ export class Database {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
     return await db.collection("lessons").find({ subCourseId: subCourseId.toString() }).toArray()
+  }
+
+  // Recent Activities for Admin Dashboard
+  async getRecentActivities() {
+    try {
+      const client = await this.getClient()
+      const db = client.db("new-era-platform")
+      
+      // Get recent activities from different collections
+      const [recentUsers, recentCourses, recentPayments, recentEnrollments] = await Promise.all([
+        // Recent users (last 5)
+        db.collection("users")
+          .find({})
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .toArray(),
+        
+        // Recent courses (last 5)
+        db.collection("courses")
+          .find({})
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .toArray(),
+        
+        // Recent payments (last 5)
+        db.collection("payments")
+          .find({})
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .toArray(),
+        
+        // Recent enrollments (last 5)
+        db.collection("enrollments")
+          .find({})
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .toArray()
+      ])
+      
+      // Define activity interface
+      interface Activity {
+        id: string
+        type: string
+        action: string
+        title: string
+        description: string
+        timestamp: Date
+        status: string
+        icon: string
+      }
+      
+      // Combine and format activities
+      const activities: Activity[] = []
+      
+      // Add user activities
+      recentUsers.forEach((user: any) => {
+        activities.push({
+          id: user._id?.toString(),
+          type: 'user',
+          action: 'registered',
+          title: user.name || user.email || 'New User',
+          description: `New user ${user.role || 'student'} registered`,
+          timestamp: user.createdAt || new Date(),
+          status: 'success',
+          icon: '👤'
+        })
+      })
+      
+      // Add course activities
+      recentCourses.forEach((course: any) => {
+        activities.push({
+          id: course._id?.toString(),
+          type: 'course',
+          action: 'created',
+          title: course.title || 'New Course',
+          description: `New course "${course.title}" created`,
+          timestamp: course.createdAt || new Date(),
+          status: 'success',
+          icon: '📚'
+        })
+      })
+      
+      // Add payment activities
+      recentPayments.forEach((payment: any) => {
+        activities.push({
+          id: payment._id?.toString(),
+          type: 'payment',
+          action: payment.status || 'completed',
+          title: `Payment ${payment.status || 'completed'}`,
+          description: `Payment of ₮${payment.amount || 0} ${payment.status || 'completed'}`,
+          timestamp: payment.createdAt || new Date(),
+          status: payment.status === 'completed' ? 'success' : payment.status === 'pending' ? 'warning' : 'error',
+          icon: '💰'
+        })
+      })
+      
+      // Add enrollment activities
+      recentEnrollments.forEach((enrollment: any) => {
+        activities.push({
+          id: enrollment._id?.toString(),
+          type: 'enrollment',
+          action: 'enrolled',
+          title: 'New Enrollment',
+          description: `Student enrolled in course`,
+          timestamp: enrollment.createdAt || new Date(),
+          status: 'success',
+          icon: '🎓'
+        })
+      })
+      
+      // Sort all activities by timestamp (most recent first) and return top 10
+      return activities
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 10)
+        
+    } catch (error) {
+      console.error("Error fetching recent activities:", error)
+      return []
+    }
   }
 }
 

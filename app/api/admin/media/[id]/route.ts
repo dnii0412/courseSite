@@ -6,9 +6,17 @@ import { ObjectId } from "mongodb"
 // DELETE /api/admin/media/[id] - Delete media item
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
+    
+    if (!id) {
+      return NextResponse.json({ error: "Media ID is required" }, { status: 400 })
+    }
+
+    const mediaId = new ObjectId(id)
+
     // Verify admin authentication
     const token = request.cookies.get("auth-token")?.value
     if (!token) {
@@ -19,8 +27,6 @@ export async function DELETE(
     if (!user || user.role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
-
-    const mediaId = new ObjectId(params.id)
 
     // Delete media item
     const success = await db.deleteMediaItem(mediaId)

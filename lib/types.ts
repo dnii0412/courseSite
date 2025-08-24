@@ -68,3 +68,38 @@ export interface Payment {
   createdAt: Date
   updatedAt: Date
 }
+
+export interface MediaItem {
+  _id?: string
+  name: string
+  description: string
+  type: string
+  size: number
+  originalName: string
+  uploadedBy: string
+  status: 'active' | 'inactive'
+  cloudinaryPublicId?: string
+  cloudinaryUrl?: string
+  cloudinarySecureUrl?: string
+  createdAt?: Date
+  updatedAt?: Date
+}
+
+export interface GridCell {
+  x: number
+  y: number
+  mediaId?: string
+  media?: MediaItem
+}
+
+export interface MediaGridLayout {
+  _id?: string
+  width: number
+  height: number
+  cells: GridCell[]
+  isPublished: boolean
+  isLive: boolean
+  lastSaved?: Date
+  createdAt?: Date
+  updatedAt?: Date
+}

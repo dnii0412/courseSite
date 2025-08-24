@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next/server"
+import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/lib/hooks/useAuth"

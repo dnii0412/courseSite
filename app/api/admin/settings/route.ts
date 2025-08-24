@@ -41,9 +41,11 @@ export async function PUT(request: NextRequest) {
     }
 
     const settings = await request.json()
+    console.log("Updating platform settings:", settings)
 
     // Update platform settings
     const success = await db.updatePlatformSettings(settings)
+    console.log("Update result:", success)
     
     if (!success) {
       return NextResponse.json({ error: "Failed to update settings" }, { status: 500 })
@@ -51,7 +53,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ message: "Settings updated successfully" })
   } catch (error) {
-    
+    console.error("Settings update error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

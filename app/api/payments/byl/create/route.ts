@@ -30,9 +30,10 @@ export async function POST(request: NextRequest) {
 
     if (paymentMethod === "checkout") {
       // Create Byl checkout
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
       const checkoutData = {
-        success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-success?paymentId=`,
-        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/courses/${courseId}`,
+        success_url: `${baseUrl}/payment-success?paymentId=`,
+        cancel_url: `${baseUrl}/courses/${courseId}`,
         items: [
           {
             price_data: {

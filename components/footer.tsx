@@ -61,7 +61,6 @@ export function Footer() {
               <li>📧 asanchir59@gmail.com</li>
               <li>📞 +976 99638369</li>
               <li>📍 Улаанбаатар, Монгол</li>
-              <li>🕒 24/7</li>
             </ul>
           </div>
         </div>

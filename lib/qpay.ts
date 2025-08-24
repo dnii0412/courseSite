@@ -34,19 +34,27 @@ export class QPayService {
   private invoiceCode: string
 
   constructor() {
-    this.baseUrl = process.env.QPAY_BASE_URL || "https://merchant.qpay.mn"
-    this.username = process.env.QPAY_USERNAME || "demo_user"
-    this.password = process.env.QPAY_PASSWORD || "demo_pass"
-    this.invoiceCode = process.env.QPAY_INVOICE_CODE || "DEMO-001"
+    this.baseUrl = process.env.QPAY_API_URL || "https://merchant.qpay.mn"
+    this.username = process.env.QPAY_MERCHANT_CODE || "demo_user"
+    this.password = process.env.QPAY_MCC_CODE || "demo_pass"
+    this.invoiceCode = process.env.QPAY_PROJECT_ID || "DEMO-001"
   }
 
   private async getAccessToken(): Promise<string> {
     // Check if required environment variables are set
     if (!this.username || !this.password) {
-      throw new Error("QPay credentials not configured. Please set QPAY_USERNAME and QPAY_PASSWORD environment variables.")
+      throw new Error("QPay credentials not configured. Please set QPAY_MERCHANT_CODE and QPAY_MCC_CODE environment variables.")
     }
 
-    const response = await fetch(`${this.baseUrl}/v2/auth/token`, {
+    // Ensure baseUrl doesn't end with a slash
+    const cleanBaseUrl = this.baseUrl.replace(/\/$/, '')
+    const authUrl = `${cleanBaseUrl}/v2/auth/token`
+    
+    console.log(`QPay Auth URL: ${authUrl}`)
+    console.log(`QPay Username: ${this.username}`)
+    console.log(`QPay Password: ${this.password}`)
+
+    const response = await fetch(authUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -57,13 +65,26 @@ export class QPayService {
       }),
     })
 
+    console.log(`QPay Auth Response Status: ${response.status}`)
+    console.log(`QPay Auth Response Headers:`, Object.fromEntries(response.headers.entries()))
+
     if (!response.ok) {
       const errorText = await response.text()
+      console.log(`QPay Auth Error Response:`, errorText)
       throw new Error(`Failed to get QPay access token: ${response.status} ${response.statusText} - ${errorText}`)
     }
 
-    const data = await response.json()
-    return data.access_token
+    const responseText = await response.text()
+    console.log(`QPay Auth Response Body:`, responseText)
+    
+    try {
+      const data = JSON.parse(responseText)
+      return data.access_token
+    } catch (parseError) {
+      console.error(`QPay Auth JSON Parse Error:`, parseError)
+      console.error(`QPay Auth Raw Response:`, responseText)
+      throw new Error(`Invalid JSON response from QPay: ${responseText.substring(0, 200)}...`)
+    }
   }
 
   async createInvoice(
@@ -74,7 +95,7 @@ export class QPayService {
   ): Promise<QPayInvoiceResponse> {
     // Check if required environment variables are set
     if (!this.invoiceCode) {
-      throw new Error("QPay invoice code not configured. Please set QPAY_INVOICE_CODE environment variable.")
+      throw new Error("QPay invoice code not configured. Please set QPAY_PROJECT_ID environment variable.")
     }
 
     const token = await this.getAccessToken()
@@ -88,7 +109,11 @@ export class QPayService {
       callback_url: callbackUrl,
     }
 
-    const response = await fetch(`${this.baseUrl}/v2/invoice`, {
+    // Ensure baseUrl doesn't end with a slash
+    const cleanBaseUrl = this.baseUrl.replace(/\/$/, '')
+    const invoiceUrl = `${cleanBaseUrl}/v2/invoice`
+
+    const response = await fetch(invoiceUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
