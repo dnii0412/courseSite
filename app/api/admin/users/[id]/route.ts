@@ -1,0 +1,118 @@
+import { NextRequest, NextResponse } from "next/server"
+import { verifyToken } from "@/lib/auth-server"
+import { db } from "@/lib/database"
+import bcrypt from "bcryptjs"
+import { ObjectId } from "mongodb"
+
+// PUT /api/admin/users/[id] - Update user
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Verify admin authentication
+    const token = request.cookies.get("auth-token")?.value
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const user = verifyToken(token)
+    if (!user || user.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const userId = new ObjectId(params.id)
+    const { name, email, password, role } = await request.json()
+
+    // Validate input
+    if (!name || !email || !role) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    }
+
+    if (!["student", "admin"].includes(role)) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 })
+    }
+
+    // Check if user exists
+    const existingUser = await db.getUserById(userId)
+    if (!existingUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    // Check if email is already taken by another user
+    if (email !== existingUser.email) {
+      const userWithEmail = await db.getUserByEmail(email)
+      if (userWithEmail && userWithEmail._id?.toString() !== params.id) {
+        return NextResponse.json({ error: "Email already taken" }, { status: 409 })
+      }
+    }
+
+    // Prepare update data
+    const updateData: any = {
+      name,
+      email,
+      role,
+    }
+
+    // Only update password if provided
+    if (password && password.trim() !== "") {
+      updateData.password = await bcrypt.hash(password, 12)
+    }
+
+    // Update user
+    const success = await db.updateUser(userId, updateData)
+    
+    if (!success) {
+      return NextResponse.json({ error: "Failed to update user" }, { status: 500 })
+    }
+
+    return NextResponse.json({ message: "User updated successfully" })
+  } catch (error) {
+    console.error("Failed to update user:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+// DELETE /api/admin/users/[id] - Delete user
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Verify admin authentication
+    const token = request.cookies.get("auth-token")?.value
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const user = verifyToken(token)
+    if (!user || user.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const userId = new ObjectId(params.id)
+
+    // Check if user exists
+    const existingUser = await db.getUserById(userId)
+    if (!existingUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    // Prevent admin from deleting themselves
+    if (user.id === params.id) {
+      return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 })
+    }
+
+    // Delete user
+    const success = await db.deleteUser(userId)
+    
+    if (!success) {
+      return NextResponse.json({ error: "Failed to delete user" }, { status: 500 })
+    }
+
+    return NextResponse.json({ message: "User deleted successfully" })
+  } catch (error) {
+    console.error("Failed to delete user:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
