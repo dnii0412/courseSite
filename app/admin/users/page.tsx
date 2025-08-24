@@ -79,7 +79,7 @@ export default function AdminUsers() {
       fetchUsers()
       fetchCourses()
     } catch (error) {
-      console.error("Auth check failed:", error)
+
       router.push("/admin/login")
     }
   }
@@ -98,7 +98,7 @@ export default function AdminUsers() {
         })
       }
     } catch (error) {
-      console.error("Failed to fetch users:", error)
+
       toast({
         title: "Error",
         description: "Failed to fetch users",
@@ -117,7 +117,7 @@ export default function AdminUsers() {
         setCourses(data.courses || [])
       }
     } catch (error) {
-      console.error("Failed to fetch courses:", error)
+
     }
   }
 
@@ -146,7 +146,7 @@ export default function AdminUsers() {
         })
       }
     } catch (error) {
-      console.error("Failed to create user:", error)
+
       toast({
         title: "Error",
         description: "Failed to create user",
@@ -183,7 +183,7 @@ export default function AdminUsers() {
         })
       }
     } catch (error) {
-      console.error("Failed to update user:", error)
+
       toast({
         title: "Error",
         description: "Failed to update user",
@@ -215,7 +215,7 @@ export default function AdminUsers() {
         })
       }
     } catch (error) {
-      console.error("Failed to delete user:", error)
+
       toast({
         title: "Error",
         description: "Failed to delete user",
@@ -249,7 +249,7 @@ export default function AdminUsers() {
         })
       }
     } catch (error) {
-      console.error("Failed to update course access:", error)
+
       toast({
         title: "Error",
         description: "Failed to update course access",

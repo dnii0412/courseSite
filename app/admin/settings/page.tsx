@@ -84,7 +84,7 @@ export default function AdminSettings() {
       
       fetchSettings()
     } catch (error) {
-      console.error("Auth check failed:", error)
+
       router.push("/admin/login")
     }
   }
@@ -97,10 +97,10 @@ export default function AdminSettings() {
         setSettings(data.settings)
       } else {
         // Use default settings if API fails
-        console.log("Using default settings")
+  
       }
     } catch (error) {
-      console.error("Failed to fetch settings:", error)
+
     } finally {
       setLoading(false)
     }
@@ -129,7 +129,7 @@ export default function AdminSettings() {
         })
       }
     } catch (error) {
-      console.error("Failed to save settings:", error)
+
       toast({
         title: "Error",
         description: "Failed to save settings",

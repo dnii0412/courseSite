@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { BookOpen, Plus, Search, Edit, Trash2, ChevronDown, ChevronRight, Video } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { bunnyVideoService } from "@/lib/bunny-video"
@@ -59,6 +60,7 @@ interface Course {
 
 export default function AdminCourses() {
   const { toast } = useToast()
+  const router = useRouter()
 
   const [courses, setCourses] = useState<Course[]>([])
   const [subCourses, setSubCourses] = useState<SubCourse[]>([])
@@ -143,29 +145,51 @@ export default function AdminCourses() {
   })
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const [coursesRes, subCoursesRes] = await Promise.all([
-          fetch("/api/admin/courses"),
-          fetch("/api/admin/sub-courses")
-        ])
-
-        if (coursesRes.ok) {
-          const data = await coursesRes.json()
-          setCourses(data.courses || [])
-        }
-        if (subCoursesRes.ok) {
-          const data = await subCoursesRes.json()
-          setSubCourses(data.subCourses || [])
-        }
-    } catch (error) {
-        console.error("Failed to load data", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
+    checkAuth()
   }, [])
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch("/api/auth/me")
+      if (!response.ok || response.status === 401) {
+        router.push("/admin/login")
+        return
+      }
+      
+      const data = await response.json()
+      if (data.user.role !== "admin") {
+        router.push("/admin/login")
+        return
+      }
+      
+      loadData()
+    } catch (error) {
+      console.error("Auth check failed:", error)
+      router.push("/admin/login")
+    }
+  }
+
+  const loadData = async () => {
+    try {
+      const [coursesRes, subCoursesRes] = await Promise.all([
+        fetch("/api/admin/courses"),
+        fetch("/api/admin/sub-courses")
+      ])
+
+      if (coursesRes.ok) {
+        const data = await coursesRes.json()
+        setCourses(data.courses || [])
+      }
+      if (subCoursesRes.ok) {
+        const data = await subCoursesRes.json()
+        setSubCourses(data.subCourses || [])
+      }
+    } catch (error) {
+      console.error("Failed to load data:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const fetchLessons = async (subCourseId: string): Promise<Lesson[]> => {
     try {
@@ -174,7 +198,7 @@ export default function AdminCourses() {
       const data = await res.json()
       return data.lessons || []
     } catch (e) {
-      console.warn("Lessons GET not available; returning empty list", e)
+      
       return []
     }
   }
@@ -407,14 +431,16 @@ export default function AdminCourses() {
     course.description.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  if (loading) {
     return (
-    <div className="space-y-6">
-      {loading ? (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
-      ) : (
-        <>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Хичээл удирдах</h1>
         <p className="text-gray-600">Хичээлүүдийг нэмэх, засах, устгах</p>
@@ -434,6 +460,9 @@ export default function AdminCourses() {
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Create New Course</DialogTitle>
+                  <DialogDescription>
+                    Create a new course by filling out the information below.
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -473,7 +502,7 @@ export default function AdminCourses() {
                         id="coursePrice"
                         type="number"
                         value={courseFormData.price}
-                        onChange={(e) => setCourseFormData({ ...courseFormData, price: parseInt(e.target.value) })}
+                        onChange={(e) => setCourseFormData({ ...courseFormData, price: parseInt(e.target.value) || 0 })}
                         placeholder="Enter price"
                       />
                     </div>
@@ -483,7 +512,7 @@ export default function AdminCourses() {
                         id="courseOriginalPrice"
                         type="number"
                         value={courseFormData.originalPrice}
-                        onChange={(e) => setCourseFormData({ ...courseFormData, originalPrice: parseInt(e.target.value) })}
+                        onChange={(e) => setCourseFormData({ ...courseFormData, originalPrice: parseInt(e.target.value) || 0 })}
                         placeholder="Enter original price"
                       />
                     </div>
@@ -749,6 +778,9 @@ export default function AdminCourses() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New Sub-Course</DialogTitle>
+            <DialogDescription>
+              Create a new sub-course by filling out the information below.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -777,7 +809,7 @@ export default function AdminCourses() {
                   id="subCourseOrder"
                   type="number"
                   value={subCourseFormData.order}
-                  onChange={(e) => setSubCourseFormData({ ...subCourseFormData, order: parseInt(e.target.value) })}
+                                          onChange={(e) => setSubCourseFormData({ ...subCourseFormData, order: parseInt(e.target.value) || 1 })}
                   placeholder="Enter order"
                 />
               </div>
@@ -800,6 +832,9 @@ export default function AdminCourses() {
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Edit Course</DialogTitle>
+                <DialogDescription>
+                  Edit the course information below.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -836,7 +871,7 @@ export default function AdminCourses() {
                       id="editCoursePrice"
                       type="number"
                       value={editCourseFormData.price}
-                      onChange={(e) => setEditCourseFormData({ ...editCourseFormData, price: parseInt(e.target.value || "0") })}
+                                              onChange={(e) => setEditCourseFormData({ ...editCourseFormData, price: parseInt(e.target.value) || 0 })}
                     />
                   </div>
                   <div>
@@ -845,7 +880,7 @@ export default function AdminCourses() {
                       id="editCourseOriginalPrice"
                       type="number"
                       value={editCourseFormData.originalPrice}
-                      onChange={(e) => setEditCourseFormData({ ...editCourseFormData, originalPrice: parseInt(e.target.value || "0") })}
+                                              onChange={(e) => setEditCourseFormData({ ...editCourseFormData, originalPrice: parseInt(e.target.value) || 0 })}
                     />
                   </div>
                   <div>
@@ -897,7 +932,7 @@ export default function AdminCourses() {
                       id="editLessonOrder"
                       type="number"
                       value={editLessonFormData.order}
-                      onChange={(e) => setEditLessonFormData({ ...editLessonFormData, order: parseInt(e.target.value || "1") })}
+                                              onChange={(e) => setEditLessonFormData({ ...editLessonFormData, order: parseInt(e.target.value) || 1 })}
                     />
                   </div>
                 </div>
@@ -986,7 +1021,7 @@ export default function AdminCourses() {
                       id="editSubCourseOrder"
                       type="number"
                       value={editSubCourseFormData.order}
-                      onChange={(e) => setEditSubCourseFormData({ ...editSubCourseFormData, order: parseInt(e.target.value || "1") })}
+                                              onChange={(e) => setEditSubCourseFormData({ ...editSubCourseFormData, order: parseInt(e.target.value) || 1 })}
                     />
                   </div>
                   <div className="flex items-center space-x-2">
@@ -1025,7 +1060,7 @@ export default function AdminCourses() {
                   id="lessonOrder"
                   type="number"
                   value={lessonFormData.order}
-                  onChange={(e) => setLessonFormData({ ...lessonFormData, order: parseInt(e.target.value) })}
+                                          onChange={(e) => setLessonFormData({ ...lessonFormData, order: parseInt(e.target.value) || 1 })}
                   placeholder="Enter order"
                 />
               </div>
@@ -1076,8 +1111,6 @@ export default function AdminCourses() {
           </div>
         </DialogContent>
       </Dialog>
-        </>
-      )}
     </div>
   )
 }

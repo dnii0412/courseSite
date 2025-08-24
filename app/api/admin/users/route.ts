@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({ users })
   } catch (error) {
-    console.error("Failed to fetch users:", error)
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       userId 
     }, { status: 201 })
   } catch (error) {
-    console.error("Failed to create user:", error)
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -31,7 +31,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Media item deleted successfully" })
   } catch (error) {
-    console.error("Failed to delete media item:", error)
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

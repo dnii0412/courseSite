@@ -33,7 +33,7 @@ export default function HomePage() {
         setCourses(coursesData.courses || [])
         setStats(statsData.stats)
       } catch (error) {
-        console.error("Error fetching data:", error)
+  
       } finally {
         setLoading(false)
       }
@@ -118,36 +118,48 @@ export default function HomePage() {
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">Манай платформын давуу талууд</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-12">
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto">
-                <Play className="w-10 h-10 text-[#5B7FFF]" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900">Чанартай видео & аудио</h3>
-              <p className="text-gray-600 leading-relaxed">
-                HD чанартай видео, тод аудио, мөн интерактив элементүүдтэй хичээллүүдээр
-              </p>
-            </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="text-center p-8 border border-gray-100 shadow-lg rounded-2xl bg-white hover:shadow-xl transition-shadow duration-300">
+              <CardContent className="space-y-6 p-0">
+                <div className="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto">
+                  <Play className="w-10 h-10 text-[#5B7FFF]" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Чанартай видео & аудио</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    HD чанартай видео, тод аудио, мөн интерактив элементүүдтэй хичээллүүдээр
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 bg-green-100 rounded-2xl flex items-center justify-center mx-auto">
-                <span className="text-2xl font-bold text-green-600">₮</span>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900">Үнэ хятад & хямд үнэ</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Өөр өөр төлөвлөгөөтэй, таны хэмжээнд тохирсон үнэтэй сургалтууд
-              </p>
-            </div>
+            <Card className="text-center p-8 border border-gray-100 shadow-lg rounded-2xl bg-white hover:shadow-xl transition-shadow duration-300">
+              <CardContent className="space-y-6 p-0">
+                <div className="w-20 h-20 bg-green-100 rounded-2xl flex items-center justify-center mx-auto">
+                  <span className="text-2xl font-bold text-green-600">₮</span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Үнэ хятад & хямд үнэ</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Өөр өөр төлөвлөгөөтэй, таны хэмжээнд тохирсон үнэтэй сургалтууд
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto">
-                <Users className="w-10 h-10 text-purple-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900">Мэргэжлийн багш нар</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Тус салбарын мэргэжлийн багш нартай, практик туршлагатай сургалтууд
-              </p>
-            </div>
+            <Card className="text-center p-8 border border-gray-100 shadow-lg rounded-2xl bg-white hover:shadow-xl transition-shadow duration-300">
+              <CardContent className="space-y-6 p-0">
+                <div className="w-20 h-20 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto">
+                  <Users className="w-10 h-10 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Мэргэжлийн багш нар</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Тус салбарын мэргэжлийн багш нартай, практик туршлагатай сургалтууд
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>

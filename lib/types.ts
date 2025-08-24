@@ -43,6 +43,9 @@ export interface User {
   password: string
   role: "student" | "admin"
   enrolledCourses: string[]
+  phone?: string
+  address?: string
+  bio?: string
   createdAt: Date
   updatedAt: Date
 }

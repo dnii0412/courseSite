@@ -33,39 +33,69 @@ interface QPayInvoice {
   }>
 }
 
+interface BylCheckout {
+  id: number
+  url: string
+  status: string
+  amount_total: number
+}
+
 export function PaymentModal({ course, onClose }: PaymentModalProps) {
   const [paymentMethod, setPaymentMethod] = useState("qpay")
   const [phoneNumber, setPhoneNumber] = useState("")
   const [loading, setLoading] = useState(false)
   const [qpayInvoice, setQpayInvoice] = useState<QPayInvoice | null>(null)
+  const [bylCheckout, setBylCheckout] = useState<BylCheckout | null>(null)
   const [paymentId, setPaymentId] = useState<string | null>(null)
   const [paymentStatus, setPaymentStatus] = useState<string>("pending")
 
   const handlePayment = async () => {
-    if (!phoneNumber) {
+    if (paymentMethod === "qpay" && !phoneNumber) {
       alert("Утасны дугаар оруулна уу")
       return
     }
 
     setLoading(true)
     try {
-      const response = await fetch("/api/payments/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          courseId: course._id,
-          phoneNumber,
-        }),
-      })
+      if (paymentMethod === "qpay") {
+        const response = await fetch("/api/payments/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            courseId: course._id,
+            phoneNumber,
+          }),
+        })
 
-      if (response.ok) {
-        const data = await response.json()
-        setQpayInvoice(data.qpayInvoice)
-        setPaymentId(data.paymentId)
-        startPaymentCheck(data.paymentId)
-      } else {
-        const error = await response.json()
-        alert(error.error || "Төлбөр үүсгэхэд алдаа гарлаа")
+        if (response.ok) {
+          const data = await response.json()
+          setQpayInvoice(data.qpayInvoice)
+          setPaymentId(data.paymentId)
+          startPaymentCheck(data.paymentId)
+        } else {
+          const error = await response.json()
+          alert(error.error || "Төлбөр үүсгэхэд алдаа гарлаа")
+        }
+      } else if (paymentMethod === "byl") {
+        const response = await fetch("/api/payments/byl/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            courseId: course._id,
+            paymentMethod: "checkout"
+          }),
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setBylCheckout(data.bylCheckout)
+          setPaymentId(data.paymentId)
+          // For Byl checkout, redirect to their payment page
+          window.open(data.bylCheckout.url, "_blank")
+        } else {
+          const error = await response.json()
+          alert(error.error || "Төлбөр үүсгэхэд алдаа гарлаа")
+        }
       }
     } catch (error) {
       console.error("Payment error:", error)
@@ -96,7 +126,7 @@ export function PaymentModal({ course, onClose }: PaymentModalProps) {
           }
         }
       } catch (error) {
-        console.error("Payment check error:", error)
+  
       }
     }, 3000) // Check every 3 seconds
 
@@ -120,7 +150,7 @@ export function PaymentModal({ course, onClose }: PaymentModalProps) {
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          {!qpayInvoice ? (
+          {!qpayInvoice && !bylCheckout ? (
             <>
               <div className="text-center">
                 <h3 className="font-semibold text-lg">{course.title}</h3>
@@ -136,20 +166,23 @@ export function PaymentModal({ course, onClose }: PaymentModalProps) {
                   className="w-full p-2 border rounded-md mt-1"
                 >
                   <option value="qpay">QPay</option>
+                  <option value="byl">Byl</option>
                 </select>
               </div>
 
-              <div>
-                <Label htmlFor="phoneNumber">Утасны дугаар</Label>
-                <Input
-                  id="phoneNumber"
-                  type="tel"
-                  placeholder="Утасны дугаар"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
+              {paymentMethod === "qpay" && (
+                <div>
+                  <Label htmlFor="phoneNumber">Утасны дугаар</Label>
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    placeholder="Утасны дугаар"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="duration">Тоо ширхэг</Label>
@@ -169,7 +202,7 @@ export function PaymentModal({ course, onClose }: PaymentModalProps) {
                 )}
               </Button>
             </>
-          ) : (
+          ) : qpayInvoice ? (
             <div className="space-y-4">
               <div className="text-center">
                 <h3 className="font-semibold text-lg mb-2">QPay төлбөр</h3>
@@ -212,7 +245,29 @@ export function PaymentModal({ course, onClose }: PaymentModalProps) {
                 </div>
               )}
             </div>
-          )}
+          ) : bylCheckout ? (
+            <div className="space-y-4">
+              <div className="text-center">
+                <h3 className="font-semibold text-lg mb-2">Byl төлбөр</h3>
+                <div className="text-sm text-gray-600 mb-4">
+                  Төлбөрийн хуудас нээгдлээ. Хэрэв автоматаар нээгдээгүй бол доорх товчлуурыг дарна уу.
+                </div>
+              </div>
+
+              <div className="text-center">
+                <Button
+                  onClick={() => window.open(bylCheckout.url, "_blank")}
+                  className="w-full bg-primary hover:bg-primary/90"
+                >
+                  Төлбөрийн хуудас нээх
+                </Button>
+              </div>
+
+              <div className="text-center text-sm text-gray-600">
+                <p>Төлбөр төлөгдсөний дараа автоматаар хичээлд бүртгэгдэх болно.</p>
+              </div>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
     </div>

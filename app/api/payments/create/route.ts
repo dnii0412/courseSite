@@ -22,6 +22,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Course ID and phone number are required" }, { status: 400 })
     }
 
+    // Test database connection first
+    try {
+      await db.getStats() // Simple database test
+    } catch (dbError) {
+      console.error("Database connection error:", dbError)
+      return NextResponse.json({ 
+        error: "Database connection failed", 
+        details: dbError instanceof Error ? dbError.message : "Unknown database error"
+      }, { status: 500 })
+    }
+
     // Get course details
     const course = await db.getCourseById(new ObjectId(courseId))
     if (!course) {
@@ -46,7 +57,7 @@ export async function POST(request: NextRequest) {
     const qpayInvoice = await qpayService.createInvoice(course.price, description, senderInvoiceNo, callbackUrl)
 
     // Update payment with QPay invoice ID
-    await db.updatePaymentStatus(paymentId, "pending", qpayInvoice.invoice_id)
+    await db.updatePaymentStatus(paymentId, "pending", qpayInvoice.invoice_id, "qpay")
 
     return NextResponse.json({
       paymentId: paymentId.toString(),
@@ -55,6 +66,18 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("Payment creation error:", error)
-    return NextResponse.json({ error: "Failed to create payment" }, { status: 500 })
+    
+    // Log more details for debugging
+    if (error instanceof Error) {
+      console.error("Error name:", error.name)
+      console.error("Error message:", error.message)
+      console.error("Error stack:", error.stack)
+    }
+    
+    return NextResponse.json({ 
+      error: "Failed to create payment", 
+      details: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString()
+    }, { status: 500 })
   }
 }

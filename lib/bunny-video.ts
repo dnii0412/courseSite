@@ -23,30 +23,20 @@ export class BunnyVideoService {
     this.baseUrl = 'https://video.bunnycdn.com'
     
     if (!this.apiKey || !this.libraryId) {
-      console.warn('Bunny.net credentials not configured. Video uploads will fail.')
+  
     }
   }
 
   async uploadVideo(file: File, metadata: BunnyVideoMetadata): Promise<BunnyVideoUploadResponse> {
     try {
       if (!this.apiKey || !this.libraryId) {
-        console.error('Missing credentials:', { 
-          hasApiKey: !!this.apiKey, 
-          hasLibraryId: !!this.libraryId,
-          apiKeyLength: this.apiKey?.length,
-          libraryId: this.libraryId
-        })
         return {
           success: false,
           error: 'Bunny.net credentials not configured'
         }
       }
 
-      console.log('Starting Bunny.net upload with credentials:', {
-        hasApiKey: !!this.apiKey,
-        libraryId: this.libraryId,
-        baseUrl: this.baseUrl
-      })
+
 
       // Step 1: Create video entry in Bunny.net
       const createResponse = await fetch(`${this.baseUrl}/library/${this.libraryId}/videos`, {
@@ -65,18 +55,14 @@ export class BunnyVideoService {
 
       if (!createResponse.ok) {
         const error = await createResponse.text()
-        console.error('Failed to create video entry:', {
-          status: createResponse.status,
-          statusText: createResponse.statusText,
-          error
-        })
+
         throw new Error(`Failed to create video entry: ${error}`)
       }
 
       const videoData = await createResponse.json()
       const videoId = videoData.guid
 
-      console.log('Video entry created successfully:', { videoId, videoData })
+
 
       // Step 2: Upload video file
       const uploadResponse = await fetch(`${this.baseUrl}/library/${this.libraryId}/videos/${videoId}`, {
@@ -90,20 +76,16 @@ export class BunnyVideoService {
 
       if (!uploadResponse.ok) {
         const error = await uploadResponse.text()
-        console.error('Failed to upload video file:', {
-          status: uploadResponse.status,
-          statusText: uploadResponse.statusText,
-          error
-        })
+
         throw new Error(`Failed to upload video file: ${error}`)
       }
 
-      console.log('Video file uploaded successfully')
+
 
       // Step 3: Generate video URL
       const videoUrl = `https://iframe.mediadelivery.net/embed/${this.libraryId}/${videoId}`
       
-      console.log('Upload completed:', { videoId, videoUrl })
+
       
       return {
         success: true,
@@ -111,7 +93,7 @@ export class BunnyVideoService {
         videoUrl
       }
     } catch (error) {
-      console.error('Bunny.net video upload failed:', error)
+
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -133,7 +115,7 @@ export class BunnyVideoService {
 
       return await response.json()
     } catch (error) {
-      console.error('Failed to get video info:', error)
+      
       throw error
     }
   }
@@ -149,7 +131,7 @@ export class BunnyVideoService {
 
       return response.ok
     } catch (error) {
-      console.error('Failed to delete video:', error)
+      
       return false
     }
   }

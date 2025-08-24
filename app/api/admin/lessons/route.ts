@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       lessonId 
     }, { status: 201 })
   } catch (error) {
-    console.error("Failed to create lesson:", error)
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -85,7 +85,6 @@ export async function GET(request: NextRequest) {
     const lessons = await db.getLessonsBySubCourseId(objectId)
     return NextResponse.json({ lessons })
   } catch (error) {
-    console.error("Failed to fetch lessons:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -36,56 +36,26 @@ export default function DashboardPage() {
 
   const fetchUserCourses = async () => {
     try {
-      // This would normally fetch from an API
-      // For now, showing sample data
-      const sampleCourses: EnrolledCourse[] = [
-        {
-          _id: "1",
-          title: "React суурь ойлголт",
-          description: "React-ийн суурь ойлголтууд болон component бүтээх аргууд",
-          price: 150000,
-          category: "Веб хөгжүүлэлт",
-          level: "beginner",
-          duration: 480,
-          lessons: [],
-          enrolledCount: 234,
-          rating: 4.8,
-          totalRatings: 156,
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          progress: 65,
-          lastAccessed: new Date()
-        },
-        {
-          _id: "2", 
-          title: "JavaScript дэвшилтэт",
-          description: "JavaScript-ийн дэвшилтэт функцууд болон ES6+ онцлогууд",
-          price: 200000,
-          category: "Програмчлал",
-          level: "intermediate", 
-          duration: 720,
-          lessons: [],
-          enrolledCount: 189,
-          rating: 4.9,
-          totalRatings: 98,
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          progress: 30,
-          lastAccessed: new Date()
-        }
-      ]
+      if (!user?.id) return
       
-      setEnrolledCourses(sampleCourses)
-      setStats({
-        totalCourses: sampleCourses.length,
-        completedCourses: sampleCourses.filter(c => c.progress === 100).length,
-        totalHours: Math.round(sampleCourses.reduce((acc, c) => acc + c.duration, 0) / 60),
-        certificates: sampleCourses.filter(c => c.progress === 100).length
-      })
+      // Fetch user's profile data including enrollments and stats
+      const response = await fetch(`/api/auth/profile`)
+      if (response.ok) {
+        const profileData = await response.json()
+        const { enrollments, stats: profileStats } = profileData
+        
+        // Transform enrollments to course format with progress
+        const coursesWithProgress: EnrolledCourse[] = enrollments.map((enrollment: any) => ({
+          ...enrollment.course,
+          progress: enrollment.progress || 0,
+          lastAccessed: enrollment.enrolledAt ? new Date(enrollment.enrolledAt) : undefined
+        }))
+        
+        setEnrolledCourses(coursesWithProgress)
+        setStats(profileStats)
+      }
     } catch (error) {
-      console.error("Failed to fetch courses:", error)
+      console.error("Error fetching user courses:", error)
     }
   }
 
@@ -172,17 +142,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Гэрчилгээ</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.certificates}</p>
-                </div>
-                <Star className="w-8 h-8 text-yellow-600" />
-              </div>
-            </CardContent>
-          </Card>
+
         </div>
 
         {/* Enrolled Courses */}

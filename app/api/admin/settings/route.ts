@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({ settings })
   } catch (error) {
-    console.error("Failed to fetch settings:", error)
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -51,7 +51,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ message: "Settings updated successfully" })
   } catch (error) {
-    console.error("Failed to update settings:", error)
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -33,7 +33,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     return NextResponse.json({ course: courseWithLessons })
   } catch (error) {
-    console.error("Error fetching course:", error)
+    
     return NextResponse.json({ error: "Failed to fetch course" }, { status: 500 })
   }
 }

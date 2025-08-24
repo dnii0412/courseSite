@@ -6,7 +6,9 @@ import { cookies } from "next/headers"
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if Google OAuth service is configured
     if (!googleAuthService) {
+      console.error("Google OAuth service not configured")
       return NextResponse.redirect(new URL('/login?error=oauth_not_configured', request.url))
     }
 
@@ -14,27 +16,42 @@ export async function GET(request: NextRequest) {
     const code = searchParams.get('code')
     const error = searchParams.get('error')
 
+    console.log("Google OAuth callback received:", { 
+      hasCode: !!code, 
+      hasError: !!error, 
+      error: error,
+      url: request.url 
+    })
+
     if (error) {
-      return NextResponse.redirect(new URL('/login?error=google_auth_failed', request.url))
+      console.error("Google OAuth error:", error)
+      return NextResponse.redirect(new URL(`/login?error=google_auth_failed&details=${error}`, request.url))
     }
 
     if (!code) {
+      console.error("No authorization code received")
       return NextResponse.redirect(new URL('/login?error=no_code', request.url))
     }
 
     // Exchange code for tokens
+    console.log("Exchanging authorization code for tokens...")
     const tokens = await googleAuthService.exchangeCodeForTokens(code)
     
     if (!tokens.id_token) {
+      console.error("No ID token received from Google")
       return NextResponse.redirect(new URL('/login?error=no_id_token', request.url))
     }
 
+    console.log("Tokens received, verifying ID token...")
     // Verify the ID token
     const googleUser = await googleAuthService.verifyToken(tokens.id_token)
     
     if (!googleUser.email) {
+      console.error("No email in Google user data")
       return NextResponse.redirect(new URL('/login?error=no_email', request.url))
     }
+
+    console.log("Google user verified:", { email: googleUser.email, name: googleUser.name })
 
     // Check if user exists
     let user = await db.getUserByEmail(googleUser.email)
@@ -79,6 +96,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   } catch (error) {
     console.error("Google OAuth callback error:", error)
-    return NextResponse.redirect(new URL('/login?error=oauth_failed', request.url))
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.redirect(new URL(`/login?error=oauth_failed&details=${encodeURIComponent(errorMessage)}`, request.url))
   }
 }

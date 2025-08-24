@@ -2,10 +2,10 @@ import { MongoClient } from "mongodb"
 
 // Fallback to local MongoDB if environment variable is not set
 const defaultUri = "mongodb://localhost:27017/new-era-platform"
-const uri = process.env.MONGODB_URI || defaultUri
+const uri = process.env.MONGODB_URI || process.env.MONGODB_URL || defaultUri
 
 if (!uri) {
-  throw new Error('Invalid/Missing environment variable: "MONGODB_URI"')
+  throw new Error('Invalid/Missing environment variable: "MONGODB_URI" or "MONGODB_URL"')
 }
 
 const options = {

@@ -44,7 +44,7 @@ export default function CoursePage() {
             setSubCourses(subCoursesData.subCourses || [])
           }
         } catch (error) {
-          console.error("Error fetching sub-courses:", error)
+    
         }
 
         // Fetch user enrollments if logged in
@@ -56,11 +56,11 @@ export default function CoursePage() {
               setEnrolledCourses(enrollmentsData.enrollments || [])
             }
           } catch (error) {
-            console.error("Error fetching enrollments:", error)
+      
           }
         }
       } catch (error) {
-        console.error("Error fetching course:", error)
+  
       } finally {
         setLoading(false)
       }

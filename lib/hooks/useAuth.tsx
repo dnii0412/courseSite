@@ -33,10 +33,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // 401 is expected when no user is logged in - not an error
         setUser(null)
       } else {
-        console.error("Auth check failed with status:", response.status)
+
       }
     } catch (error) {
-      console.error("Auth check failed:", error)
+      
     } finally {
       setLoading(false)
     }
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return false
     } catch (error) {
-      console.error("Login failed:", error)
+      
       return false
     }
   }
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return false
     } catch (error) {
-      console.error("Registration failed:", error)
+      
       return false
     }
   }
@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await fetch("/api/auth/logout", { method: "POST" })
       setUser(null)
     } catch (error) {
-      console.error("Logout failed:", error)
+      
     }
   }
 

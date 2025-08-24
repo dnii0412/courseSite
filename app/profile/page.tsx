@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,38 +9,94 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useAuth } from "@/lib/hooks/useAuth"
-import { User, Mail, Phone, MapPin, Calendar, Edit, Save, X } from "lucide-react"
+import { User, Mail, Phone, Edit, Save, X, Lock } from "lucide-react"
 import Link from "next/link"
 
 export default function ProfilePage() {
   const { user, loading } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
+  const [userStats, setUserStats] = useState({
+    totalCourses: 0,
+    completedCourses: 0
+  })
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    address: "",
-    bio: ""
+    newPassword: "",
+    confirmPassword: ""
   })
 
   // Initialize form data when user is loaded
-  useState(() => {
+  useEffect(() => {
     if (user) {
       setFormData({
         name: user.name || "",
         email: user.email || "",
         phone: "",
-        address: "",
-        bio: ""
+        newPassword: "",
+        confirmPassword: ""
       })
+      fetchUserStats()
     }
-  })
+  }, [user])
 
-  const handleSave = () => {
-    // Here you would typically save to the backend
-    console.log("Saving profile:", formData)
-    setIsEditing(false)
-    // Show success message
+  const fetchUserStats = async () => {
+    try {
+      if (!user?.id) return
+      
+      // Fetch user's profile data including stats
+      const response = await fetch(`/api/auth/profile`)
+      if (response.ok) {
+        const profileData = await response.json()
+        const { stats, user: userDetails } = profileData
+        
+        setUserStats({
+          totalCourses: stats.totalCourses,
+          completedCourses: stats.completedCourses
+        })
+        
+        // Update form data with user details
+        setFormData({
+          name: userDetails.name || "",
+          email: userDetails.email || "",
+          phone: userDetails.phone || "",
+          newPassword: "",
+          confirmPassword: ""
+        })
+      }
+    } catch (error) {
+      console.error("Error fetching user stats:", error)
+    }
+  }
+
+  const handleSave = async () => {
+    try {
+      const response = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (response.ok) {
+        setIsEditing(false)
+        // Clear password fields
+        setFormData(prev => ({
+          ...prev,
+          newPassword: "",
+          confirmPassword: ""
+        }))
+        // Refresh user stats
+        fetchUserStats()
+        // You could add a toast notification here
+      } else {
+        console.error('Failed to update profile')
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error)
+    }
   }
 
   const handleCancel = () => {
@@ -50,8 +106,8 @@ export default function ProfilePage() {
         name: user.name || "",
         email: user.email || "",
         phone: "",
-        address: "",
-        bio: ""
+        newPassword: "",
+        confirmPassword: ""
       })
     }
     setIsEditing(false)
@@ -118,12 +174,12 @@ export default function ProfilePage() {
                   <div className="mt-6 pt-6 border-t">
                     <div className="grid grid-cols-2 gap-4 text-center">
                       <div>
-                        <p className="text-2xl font-bold text-gray-900">12</p>
+                        <p className="text-2xl font-bold text-gray-900">{userStats.totalCourses}</p>
                         <p className="text-sm text-gray-600">Хичээл</p>
                       </div>
                       <div>
-                        <p className="text-2xl font-bold text-gray-900">8</p>
-                        <p className="text-sm text-gray-600">Гэрчилгээ</p>
+                        <p className="text-2xl font-bold text-gray-900">{userStats.completedCourses}</p>
+                        <p className="text-sm text-gray-600">Дууссан хичээл</p>
                       </div>
                     </div>
                   </div>
@@ -194,6 +250,7 @@ export default function ProfilePage() {
                       {isEditing ? (
                         <Input
                           id="phone"
+                          type="tel"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                           placeholder="Утасны дугаар оруулна уу"
@@ -205,64 +262,83 @@ export default function ProfilePage() {
                         </div>
                       )}
                     </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Хаяг</Label>
-                      {isEditing ? (
-                        <Input
-                          id="address"
-                          value={formData.address}
-                          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                          placeholder="Хаяг оруулна уу"
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-                          <MapPin className="w-4 h-4 text-gray-500" />
-                          <span>{formData.address || "Тодорхойгүй"}</span>
-                        </div>
-                      )}
-                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="bio">Товч танилцуулга</Label>
-                    {isEditing ? (
-                      <textarea
-                        id="bio"
-                        rows={4}
-                        className="w-full p-3 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={formData.bio}
-                        onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                        placeholder="Өөрийн талаар товчхон бичнэ үү..."
-                      />
-                    ) : (
-                      <div className="p-3 bg-gray-50 rounded-md min-h-[100px]">
-                        <span className="text-gray-700">
-                          {formData.bio || "Товч танилцуулга байхгүй байна."}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
+                  {/* Password Change Section */}
                   <div className="pt-6 border-t">
-                    <h3 className="text-lg font-semibold mb-4">Аккаунтын мэдээлэл</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-                        <Calendar className="w-4 h-4 text-gray-500" />
-                        <div>
-                          <p className="text-sm text-gray-600">Элссэн огноо</p>
-                          <p className="font-medium">2024 оны 1-р сар</p>
-                        </div>
+                    <h3 className="text-lg font-semibold mb-4">Нууц үг солих</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="newPassword">Шинэ нууц үг</Label>
+                        {isEditing ? (
+                          <Input
+                            id="newPassword"
+                            type="password"
+                            value={formData.newPassword}
+                            onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                            placeholder="Шинэ нууц үг оруулна уу"
+                          />
+                        ) : (
+                          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
+                            <Lock className="w-4 h-4 text-gray-500" />
+                            <span className="text-gray-500">••••••••</span>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-                        <User className="w-4 h-4 text-gray-500" />
-                        <div>
-                          <p className="text-sm text-gray-600">Статус</p>
-                          <p className="font-medium text-green-600">Идэвхтэй</p>
-                        </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="confirmPassword">Нууц үг баталгаажуулах</Label>
+                        {isEditing ? (
+                          <Input
+                            id="confirmPassword"
+                            type="password"
+                            value={formData.confirmPassword}
+                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                            placeholder="Нууц үг давтаж оруулна уу"
+                          />
+                        ) : (
+                          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
+                            <Lock className="w-4 h-4 text-gray-500" />
+                            <span className="text-gray-500">••••••••</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
+
+                  {/* Delete Account Section */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold mb-4 text-red-600">Аккаунт устгах</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Энэ үйлдэл нь таны бүх мэдээллийг бүр мөсөн устгах болно. Энэ үйлдлийг буцааж болохгүй.
+                    </p>
+                    <Button 
+                      variant="destructive" 
+                      onClick={async () => {
+                        if (confirm('Та өөрийн аккаунтыг устгахдаа итгэлтэй байна уу? Энэ үйлдлийг буцааж болохгүй.')) {
+                          try {
+                            const response = await fetch('/api/auth/delete-account', {
+                              method: 'DELETE',
+                            })
+                            
+                            if (response.ok) {
+                              // Redirect to home page after successful deletion
+                              window.location.href = '/'
+                            } else {
+                              const error = await response.json()
+                              alert(`Аккаунт устгахад алдаа гарлаа: ${error.error}`)
+                            }
+                          } catch (error) {
+                            console.error('Error deleting account:', error)
+                            alert('Аккаунт устгахад алдаа гарлаа')
+                          }
+                        }
+                      }}
+                    >
+                      Аккаунт устгах
+                    </Button>
+                  </div>
+
                 </CardContent>
               </Card>
             </div>

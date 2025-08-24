@@ -34,7 +34,7 @@ export default function PaymentSuccessPage() {
           setPaymentDetails(data.payment)
         }
       } catch (error) {
-        console.error("Error checking payment:", error)
+  
       } finally {
         setLoading(false)
       }

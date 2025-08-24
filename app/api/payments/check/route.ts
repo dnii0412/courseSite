@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb"
 import { verifyToken } from "@/lib/auth-server"
 import { db } from "@/lib/database"
 import { qpayService } from "@/lib/qpay"
+import { bylService } from "@/lib/byl"
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
 
       if (qpayStatus.payment_status === "PAID") {
         // Update payment status
-        await db.updatePaymentStatus(new ObjectId(paymentId), "completed", qpayStatus.payment_id)
+        await db.updatePaymentStatus(new ObjectId(paymentId), "completed", qpayStatus.payment_id, "qpay")
 
         // Create enrollment
         await db.createEnrollment({
@@ -58,9 +59,63 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Check payment status with Byl
+    if (payment.bylInvoiceId) {
+      try {
+        const bylInvoice = await bylService.getInvoice(payment.bylInvoiceId)
+        
+        if (bylInvoice.status === "paid") {
+          // Update payment status
+          await db.updatePaymentStatus(new ObjectId(paymentId), "completed", bylInvoice.id.toString(), "byl")
+
+          // Create enrollment
+          await db.createEnrollment({
+            userId: new ObjectId(user.id),
+            courseId: payment.courseId,
+            paymentId: new ObjectId(paymentId),
+            enrolledAt: new Date(),
+            completedLessons: [],
+            progress: 0,
+            isActive: true,
+          })
+
+          return NextResponse.json({ status: "completed", payment: { ...payment, status: "completed" } })
+        }
+      } catch (error) {
+        console.error("Error checking Byl invoice:", error)
+      }
+    }
+
+    // Check payment status with Byl checkout
+    if (payment.bylCheckoutId) {
+      try {
+        const bylCheckout = await bylService.getCheckout(payment.bylCheckoutId)
+        
+        if (bylCheckout.status === "complete") {
+          // Update payment status
+          await db.updatePaymentStatus(new ObjectId(paymentId), "completed", bylCheckout.id.toString(), "byl")
+
+          // Create enrollment
+          await db.createEnrollment({
+            userId: new ObjectId(user.id),
+            courseId: payment.courseId,
+            paymentId: new ObjectId(paymentId),
+            enrolledAt: new Date(),
+            completedLessons: [],
+            progress: 0,
+            isActive: true,
+          })
+
+          return NextResponse.json({ status: "completed", payment: { ...payment, status: "completed" } })
+        }
+      } catch (error) {
+        console.error("Error checking Byl checkout:", error)
+      }
+    }
+
     return NextResponse.json({ status: payment.status, payment })
   } catch (error) {
-    console.error("Payment check error:", error)
+    
     return NextResponse.json({ error: "Failed to check payment" }, { status: 500 })
   }
 }

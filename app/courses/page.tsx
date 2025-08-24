@@ -44,11 +44,11 @@ export default function CoursesPage() {
               setEnrolledCourses(enrollmentsData.enrollments || [])
             }
           } catch (error) {
-            console.error("Error fetching enrollments:", error)
+      
           }
         }
       } catch (error) {
-        console.error("Error fetching courses:", error)
+  
       } finally {
         setLoading(false)
       }
@@ -144,23 +144,23 @@ export default function CoursesPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredCourses.map((course) => (
             <Card key={course._id?.toString()} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="aspect-video bg-gray-100 relative">
+              <div className="aspect-[4/3] bg-gray-100 relative">
                 <img
                   src={course.thumbnailUrl || "/placeholder.svg?height=200&width=300"}
                   alt={course.title}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                  <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
-                    <span className="text-primary">▶</span>
+                  <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center">
+                    <span className="text-primary text-sm">▶</span>
                   </div>
                 </div>
                 {isEnrolled(course._id || '') && (
                   <div className="absolute top-2 right-2">
-                    <Badge className="bg-green-600 text-white">
+                    <Badge className="bg-green-600 text-white text-xs px-2 py-1">
                       <BookOpen className="w-3 h-3 mr-1" />
                       Бүртгэлтэй
                     </Badge>
@@ -168,44 +168,44 @@ export default function CoursesPage() {
                 )}
               </div>
 
-              <CardContent className="p-6">
-                <div className="space-y-3">
+              <CardContent className="p-3">
+                <div className="space-y-1.5">
                   <div className="flex items-start justify-between">
-                    <h3 className="font-bold text-lg text-gray-900">{course.title}</h3>
+                    <h3 className="font-bold text-base text-gray-900 line-clamp-2">{course.title}</h3>
                   </div>
 
-                  <p className="text-gray-600 text-sm line-clamp-2">{course.description}</p>
+                  <p className="text-gray-600 text-xs line-clamp-1 leading-tight">{course.description}</p>
 
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <div className="flex items-center gap-3 text-xs text-gray-500">
                     <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
+                      <Clock className="w-3 h-3" />
                       <span>{course.duration} хичээл</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
+                      <Users className="w-3 h-3" />
                       <span>{course.enrolledCount}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                       <span>{course.rating}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-xl font-bold text-primary">₮{course.price.toLocaleString()}</span>
+                      <span className="text-lg font-bold text-primary">₮{course.price.toLocaleString()}</span>
                       {course.originalPrice && (
-                        <span className="text-sm text-gray-400 line-through">
+                        <span className="text-xs text-gray-400 line-through">
                           ₮{course.originalPrice.toLocaleString()}
                         </span>
                       )}
                     </div>
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className="text-xs px-2 py-1">
                       {course.level}
                     </Badge>
                   </div>
 
-                  <div className="pt-2">
+                  <div className="pt-0.5">
                     {getCourseButton(course)}
                   </div>
                 </div>

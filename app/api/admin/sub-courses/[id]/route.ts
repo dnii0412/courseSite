@@ -38,7 +38,7 @@ export async function PUT(
 
     return NextResponse.json({ message: "Sub-course updated successfully" })
   } catch (error) {
-    console.error("Failed to update sub-course:", error)
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -77,7 +77,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Sub-course deleted successfully" })
   } catch (error) {
-    console.error("Failed to delete sub-course:", error)
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

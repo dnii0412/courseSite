@@ -9,6 +9,9 @@ export interface User {
   enrolledCourses: ObjectId[]
   googleId?: string
   profilePicture?: string
+  phone?: string
+  address?: string
+  bio?: string
   createdAt: Date
   updatedAt: Date
 }

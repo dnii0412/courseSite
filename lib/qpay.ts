@@ -35,12 +35,17 @@ export class QPayService {
 
   constructor() {
     this.baseUrl = process.env.QPAY_BASE_URL || "https://merchant.qpay.mn"
-    this.username = process.env.QPAY_USERNAME || ""
-    this.password = process.env.QPAY_PASSWORD || ""
-    this.invoiceCode = process.env.QPAY_INVOICE_CODE || ""
+    this.username = process.env.QPAY_USERNAME || "demo_user"
+    this.password = process.env.QPAY_PASSWORD || "demo_pass"
+    this.invoiceCode = process.env.QPAY_INVOICE_CODE || "DEMO-001"
   }
 
   private async getAccessToken(): Promise<string> {
+    // Check if required environment variables are set
+    if (!this.username || !this.password) {
+      throw new Error("QPay credentials not configured. Please set QPAY_USERNAME and QPAY_PASSWORD environment variables.")
+    }
+
     const response = await fetch(`${this.baseUrl}/v2/auth/token`, {
       method: "POST",
       headers: {
@@ -53,7 +58,8 @@ export class QPayService {
     })
 
     if (!response.ok) {
-      throw new Error("Failed to get QPay access token")
+      const errorText = await response.text()
+      throw new Error(`Failed to get QPay access token: ${response.status} ${response.statusText} - ${errorText}`)
     }
 
     const data = await response.json()
@@ -66,6 +72,11 @@ export class QPayService {
     senderInvoiceNo: string,
     callbackUrl?: string,
   ): Promise<QPayInvoiceResponse> {
+    // Check if required environment variables are set
+    if (!this.invoiceCode) {
+      throw new Error("QPay invoice code not configured. Please set QPAY_INVOICE_CODE environment variable.")
+    }
+
     const token = await this.getAccessToken()
 
     const invoiceData: QPayInvoiceRequest = {

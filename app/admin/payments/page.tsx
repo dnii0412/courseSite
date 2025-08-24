@@ -17,9 +17,11 @@ interface Payment {
   amount: number
   currency: string
   status: "pending" | "completed" | "failed" | "refunded"
-  paymentMethod: string
+  paymentMethod: "qpay" | "byl"
   qpayInvoiceId?: string
   qpayTransactionId?: string
+  bylInvoiceId?: number
+  bylCheckoutId?: number
   createdAt: string
   user?: {
     name: string
@@ -71,7 +73,7 @@ export default function AdminPayments() {
       
       fetchPayments()
     } catch (error) {
-      console.error("Auth check failed:", error)
+
       router.push("/admin/login")
     }
   }
@@ -91,7 +93,7 @@ export default function AdminPayments() {
         })
       }
     } catch (error) {
-      console.error("Failed to fetch payments:", error)
+
       toast({
         title: "Error",
         description: "Failed to fetch payments",
@@ -140,6 +142,17 @@ export default function AdminPayments() {
         return <Badge className="bg-gray-100 text-gray-800">Буцаагдсан</Badge>
       default:
         return <Badge variant="secondary">{status}</Badge>
+    }
+  }
+
+  const getPaymentMethodBadge = (paymentMethod: string) => {
+    switch (paymentMethod) {
+      case "qpay":
+        return <Badge className="bg-blue-100 text-blue-800">QPay</Badge>
+      case "byl":
+        return <Badge className="bg-purple-100 text-purple-800">Byl</Badge>
+      default:
+        return <Badge variant="secondary">{paymentMethod}</Badge>
     }
   }
 
@@ -296,7 +309,10 @@ export default function AdminPayments() {
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <div className="font-medium">₮{payment.amount} MNT</div>
-                      {getStatusBadge(payment.status)}
+                      <div className="flex items-center gap-2 mt-1">
+                        {getStatusBadge(payment.status)}
+                        {getPaymentMethodBadge(payment.paymentMethod)}
+                      </div>
                     </div>
                     <Button variant="outline" size="sm">
                       <Eye className="h-4 w-4" />

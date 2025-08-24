@@ -33,7 +33,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Lesson deleted successfully" })
   } catch (error) {
-    console.error("Failed to delete lesson:", error)
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -69,7 +69,7 @@ export async function PUT(
 
     return NextResponse.json({ message: "Lesson updated successfully" })
   } catch (error) {
-    console.error("Failed to update lesson:", error)
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

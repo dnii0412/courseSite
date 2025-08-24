@@ -76,7 +76,7 @@ export default function SettingsPage() {
     }
     
     // Here you would typically call an API to change the password
-    console.log("Changing password...")
+    
     alert("Нууц үг амжилттай солигдлоо")
     setPasswords({ current: "", new: "", confirm: "" })
   }
@@ -84,7 +84,7 @@ export default function SettingsPage() {
   const handleDeleteAccount = () => {
     if (confirm("Та өөрийн аккаунтыг устгахдаа итгэлтэй байна уу? Энэ үйлдэл буцаах боломжгүй.")) {
       // Here you would typically call an API to delete the account
-      console.log("Deleting account...")
+
       alert("Аккаунт устгах хүсэлт илгээгдлээ")
     }
   }

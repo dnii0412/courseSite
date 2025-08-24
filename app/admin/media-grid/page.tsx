@@ -79,7 +79,7 @@ export default function AdminMediaGrid() {
       fetchMediaItems()
       fetchGridLayout()
     } catch (error) {
-      console.error("Auth check failed:", error)
+
       router.push("/admin/login")
     }
   }
@@ -126,7 +126,7 @@ export default function AdminMediaGrid() {
         ])
       }
     } catch (error) {
-      console.error("Failed to fetch media items:", error)
+
     } finally {
       setLoading(false)
     }
@@ -149,7 +149,7 @@ export default function AdminMediaGrid() {
         setGridLayout(prev => ({ ...prev, cells }))
       }
     } catch (error) {
-      console.error("Failed to fetch grid layout:", error)
+
     }
   }
 
@@ -203,7 +203,7 @@ export default function AdminMediaGrid() {
         })
       }
     } catch (error) {
-      console.error("Failed to save grid layout:", error)
+
       toast({
         title: "Error",
         description: "Failed to save grid layout",
@@ -242,7 +242,7 @@ export default function AdminMediaGrid() {
         })
       }
     } catch (error) {
-      console.error("Failed to delete media item:", error)
+
       toast({
         title: "Error",
         description: "Failed to delete media item",

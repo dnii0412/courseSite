@@ -130,6 +130,13 @@ export class Database {
     return await db.collection("enrollments").find({ userId, isActive: true }).toArray()
   }
 
+  async deleteEnrollment(id: ObjectId): Promise<boolean> {
+    const client = await this.getClient()
+    const db = client.db("new-era-platform")
+    const result = await db.collection("enrollments").deleteOne({ _id: id })
+    return result.deletedCount > 0
+  }
+
   // Payment operations
   async createPayment(payment: Omit<Payment, "_id" | "createdAt" | "updatedAt">): Promise<ObjectId> {
     const client = await this.getClient()
@@ -205,15 +212,32 @@ export class Database {
     return payments
   }
 
-  async updatePaymentStatus(id: ObjectId, status: Payment["status"], qpayTransactionId?: string): Promise<boolean> {
+  async updatePaymentStatus(id: ObjectId, status: Payment["status"], transactionId?: string, transactionType?: "qpay" | "byl"): Promise<boolean> {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
     const updates: any = { status, updatedAt: new Date() }
-    if (qpayTransactionId) {
-      updates.qpayTransactionId = qpayTransactionId
+    
+    if (transactionId && transactionType === "qpay") {
+      updates.qpayTransactionId = transactionId
+    } else if (transactionId && transactionType === "byl") {
+      updates.bylTransactionId = transactionId
     }
+    
     const result = await db.collection("payments").updateOne({ _id: id }, { $set: updates })
     return result.modifiedCount > 0
+  }
+
+  async deletePayment(id: ObjectId): Promise<boolean> {
+    const client = await this.getClient()
+    const db = client.db("new-era-platform")
+    const result = await db.collection("payments").deleteOne({ _id: id })
+    return result.deletedCount > 0
+  }
+
+  async getUserPayments(userId: ObjectId): Promise<Payment[]> {
+    const client = await this.getClient()
+    const db = client.db("new-era-platform")
+    return await db.collection("payments").find({ userId }).toArray()
   }
 
   // Statistics
@@ -476,7 +500,7 @@ export class Database {
       
       return { stats, collections: collectionsInfo }
     } catch (error) {
-      console.error("Failed to get database stats:", error)
+
       // Return default values if stats fail
       return {
         stats: {
@@ -517,7 +541,7 @@ export class Database {
       
       return result.insertedId.toString()
     } catch (error) {
-      console.error("Failed to save video metadata:", error)
+
       throw error
     }
   }
@@ -529,7 +553,7 @@ export class Database {
       
       return await db.collection("videos").findOne({ _id: new ObjectId(videoId) })
     } catch (error) {
-      console.error("Failed to get video:", error)
+
       throw error
     }
   }
@@ -555,7 +579,7 @@ export class Database {
       
       return result.modifiedCount > 0
     } catch (error) {
-      console.error("Failed to update video status:", error)
+
       throw error
     }
   }

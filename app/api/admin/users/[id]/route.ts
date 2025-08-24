@@ -68,7 +68,7 @@ export async function PUT(
 
     return NextResponse.json({ message: "User updated successfully" })
   } catch (error) {
-    console.error("Failed to update user:", error)
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -112,7 +112,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "User deleted successfully" })
   } catch (error) {
-    console.error("Failed to delete user:", error)
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

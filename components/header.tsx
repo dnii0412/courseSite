@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/hooks/useAuth"
 import {
@@ -11,27 +12,41 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { User, Settings, LogOut, BookOpen, Home, GraduationCap } from "lucide-react"
+import { User, LogOut, BookOpen, Home, GraduationCap } from "lucide-react"
+import { Logo } from "@/components/logo"
 
 export function Header() {
   const { user, logout } = useAuth()
+  const pathname = usePathname()
 
   return (
     <header className="border-b bg-white">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">NE</span>
-            </div>
+            <Logo className="w-8 h-8 text-primary" />
             <span className="text-xl font-bold">New Era</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-gray-600 hover:text-primary border-b-2 border-primary pb-1">
+            <Link 
+              href="/" 
+              className={`text-gray-600 hover:text-primary border-b-2 pb-1 transition-colors ${
+                pathname === "/" 
+                  ? "border-primary text-primary" 
+                  : "border-transparent"
+              }`}
+            >
               Нүүр
             </Link>
-            <Link href="/courses" className="text-gray-600 hover:text-primary">
+            <Link 
+              href="/courses" 
+              className={`text-gray-600 hover:text-primary border-b-2 pb-1 transition-colors ${
+                pathname === "/courses" 
+                  ? "border-primary text-primary" 
+                  : "border-transparent"
+              }`}
+            >
               Хичээлүүд
             </Link>
           </nav>
@@ -86,12 +101,7 @@ export function Header() {
                       Профайл
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/settings" className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Тохиргоо
-                    </Link>
-                  </DropdownMenuItem>
+
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="cursor-pointer">
                     <LogOut className="mr-2 h-4 w-4" />

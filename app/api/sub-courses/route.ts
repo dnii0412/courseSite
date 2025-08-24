@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({ subCourses })
   } catch (error) {
-    console.error("Failed to fetch sub-courses:", error)
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

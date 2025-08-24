@@ -58,7 +58,7 @@ export default function AdminDatabase() {
       
       fetchDatabaseStats()
     } catch (error) {
-      console.error("Auth check failed:", error)
+
       router.push("/admin/login")
     }
   }
@@ -78,7 +78,7 @@ export default function AdminDatabase() {
         })
       }
     } catch (error) {
-      console.error("Failed to fetch database stats:", error)
+
       toast({
         title: "Error",
         description: "Failed to fetch database stats",

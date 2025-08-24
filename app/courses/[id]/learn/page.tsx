@@ -49,7 +49,7 @@ export default function LearnPage() {
               setEnrolledCourses(enrollmentsData.enrollments || [])
             }
           } catch (error) {
-            console.error("Error fetching enrollments:", error)
+      
           }
         }
 
@@ -61,7 +61,7 @@ export default function LearnPage() {
             setSubCourses(subCoursesData.subCourses || [])
           }
         } catch (error) {
-          console.error("Error fetching sub-courses:", error)
+    
         }
 
         // Set first lesson as selected by default
@@ -69,7 +69,7 @@ export default function LearnPage() {
           setSelectedLesson(courseData.course.lessons[0])
         }
       } catch (error) {
-        console.error("Error fetching course:", error)
+  
         router.push("/courses")
       } finally {
         setLoading(false)

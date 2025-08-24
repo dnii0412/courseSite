@@ -61,7 +61,7 @@ export default function AdminDashboard() {
       setAuthLoading(false)
       fetchStats()
     } catch (error) {
-      console.error("Auth check failed:", error)
+
       router.push("/admin/login")
     }
   }
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
         setStats(data)
       }
     } catch (error) {
-      console.error("Failed to fetch stats:", error)
+
     } finally {
       setLoading(false)
     }
