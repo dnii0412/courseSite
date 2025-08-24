@@ -4,6 +4,28 @@ import { db } from "@/lib/database"
 import bcrypt from "bcryptjs"
 import { ObjectId } from "mongodb"
 
+// GET /api/admin/users/[id] - Get user by ID
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const userId = new ObjectId(params.id)
+    const user = await db.getUserById(userId)
+    
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    // Remove sensitive information
+    const { password, ...userWithoutPassword } = user
+    return NextResponse.json({ user: userWithoutPassword })
+  } catch (error) {
+    console.error("Failed to get user:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
 // PUT /api/admin/users/[id] - Update user
 export async function PUT(
   request: NextRequest,

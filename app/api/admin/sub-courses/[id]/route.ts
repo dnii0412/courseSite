@@ -3,6 +3,26 @@ import { verifyToken } from "@/lib/auth-server"
 import { db } from "@/lib/database"
 import { ObjectId } from "mongodb"
 
+// GET /api/admin/sub-courses/[id] - Get sub-course by ID
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const subCourseId = new ObjectId(params.id)
+    const subCourse = await db.getSubCourseById(subCourseId)
+    
+    if (!subCourse) {
+      return NextResponse.json({ error: "Sub-course not found" }, { status: 404 })
+    }
+
+    return NextResponse.json({ subCourse })
+  } catch (error) {
+    console.error("Failed to get sub-course:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
 // PUT /api/admin/sub-courses/[id] - Update sub-course
 export async function PUT(
   request: NextRequest,

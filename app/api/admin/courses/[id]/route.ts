@@ -3,6 +3,26 @@ import { verifyToken } from "@/lib/auth-server"
 import { db } from "@/lib/database"
 import { ObjectId } from "mongodb"
 
+// GET /api/admin/courses/[id] - Get course by ID
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const courseId = new ObjectId(params.id)
+    const course = await db.getCourseById(courseId)
+    
+    if (!course) {
+      return NextResponse.json({ error: "Course not found" }, { status: 404 })
+    }
+
+    return NextResponse.json({ course })
+  } catch (error) {
+    console.error("Failed to get course:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
 // PUT /api/admin/courses/[id] - Update course
 export async function PUT(
   request: NextRequest,

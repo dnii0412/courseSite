@@ -4,8 +4,14 @@ import { MongoClient } from "mongodb"
 const defaultUri = "mongodb://localhost:27017/new-era-platform"
 const uri = process.env.MONGODB_URI || process.env.MONGODB_URL || defaultUri
 
+// Validate the connection string format
+if (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://')) {
+  console.error('Invalid MongoDB URI format. Expected "mongodb://" or "mongodb+srv://" but got:', uri)
+  throw new Error('Invalid MongoDB connection string format. Please check your MONGODB_URI environment variable.')
+}
+
 if (!uri) {
-  throw new Error('Invalid/Missing environment variable: "MONGODB_URI" or "MONGODB_URL"')
+  throw new Error('Missing environment variable: "MONGODB_URI" or "MONGODB_URL"')
 }
 
 const options = {

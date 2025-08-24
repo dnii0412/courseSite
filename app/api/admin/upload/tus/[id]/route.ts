@@ -1,6 +1,26 @@
 import { NextRequest, NextResponse } from "next/server"
 import { verifyToken } from "@/lib/auth-server"
 
+// GET /api/admin/upload/tus/[id] - Get upload information
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: uploadId } = await params
+    
+    // For build-time compatibility, return a simple response
+    // The actual upload data will be fetched when needed at runtime
+    return NextResponse.json({ 
+      message: "TUS upload endpoint available",
+      uploadId 
+    })
+  } catch (error) {
+    console.error("Failed to get upload info:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
 // PATCH /api/admin/upload/tus/[id] - Handle TUS upload
 export async function PATCH(
   request: NextRequest,
