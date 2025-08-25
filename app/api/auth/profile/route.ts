@@ -3,6 +3,7 @@ import { auth } from "@/auth"
 import { verifyToken } from "@/lib/auth-server"
 import { db } from "@/lib/database"
 import { ObjectId } from "mongodb"
+import bcrypt from "bcryptjs"
 
 export async function GET(request: NextRequest) {
   try {
@@ -151,12 +152,10 @@ export async function PUT(request: NextRequest) {
       console.log("🔍 Phone field not included (undefined/null):", phone)
     }
     if (newPassword && confirmPassword && newPassword === confirmPassword) {
-      // Hash the new password
-      const bcrypt = await import('bcryptjs')
       updateData.password = await bcrypt.hash(newPassword, 12)
     }
 
-    console.log("🔍 Update data being sent to database:", updateData)
+    console.log("🔍 Update data being sent to database:", { ...updateData, password: updateData.password ? '[REDACTED]' : undefined })
 
     // Update user in database
     const success = await db.updateUser(new ObjectId(userId), updateData)

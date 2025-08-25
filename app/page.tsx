@@ -60,37 +60,40 @@ export default async function Home() {
   let gridLayout: any = null
 
   try {
-         // Fetch courses
-     const coursesResponse = await fetch('http://localhost:3000/api/courses', { next: { revalidate: 60 } })
-     if (coursesResponse.ok) {
-       const coursesData = await coursesResponse.json()
-       courses = coursesData.courses || []
-     }
+    // Get base URL for server-side fetching
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    
+    // Fetch courses
+    const coursesResponse = await fetch(`${baseUrl}/api/courses`, { next: { revalidate: 60 } })
+    if (coursesResponse.ok) {
+      const coursesData = await coursesResponse.json()
+      courses = coursesData.courses || []
+    }
 
-     // Fetch stats
-     const statsResponse = await fetch('http://localhost:3000/api/stats', { next: { revalidate: 300 } })
-     if (statsResponse.ok) {
-       const statsData = await statsResponse.json()
-       stats = statsData.stats
-     }
+    // Fetch stats
+    const statsResponse = await fetch(`${baseUrl}/api/stats`, { next: { revalidate: 300 } })
+    if (statsResponse.ok) {
+      const statsData = await statsResponse.json()
+      stats = statsData.stats
+    }
 
-     // Fetch features
-     const featuresResponse = await fetch('http://localhost:3000/api/features', { next: { revalidate: 3600 } })
-     if (featuresResponse.ok) {
-       const featuresData = await featuresResponse.json()
-       if (featuresData.features) {
-         features = featuresData.features
-       }
-     }
+    // Fetch features
+    const featuresResponse = await fetch(`${baseUrl}/api/features`, { next: { revalidate: 3600 } })
+    if (featuresResponse.ok) {
+      const featuresData = await featuresResponse.json()
+      if (featuresData.features) {
+        features = featuresData.features
+      }
+    }
 
-     // Fetch media grid layout
-     const gridResponse = await fetch('http://localhost:3000/api/media-grid', { next: { revalidate: 300 } })
-     if (gridResponse.ok) {
-       const gridData = await gridResponse.json()
-       if (gridData.layout && gridData.layout.isPublished) {
-         gridLayout = gridData.layout
-       }
-     }
+    // Fetch media grid layout
+    const gridResponse = await fetch(`${baseUrl}/api/media-grid`, { next: { revalidate: 300 } })
+    if (gridResponse.ok) {
+      const gridData = await gridResponse.json()
+      if (gridData.layout && gridData.layout.isPublished) {
+        gridLayout = gridData.layout
+      }
+    }
   } catch (error) {
     console.error("Error fetching data:", error)
     // Use fallback data if fetching fails
@@ -128,7 +131,7 @@ export default async function Home() {
               <Button
                 variant="outline"
                 size="lg"
-                className="border-gray-300 text-white px-8 py-3 rounded-lg bg-transparent"
+                className="border-gray-300 text-foreground px-8 py-3 rounded-lg bg-transparent"
               >
                 Хичээллүүдийг үзэх
               </Button>

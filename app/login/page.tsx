@@ -61,7 +61,10 @@ function LoginForm() {
 
     const success = await login(email, password)
     if (success) {
-      router.push("/")
+      // Add a small delay to ensure the user state is updated
+      setTimeout(() => {
+        router.push("/")
+      }, 100)
     } else {
       setError("Invalid email or password")
     }
