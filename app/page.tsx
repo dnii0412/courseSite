@@ -60,8 +60,9 @@ export default async function Home() {
   let gridLayout: any = null
 
   try {
-    // Get base URL for server-side fetching
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    // Use absolute URL for server-side fetching
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://edunewera.mn')
     
     // Fetch courses
     const coursesResponse = await fetch(`${baseUrl}/api/courses`, { next: { revalidate: 60 } })

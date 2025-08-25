@@ -12,7 +12,10 @@ export default async function CoursesPage() {
   let courses: Course[] = []
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    // Use absolute URL for server-side fetching
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://edunewera.mn')
+    
     const response = await fetch(`${baseUrl}/api/courses`, { next: { revalidate: 60 } })
     if (response.ok) {
       const data = await response.json()
