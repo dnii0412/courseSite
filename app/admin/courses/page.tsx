@@ -95,6 +95,8 @@ export default function AdminCourses() {
   const [expandedSubCourses, setExpandedSubCourses] = useState<Set<string>>(new Set())
 
   const [isCreatingLesson, setIsCreatingLesson] = useState(false)
+  const [thumbnailUploadLoading, setThumbnailUploadLoading] = useState(false)
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
 
   const [courseFormData, setCourseFormData] = useState({
     title: "",
@@ -103,7 +105,8 @@ export default function AdminCourses() {
     originalPrice: 0,
     category: "",
     level: "beginner" as "beginner" | "intermediate" | "advanced",
-    isActive: true
+    isActive: true,
+    thumbnailFile: null as File | null
   })
 
   const [subCourseFormData, setSubCourseFormData] = useState({
@@ -120,7 +123,8 @@ export default function AdminCourses() {
     originalPrice: 0,
     category: "",
     level: "beginner" as "beginner" | "intermediate" | "advanced",
-    isActive: true
+    isActive: true,
+    thumbnailFile: null as File | null
   })
 
   const [editSubCourseFormData, setEditSubCourseFormData] = useState({
@@ -227,22 +231,73 @@ export default function AdminCourses() {
 
   const handleCreateCourse = async () => {
     try {
+      setThumbnailUploadLoading(true)
+      
+      // Prepare course data
+      const courseData = {
+        title: courseFormData.title,
+        description: courseFormData.description,
+        price: courseFormData.price,
+        originalPrice: courseFormData.originalPrice,
+        category: courseFormData.category,
+        level: courseFormData.level,
+        isActive: courseFormData.isActive,
+        thumbnailUrl: null as string | null
+      }
+
+      // Upload thumbnail if provided
+      if (courseFormData.thumbnailFile) {
+        toast({ title: "Uploading thumbnail...", description: "Please wait while we upload the thumbnail." })
+        
+        const formData = new FormData()
+        formData.append('file', courseFormData.thumbnailFile)
+        formData.append('name', `${courseFormData.title}_thumbnail`)
+        formData.append('description', `Thumbnail for course: ${courseFormData.title}`)
+
+        const uploadResponse = await fetch("/api/admin/media", {
+          method: "POST",
+          body: formData
+        })
+
+        if (uploadResponse.ok) {
+          const uploadResult = await uploadResponse.json()
+          courseData.thumbnailUrl = uploadResult.mediaItem.cloudinarySecureUrl || uploadResult.mediaItem.cloudinaryUrl
+        } else {
+          toast({ title: "Warning", description: "Thumbnail upload failed, continuing without thumbnail", variant: "destructive" })
+        }
+      }
+
+      // Create course
       const res = await fetch("/api/admin/courses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(courseFormData)
+        body: JSON.stringify(courseData)
       })
+      
       if (res.ok) {
-        toast({ title: "Success", description: "Course created" })
+        toast({ title: "Success", description: "Course created successfully" })
         const data = await (await fetch("/api/admin/courses")).json()
         setCourses(data.courses || [])
         setIsCreateCourseDialogOpen(false)
+        setCourseFormData({
+          title: "",
+          description: "",
+          price: 0,
+          originalPrice: 0,
+          category: "",
+          level: "beginner",
+          isActive: true,
+          thumbnailFile: null
+        })
+        setThumbnailPreview(null)
       } else {
         const err = await res.json()
-        toast({ title: "Error", description: err.error || "Failed", variant: "destructive" })
+        toast({ title: "Error", description: err.error || "Failed to create course", variant: "destructive" })
       }
     } catch (e) {
       toast({ title: "Error", description: "Failed to create course", variant: "destructive" })
+    } finally {
+      setThumbnailUploadLoading(false)
     }
   }
 

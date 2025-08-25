@@ -8,7 +8,7 @@ import bcrypt from "bcryptjs"
 export async function GET(request: NextRequest) {
   try {
     let userId: string | null = null
-    
+
     // First try NextAuth.js session
     try {
       const session = await auth()
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     } catch (error) {
       console.log("NextAuth session check failed, trying custom auth")
     }
-    
+
     // If NextAuth failed, try custom auth token
     if (!userId) {
       const token = request.cookies.get("auth-token")?.value
@@ -29,20 +29,33 @@ export async function GET(request: NextRequest) {
         }
       }
     }
-    
+
     if (!userId) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
 
-    // Get user details
-    const userDetails = await db.getUserById(new ObjectId(userId))
+    // Get user details - handle invalid ObjectId
+    let userDetails;
+    try {
+      // Check if userId is a valid ObjectId format
+      if (ObjectId.isValid(userId)) {
+        userDetails = await db.getUserById(new ObjectId(userId))
+      } else {
+        // If not valid ObjectId, it might be from OAuth - try to find by email or other means
+        return NextResponse.json({ error: "Invalid user ID format" }, { status: 400 })
+      }
+    } catch (error) {
+      console.error("Error creating ObjectId:", error)
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 })
+    }
+
     if (!userDetails) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
     // Get user enrollments
     const enrollments = await db.getUserEnrollments(new ObjectId(userId))
-    
+
     // Get course details for each enrollment
     const coursesWithProgress = await Promise.all(
       enrollments.map(async (enrollment: any) => {
@@ -85,6 +98,7 @@ export async function GET(request: NextRequest) {
         phone: userDetails.phone,
         address: userDetails.address,
         bio: userDetails.bio,
+        enrolledCourses: userDetails.enrolledCourses || [],
         createdAt: userDetails.createdAt,
         updatedAt: userDetails.updatedAt
       },
@@ -100,7 +114,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     let userId: string | null = null
-    
+
     // First try NextAuth.js session
     try {
       const session = await auth()
@@ -110,7 +124,7 @@ export async function PUT(request: NextRequest) {
     } catch (error) {
       console.log("NextAuth session check failed, trying custom auth")
     }
-    
+
     // If NextAuth failed, try custom auth token
     if (!userId) {
       const token = request.cookies.get("auth-token")?.value
@@ -121,7 +135,7 @@ export async function PUT(request: NextRequest) {
         }
       }
     }
-    
+
     if (!userId) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
@@ -157,8 +171,18 @@ export async function PUT(request: NextRequest) {
 
     console.log("🔍 Update data being sent to database:", { ...updateData, password: updateData.password ? '[REDACTED]' : undefined })
 
-    // Update user in database
-    const success = await db.updateUser(new ObjectId(userId), updateData)
+    // Update user in database - handle invalid ObjectId
+    let success;
+    try {
+      if (ObjectId.isValid(userId)) {
+        success = await db.updateUser(new ObjectId(userId), updateData)
+      } else {
+        return NextResponse.json({ error: "Invalid user ID format" }, { status: 400 })
+      }
+    } catch (error) {
+      console.error("Error updating user:", error)
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 })
+    }
 
     if (success) {
       return NextResponse.json({ message: "Profile updated successfully" })

@@ -7,16 +7,16 @@ import type { AuthUser } from "@/lib/types"
 export function useAuth() {
   const { data: session, status } = useSession()
   const [localUser, setLocalUser] = useState<AuthUser | null>(null)
-  
+
   // Check for local auth token on mount
   useEffect(() => {
     const checkLocalAuth = async () => {
       // Only check if we don't already have a local user and NextAuth session is not loading
       if (localUser || status === "loading") return
-      
+
       // Check if we're in the browser
       if (typeof window === 'undefined') return
-      
+
       try {
         const response = await fetch('/api/auth/profile', {
           credentials: 'include'
@@ -31,7 +31,8 @@ export function useAuth() {
                   id: data.user.id,
                   name: data.user.name || "",
                   email: data.user.email || "",
-                  role: data.user.role || "student"
+                  role: data.user.role || "student",
+                  enrolledCourses: data.user.enrolledCourses || []
                 })
               }
             } catch (jsonError) {
@@ -48,20 +49,24 @@ export function useAuth() {
         console.log("No local auth token found")
       }
     }
-    
-    checkLocalAuth()
-  }, [localUser, status])
-  
-  // Use NextAuth session if available, otherwise use local user
-  const user: AuthUser | null = session?.user ? {
+
+    // Only run once when component mounts or when status changes to not loading
+    if (status !== "loading" && !localUser) {
+      checkLocalAuth()
+    }
+  }, [status]) // Remove localUser from dependencies to prevent infinite loop
+
+  // Prefer localUser if it has more complete data, otherwise use NextAuth session
+  const user: AuthUser | null = localUser || (session?.user ? {
     id: session.user.id || session.user.email || "",
     name: session.user.name || "",
     email: session.user.email || "",
     role: "student",
-  } : localUser
+    enrolledCourses: session.user.enrolledCourses || []
+  } : null)
 
   const loading = status === "loading" && !localUser
-  
+
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const response = await fetch("/api/auth/login", {
@@ -77,7 +82,8 @@ export function useAuth() {
           id: data.user.id,
           name: data.user.name || "",
           email: data.user.email || "",
-          role: data.user.role || "student"
+          role: data.user.role || "student",
+          enrolledCourses: data.user.enrolledCourses || []
         }
         setLocalUser(userData)
         return true
@@ -104,7 +110,8 @@ export function useAuth() {
           id: data.user.id,
           name: data.user.name || "",
           email: data.user.email || "",
-          role: data.user.role || "student"
+          role: data.user.role || "student",
+          enrolledCourses: data.user.enrolledCourses || []
         })
         return true
       }
@@ -123,12 +130,39 @@ export function useAuth() {
     } catch (error) {
       console.log("NextAuth logout failed, but local user cleared")
     }
-    
+
     // Clear auth token cookie
     try {
       await fetch("/api/auth/logout", { method: "POST" })
     } catch (error) {
       console.log("Logout API call failed")
+    }
+  }
+
+  const refreshUser = async (): Promise<void> => {
+    try {
+      console.log("🔄 Refreshing user data...")
+      const response = await fetch('/api/auth/profile', {
+        credentials: 'include',
+        cache: 'no-cache' // Force fresh data
+      })
+      if (response.ok) {
+        const data = await response.json()
+        console.log("✅ Refreshed user data:", data.user)
+        if (data.user) {
+          setLocalUser({
+            id: data.user.id,
+            name: data.user.name || "",
+            email: data.user.email || "",
+            role: data.user.role || "student",
+            enrolledCourses: data.user.enrolledCourses || []
+          })
+        }
+      } else {
+        console.log("❌ Failed to refresh user data, status:", response.status)
+      }
+    } catch (error) {
+      console.log("❌ Failed to refresh user data:", error)
     }
   }
 
@@ -138,5 +172,6 @@ export function useAuth() {
     login,
     register,
     logout,
+    refreshUser,
   }
 }

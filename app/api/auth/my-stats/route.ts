@@ -8,7 +8,7 @@ import { ObjectId } from "mongodb"
 export async function GET(request: NextRequest) {
   try {
     let userId: string | null = null
-    
+
     // First try NextAuth.js session
     try {
       const session = await auth()
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     } catch (error) {
       console.log("NextAuth session check failed, trying custom auth")
     }
-    
+
     // If NextAuth failed, try custom auth token
     if (!userId) {
       const token = request.cookies.get("auth-token")?.value
@@ -29,14 +29,14 @@ export async function GET(request: NextRequest) {
         }
       }
     }
-    
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Get user with enrolled courses
     const userData = await db.getUserById(new ObjectId(userId))
-    
+
     if (!userData || !userData.enrolledCourses || userData.enrolledCourses.length === 0) {
       return NextResponse.json({
         stats: {
@@ -50,14 +50,37 @@ export async function GET(request: NextRequest) {
 
     // Calculate user-specific stats
     const enrolledCourses = userData.enrolledCourses.length
-    const completedLessons = 0 // For now, since we don't have lesson progress in user schema
-    const totalProgress = 0 // For now, since we don't have progress in user schema
-    const averageProgress = 0 // For now, since we don't have progress in user schema
+    let totalLessons = 0
+    let completedLessons = 0
+    let totalProgress = 0
+
+    // Calculate stats from enrolled courses
+    for (const courseId of userData.enrolledCourses) {
+      try {
+        // Handle both string and ObjectId formats
+        const objectId = typeof courseId === 'string' ? new ObjectId(courseId) : courseId
+        const course = await db.getCourseWithLessons(objectId)
+
+        if (course && course.isActive) {
+          totalLessons += course.lessons?.length || 0
+
+          // Get user progress for this course
+          const progress = await db.getUserProgress(new ObjectId(userId), objectId)
+          totalProgress += progress.progress || 0
+          completedLessons += progress.completedLessons?.length || 0
+        }
+      } catch (error) {
+        console.error("Error calculating stats for course:", courseId, error)
+      }
+    }
+
+    const averageProgress = enrolledCourses > 0 ? Math.round(totalProgress / enrolledCourses) : 0
 
     return NextResponse.json({
       stats: {
         enrolledCourses,
         completedLessons,
+        totalLessons,
         totalProgress,
         averageProgress
       }

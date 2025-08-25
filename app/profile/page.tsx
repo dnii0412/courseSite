@@ -97,7 +97,7 @@ export default function ProfilePage() {
       })
       fetchUserStats()
     }
-  }, [user, fetchUserStats])
+  }, [user?.id]) // Only depend on user.id to prevent infinite loop
 
   // Check if form has changes
   const hasChanges = () => {

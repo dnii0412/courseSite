@@ -7,7 +7,7 @@ export function Logo({ className = "w-8 h-8" }: { className?: string }) {
       alt="NewEra Logo"
       width={32}
       height={32}
-      className={className}
+      className={`rounded-full ${className}`}
       priority
     />
   )

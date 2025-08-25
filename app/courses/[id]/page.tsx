@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { Clock, Star, Users, Play, CheckCircle } from "lucide-react"
+import { Clock, Star, Users, Play, CheckCircle, ShoppingCart, UserPlus } from "lucide-react"
 import type { Course } from "@/lib/types"
+import { useAuth } from "@/lib/hooks/useAuth"
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -17,6 +18,7 @@ interface PageProps {
 
 export default function CoursePage({ params }: PageProps) {
   const { id } = use(params)
+  const { user, loading: authLoading, refreshUser } = useAuth()
   const [course, setCourse] = useState<Course | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -44,7 +46,103 @@ export default function CoursePage({ params }: PageProps) {
     }
   }, [id])
 
-  if (loading) {
+  // Refresh user data when component mounts (in case admin granted access)
+  useEffect(() => {
+    // Always refresh user data when component mounts to get latest enrollments
+    if (!authLoading) {
+      refreshUser()
+    }
+  }, [authLoading])
+
+  // Also refresh when user data changes
+  useEffect(() => {
+    if (user && !user.enrolledCourses) {
+      // If user exists but has no enrolled courses data, refresh
+      refreshUser()
+    }
+  }, [user?.id])
+
+  // Check enrollment status
+  const isLoggedIn = !!user
+  const isEnrolled = course && user?.enrolledCourses?.includes(course._id || '')
+
+
+
+  // Determine what button to show
+  const getEnrollmentButton = () => {
+    if (!isLoggedIn) {
+      return (
+        <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800/30 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <UserPlus className="w-5 h-5 text-orange-600" />
+            <span className="font-medium text-orange-800 dark:text-orange-200">Бүртгүүлэх шаардлагатай</span>
+          </div>
+          <p className="text-orange-700 dark:text-orange-300 text-sm mb-4">
+            Энэ хичээлийг худалдаж авахын тулд эхлээд бүртгүүлнэ үү
+          </p>
+          <div className="space-y-2">
+            <Button asChild className="w-full bg-orange-600 hover:bg-orange-700 text-white">
+              <Link href="/register">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Бүртгүүлэх
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/login">
+                Нэвтрэх
+              </Link>
+            </Button>
+          </div>
+        </div>
+      )
+    }
+
+    if (!isEnrolled) {
+      return (
+        <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <ShoppingCart className="w-5 h-5 text-red-600" />
+            <span className="font-medium text-red-800 dark:text-red-200">Худалдаж авах шаардлагатай</span>
+          </div>
+          <p className="text-red-700 dark:text-red-300 text-sm mb-4">
+            Энэ хичээлийг үзэхийн тулд худалдаж авна уу
+          </p>
+          <div className="space-y-2">
+            <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              {course?.price ? `${course.price}₮ -өөр худалдаж авах` : 'Худалдаж авах'}
+            </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/courses">
+                Бүх хичээлүүд үзэх
+              </Link>
+            </Button>
+          </div>
+        </div>
+      )
+    }
+
+    // User is enrolled
+    return (
+      <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/30 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <CheckCircle className="w-5 h-5 text-blue-600" />
+          <span className="font-medium text-blue-800 dark:text-blue-200">Бүртгэлтэй</span>
+        </div>
+        <p className="text-blue-700 dark:text-blue-300 text-sm mb-4">
+          Та энэ хичээлийг үзэх боломжтой
+        </p>
+        <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+          <Link href={`/courses/${course._id}/learn`}>
+            <Play className="w-4 h-4 mr-2" />
+            Үргэлжлүүлэх
+          </Link>
+        </Button>
+      </div>
+    )
+  }
+
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -88,7 +186,7 @@ export default function CoursePage({ params }: PageProps) {
               <h1 className="text-4xl lg:text-5xl font-bold text-foreground leading-tight">
                 {course.title}
               </h1>
-              
+
               {/* Course Metadata */}
               <div className="flex items-center gap-6 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
@@ -134,21 +232,21 @@ export default function CoursePage({ params }: PageProps) {
               </Card>
 
               <Card>
-              <CardContent className="p-4 space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Хичээлийн тоо:</span>
-                  <span className="font-medium">{course.lessons?.length || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Үргэлжлэх хугацаа:</span>
-                  <span className="font-medium">{course.duration || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Категори:</span>
-                  <span className="font-medium">{course.category || "Хичээл"}</span>
-                </div>
-              </CardContent>
-            </Card>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Хичээлийн тоо:</span>
+                    <span className="font-medium">{course.lessons?.length || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Үргэлжлэх хугацаа:</span>
+                    <span className="font-medium">{course.duration || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Категори:</span>
+                    <span className="font-medium">{course.category || "Хичээл"}</span>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
 
@@ -169,31 +267,19 @@ export default function CoursePage({ params }: PageProps) {
               )}
             </div>
 
+
+
             {/* Enrollment Status */}
-            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/30 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-blue-600" />
-                <span className="font-medium text-blue-800 dark:text-blue-200">Бүртгэлтэй</span>
-              </div>
-              <p className="text-blue-700 dark:text-blue-300 text-sm mb-4">
-                Та энэ хичээлийг үзэх боломжтой
-              </p>
-              <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                <Link href={`/courses/${course._id}/learn`}>
-                  <Play className="w-4 h-4 mr-2" />
-                  Үргэлжлүүлэх
-                </Link>
-              </Button>
-            </div>
+            {getEnrollmentButton()}
 
             {/* Course Statistics */}
-            
+
           </div>
         </div>
       </section>
 
       {/* Course Content */}
-      
+
 
       <Footer />
     </div>

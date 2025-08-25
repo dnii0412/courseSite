@@ -51,18 +51,25 @@ export async function GET(request: NextRequest) {
     console.log("🔍 Fetching courses for enrolled course IDs:", userData.enrolledCourses.map(id => id.toString()))
     
     for (const courseId of userData.enrolledCourses) {
-      const course = await db.getCourseWithLessons(courseId)
-      console.log("📚 Course fetched:", courseId.toString(), "Found:", !!course, "Active:", course?.isActive)
-      if (course && course.isActive) {
-        // Get user progress for this course
-        const progress = await db.getUserProgress(new ObjectId(userId), courseId)
+      try {
+        // Handle both string and ObjectId formats
+        const objectId = typeof courseId === 'string' ? new ObjectId(courseId) : courseId
+        const course = await db.getCourseWithLessons(objectId)
+        console.log("📚 Course fetched:", objectId.toString(), "Found:", !!course, "Active:", course?.isActive)
         
-        courses.push({
-          ...course,
-          progress: progress.progress || 0,
-          completedLessons: progress.completedLessons?.length || 0,
-          enrollmentId: courseId.toString()
-        })
+        if (course && course.isActive) {
+          // Get user progress for this course
+          const progress = await db.getUserProgress(new ObjectId(userId), objectId)
+          
+          courses.push({
+            ...course,
+            progress: progress.progress || 0,
+            completedLessons: progress.completedLessons?.length || 0,
+            enrollmentId: objectId.toString()
+          })
+        }
+      } catch (error) {
+        console.error("Error processing course ID:", courseId, error)
       }
     }
 
