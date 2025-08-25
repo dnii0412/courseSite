@@ -61,12 +61,27 @@ export class Database {
   }
 
   async updateUser(id: ObjectId, updates: Partial<User>): Promise<boolean> {
-    const client = await this.getClient()
-    const db = client.db("new-era-platform")
-    const result = await db
-      .collection("users")
-      .updateOne({ _id: id }, { $set: { ...updates, updatedAt: new Date() } })
-    return result.modifiedCount > 0
+    try {
+      const client = await this.getClient()
+      const db = client.db("new-era-platform")
+      
+      console.log("🔍 Database updateUser called with:", { id: id.toString(), updates })
+      
+      const result = await db
+        .collection("users")
+        .updateOne({ _id: id }, { $set: { ...updates, updatedAt: new Date() } })
+      
+      console.log("🔍 Database update result:", { 
+        matchedCount: result.matchedCount, 
+        modifiedCount: result.modifiedCount,
+        upsertedCount: result.upsertedCount 
+      })
+      
+      return result.modifiedCount > 0
+    } catch (error) {
+      console.error("❌ Database updateUser error:", error)
+      return false
+    }
   }
 
   async deleteUser(id: ObjectId): Promise<boolean> {
@@ -98,6 +113,52 @@ export class Database {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
     return await db.collection("courses").findOne({ _id: id })
+  }
+
+  async getCourseWithLessons(id: ObjectId): Promise<Course | null> {
+    const client = await this.getClient()
+    const db = client.db("new-era-platform")
+    
+    const course = await db.collection("courses").findOne({ _id: id })
+    if (!course) return null
+    
+    // Get sub-courses for this course
+    const subCourses = await db.collection("subCourses")
+      .find({ courseId: id, isActive: true })
+      .sort({ order: 1 })
+      .toArray()
+    
+    // Get all lessons for all sub-courses
+    const allLessons = []
+    for (const subCourse of subCourses) {
+      const lessons = await db.collection("lessons")
+        .find({ subCourseId: subCourse._id })
+        .sort({ order: 1 })
+        .toArray()
+      
+      allLessons.push(...lessons.map((lesson: any) => ({
+        _id: lesson._id?.toString(),
+        title: lesson.title,
+        description: lesson.description,
+        videoUrl: lesson.videoUrl,
+        duration: lesson.duration,
+        order: lesson.order,
+        isPreview: lesson.isPreview,
+        subCourseId: lesson.subCourseId?.toString()
+      })))
+    }
+    
+    return {
+      ...course,
+      lessons: allLessons,
+      subCourses: subCourses.map((subCourse: any) => ({
+        _id: subCourse._id?.toString(),
+        title: subCourse.title,
+        description: subCourse.description,
+        order: subCourse.order,
+        isActive: subCourse.isActive
+      }))
+    }
   }
 
   async updateCourse(id: ObjectId, updates: Partial<Course>): Promise<boolean> {
@@ -741,6 +802,119 @@ export class Database {
     } catch (error) {
       console.error("Error fetching recent activities:", error)
       return []
+    }
+  }
+
+  // Progress tracking functions
+  async markLessonComplete(userId: ObjectId, courseId: ObjectId, lessonId: ObjectId): Promise<boolean> {
+    try {
+      const client = await this.getClient()
+      const db = client.db("new-era-platform")
+      
+      // Check if progress record exists
+      const existingProgress = await db.collection("userProgress").findOne({
+        userId,
+        courseId,
+        lessonId
+      })
+
+      if (existingProgress) {
+        // Update existing progress
+        const result = await db.collection("userProgress").updateOne(
+          { _id: existingProgress._id },
+          { 
+            $set: { 
+              isCompleted: true,
+              completedAt: new Date(),
+              updatedAt: new Date()
+            }
+          }
+        )
+        return result.modifiedCount > 0
+      } else {
+        // Create new progress record
+        const result = await db.collection("userProgress").insertOne({
+          userId,
+          courseId,
+          lessonId,
+          completedAt: new Date(),
+          isCompleted: true,
+          progress: 100,
+          timeSpent: 0,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        return result.insertedId !== undefined
+      }
+    } catch (error) {
+      console.error("Failed to mark lesson complete:", error)
+      return false
+    }
+  }
+
+  async getUserProgress(userId: ObjectId, courseId: ObjectId): Promise<any> {
+    try {
+      const client = await this.getClient()
+      const db = client.db("new-era-platform")
+      
+      // Get all completed lessons for this user and course
+      const completedLessons = await db.collection("userProgress")
+        .find({ userId, courseId, isCompleted: true })
+        .toArray()
+      
+      // Get course total lessons
+      const course = await this.getCourseById(courseId)
+      const totalLessons = course?.lessons?.length || 0
+      
+      // Calculate progress percentage
+      const progress = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0
+      
+      return {
+        completedLessons: completedLessons.map((p: any) => p.lessonId),
+        totalLessons,
+        progress
+      }
+    } catch (error) {
+      console.error("Failed to get user progress:", error)
+      return {
+        completedLessons: [],
+        totalLessons: 0,
+        progress: 0
+      }
+    }
+  }
+
+  async getCompletedLessons(userId: ObjectId): Promise<ObjectId[]> {
+    try {
+      const client = await this.getClient()
+      const db = client.db("new-era-platform")
+      
+      const completedLessons = await db.collection("userProgress")
+        .find({ userId, isCompleted: true })
+        .project({ lessonId: 1 })
+        .toArray()
+      
+      return completedLessons.map((p: any) => p.lessonId)
+    } catch (error) {
+      console.error("Failed to get completed lessons:", error)
+      return []
+    }
+  }
+
+  async addCourseToUser(userId: ObjectId, courseId: ObjectId): Promise<boolean> {
+    try {
+      const client = await this.getClient()
+      const db = client.db("new-era-platform")
+      
+      const result = await db.collection("users").updateOne(
+        { _id: userId },
+        { $push: { enrolledCourses: courseId } }
+      )
+      
+      return result.modifiedCount > 0
+    } catch (error) {
+      console.error("Failed to add course to user:", error)
+      return false
     }
   }
 }

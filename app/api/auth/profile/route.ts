@@ -1,29 +1,46 @@
 import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/auth"
 import { verifyToken } from "@/lib/auth-server"
 import { db } from "@/lib/database"
 import { ObjectId } from "mongodb"
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get("auth-token")?.value
-
-    if (!token) {
+    let userId: string | null = null
+    
+    // First try NextAuth.js session
+    try {
+      const session = await auth()
+      if (session?.user?.id) {
+        userId = session.user.id
+      }
+    } catch (error) {
+      console.log("NextAuth session check failed, trying custom auth")
+    }
+    
+    // If NextAuth failed, try custom auth token
+    if (!userId) {
+      const token = request.cookies.get("auth-token")?.value
+      if (token) {
+        const user = verifyToken(token)
+        if (user) {
+          userId = user.id
+        }
+      }
+    }
+    
+    if (!userId) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
 
-    const user = verifyToken(token)
-    if (!user) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
-
     // Get user details
-    const userDetails = await db.getUserById(new ObjectId(user.id))
+    const userDetails = await db.getUserById(new ObjectId(userId))
     if (!userDetails) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
     // Get user enrollments
-    const enrollments = await db.getUserEnrollments(new ObjectId(user.id))
+    const enrollments = await db.getUserEnrollments(new ObjectId(userId))
     
     // Get course details for each enrollment
     const coursesWithProgress = await Promise.all(
@@ -64,6 +81,9 @@ export async function GET(request: NextRequest) {
         name: userDetails.name,
         email: userDetails.email,
         role: userDetails.role,
+        phone: userDetails.phone,
+        address: userDetails.address,
+        bio: userDetails.bio,
         createdAt: userDetails.createdAt,
         updatedAt: userDetails.updatedAt
       },
@@ -78,18 +98,35 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const token = request.cookies.get("auth-token")?.value
-
-    if (!token) {
+    let userId: string | null = null
+    
+    // First try NextAuth.js session
+    try {
+      const session = await auth()
+      if (session?.user?.id) {
+        userId = session.user.id
+      }
+    } catch (error) {
+      console.log("NextAuth session check failed, trying custom auth")
+    }
+    
+    // If NextAuth failed, try custom auth token
+    if (!userId) {
+      const token = request.cookies.get("auth-token")?.value
+      if (token) {
+        const user = verifyToken(token)
+        if (user) {
+          userId = user.id
+        }
+      }
+    }
+    
+    if (!userId) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
 
-    const user = verifyToken(token)
-    if (!user) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
-
     const body = await request.json()
+    console.log("🔍 Profile update request body:", body)
     const { name, email, phone, newPassword, confirmPassword } = body
 
     // Validate password if provided
@@ -107,15 +144,22 @@ export async function PUT(request: NextRequest) {
 
     // Prepare update data
     const updateData: any = { name, email }
-    if (phone !== undefined) updateData.phone = phone
+    if (phone !== undefined && phone !== null) {
+      updateData.phone = phone
+      console.log("🔍 Phone field included:", phone)
+    } else {
+      console.log("🔍 Phone field not included (undefined/null):", phone)
+    }
     if (newPassword && confirmPassword && newPassword === confirmPassword) {
       // Hash the new password
       const bcrypt = await import('bcryptjs')
       updateData.password = await bcrypt.hash(newPassword, 12)
     }
 
+    console.log("🔍 Update data being sent to database:", updateData)
+
     // Update user in database
-    const success = await db.updateUser(new ObjectId(user.id), updateData)
+    const success = await db.updateUser(new ObjectId(userId), updateData)
 
     if (success) {
       return NextResponse.json({ message: "Profile updated successfully" })

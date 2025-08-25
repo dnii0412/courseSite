@@ -40,16 +40,17 @@ export default function LearnPage() {
         const courseData = await courseResponse.json()
         setCourse(courseData.course)
 
-        // Fetch user enrollments if logged in
+        // Check if user is enrolled in this course
         if (user) {
-          try {
-            const enrollmentsResponse = await fetch("/api/auth/enrollments")
-            if (enrollmentsResponse.ok) {
-              const enrollmentsData = await enrollmentsResponse.json()
-              setEnrolledCourses(enrollmentsData.enrollments || [])
-            }
-          } catch (error) {
-      
+          // User is already authenticated, check their enrolledCourses array
+          const courseId = params.id as string
+          const isEnrolledInThisCourse = user.enrolledCourses?.includes(courseId)
+          if (isEnrolledInThisCourse) {
+            setEnrolledCourses([{
+              courseId: courseId,
+              enrolledAt: new Date().toISOString(),
+              isActive: true
+            }])
           }
         }
 
@@ -88,21 +89,58 @@ export default function LearnPage() {
   }
 
   const hasAccess = (courseId: string) => {
+    console.log("🔍 Checking access for courseId:", courseId)
+    console.log("👤 User:", user)
+    console.log("📚 User enrolledCourses:", user?.enrolledCourses)
+    
     // Admin has access to all courses
     if (user?.role === 'admin') {
+      console.log("✅ Admin access granted")
       return true
     }
-    // Regular users need to be enrolled
-    return isEnrolled(courseId)
+    
+    // Regular users need to be enrolled - check user's enrolledCourses array
+    const hasAccess = user?.enrolledCourses?.includes(courseId) || false
+    console.log("🔐 User access result:", hasAccess)
+    
+
+    
+    return hasAccess
   }
 
   const handleLessonSelect = (lesson: Lesson) => {
     setSelectedLesson(lesson)
   }
 
-  const markLessonComplete = (lessonId: string) => {
-    setCompletedLessons(prev => new Set([...prev, lessonId]))
-    // TODO: Save progress to backend
+  const markLessonComplete = async (lessonId: string) => {
+    if (!user || !course) return
+    
+    try {
+      const response = await fetch("/api/auth/progress/mark-complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          courseId: course._id,
+          lessonId: lessonId
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log("✅ Lesson marked complete:", data)
+        
+        // Update local state
+        setCompletedLessons(prev => new Set([...prev, lessonId]))
+        
+        // Show success message
+        // You can add a toast notification here if you have one
+      } else {
+        const error = await response.json()
+        console.error("❌ Failed to mark lesson complete:", error)
+      }
+    } catch (error) {
+      console.error("❌ Error marking lesson complete:", error)
+    }
   }
 
   const getLessonStatus = (lesson: Lesson) => {
@@ -119,7 +157,7 @@ export default function LearnPage() {
     const status = getLessonStatus(lesson)
     switch (status) {
       case 'completed':
-        return <Check className="w-4 h-4 text-green-600" />
+        return <Check className="w-4 h-4 text-blue-600" />
       case 'preview':
         return <Play className="w-4 h-4 text-blue-600" />
       default:
@@ -131,7 +169,7 @@ export default function LearnPage() {
     const status = getLessonStatus(lesson)
     switch (status) {
       case 'completed':
-        return <Badge className="bg-green-600 text-white">Дууссан</Badge>
+        return <Badge className="bg-blue-600 text-white">Дууссан</Badge>
       case 'preview':
         return <Badge variant="secondary">Үнэгүй</Badge>
       default:
@@ -161,6 +199,9 @@ export default function LearnPage() {
     )
   }
 
+  console.log("🎯 Course ID:", course._id)
+  console.log("🔍 Course object:", course)
+  
   const userHasAccess = hasAccess(course._id || '')
 
   if (!userHasAccess) {

@@ -12,7 +12,7 @@ export default async function CoursesPage() {
   let courses: Course[] = []
 
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/courses`, { cache: 'no-store' })
+    const response = await fetch('/api/courses', { next: { revalidate: 60 } })
     if (response.ok) {
       const data = await response.json()
       courses = data.courses || []
@@ -23,14 +23,14 @@ export default async function CoursesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <Header />
 
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16">
         <div className="text-center space-y-6">
-          <h1 className="text-5xl lg:text-6xl font-bold text-gray-900">Бүх хичээлүүд</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-5xl lg:text-6xl font-bold text-foreground">Бүх хичээлүүд</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Мэргэжлийн багш нартай, чанартай видео хичээллүүдээр таны ур чадварыг хөгжүүлнэ
           </p>
         </div>
@@ -42,7 +42,7 @@ export default async function CoursesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {courses.map((course) => (
               <Card key={course._id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                <div className="aspect-video bg-gray-200 relative">
+                <div className="aspect-video bg-muted relative">
                   {course.thumbnailUrl ? (
                     <img
                       src={course.thumbnailUrl}
@@ -50,8 +50,8 @@ export default async function CoursesPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                      <Play className="w-16 h-16 text-gray-400" />
+                    <div className="w-full h-full bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center">
+                      <Play className="w-16 h-16 text-muted-foreground" />
                     </div>
                   )}
                   <div className="absolute top-4 right-4">
@@ -62,14 +62,14 @@ export default async function CoursesPage() {
                 </div>
 
                 <CardHeader className="p-6">
-                  <CardTitle className="text-xl font-bold text-gray-900 mb-2">
+                  <CardTitle className="text-xl font-bold text-card-foreground mb-2">
                     {course.title}
                   </CardTitle>
-                  <p className="text-gray-600 line-clamp-2 mb-4">
+                  <p className="text-muted-foreground line-clamp-2 mb-4">
                     {course.description}
                   </p>
 
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                  <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
                       <span>{course.duration || "2 цаг"}</span>
@@ -89,7 +89,7 @@ export default async function CoursesPage() {
                       ₮{course.price?.toLocaleString() || "0"}
                     </div>
                     <Button asChild className="bg-[#5B7FFF] hover:bg-[#4A6FE7]">
-                      <Link href={`/courses/${course._id}`}>Харах</Link>
+                      <Link href={`/courses/${course._id}`}>Дэлгэрэнгүй</Link>
                     </Button>
                   </div>
                 </CardHeader>
@@ -99,8 +99,8 @@ export default async function CoursesPage() {
         ) : (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">📚</div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Хичээл олдсонгүй</h3>
-            <p className="text-gray-600 mb-6">Одоогоор бүртгэгдсэн хичээл байхгүй байна.</p>
+            <h3 className="text-2xl font-bold text-foreground mb-2">Хичээл олдсонгүй</h3>
+            <p className="text-muted-foreground mb-6">Одоогоор бүртгэгдсэн хичээл байхгүй байна.</p>
             <Button asChild className="bg-[#5B7FFF] hover:bg-[#4A6FE7]">
               <Link href="/">Нүүр хуудас руу буцах</Link>
             </Button>

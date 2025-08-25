@@ -2,7 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { AuthProvider } from "@/lib/hooks/useAuth"
+import { Providers } from "@/components/providers"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -16,15 +16,17 @@ export const metadata: Metadata = {
   generator: "New Era Platform",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="mn" className={`${inter.variable} antialiased`}>
-      <body className="font-sans">
-        <AuthProvider>{children}</AuthProvider>
+    <html lang="mn" className={`${inter.variable} antialiased`} suppressHydrationWarning>
+      <body className="font-sans bg-background text-foreground">
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   )

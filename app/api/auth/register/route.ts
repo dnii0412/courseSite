@@ -3,7 +3,7 @@ import { createUser, generateToken } from "@/lib/auth-server"
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password } = await request.json()
+    const { name, email, password, phone } = await request.json()
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Name, email, and password are required" }, { status: 400 })
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 })
     }
 
-    const user = await createUser(name, email, password)
+    const user = await createUser(name, email, password, phone)
     const token = generateToken(user)
 
     const response = NextResponse.json({ user, success: true })

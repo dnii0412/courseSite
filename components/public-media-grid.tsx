@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -40,48 +40,39 @@ interface GridLayout {
   lastSaved: string
 }
 
-export default function PublicMediaGrid() {
-  const [gridLayout, setGridLayout] = useState<GridLayout | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [isMobile, setIsMobile] = useState(false)
+interface PublicMediaGridProps {
+  gridLayout: GridLayout | null
+  loading?: boolean
+}
+
+export default function PublicMediaGrid({ gridLayout, loading = false }: PublicMediaGridProps) {
+  const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
 
   useEffect(() => {
-    // Check if mobile
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 640)
-    }
-    
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    
-    fetchGridLayout()
-    
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
-  const fetchGridLayout = async () => {
-    try {
-      const response = await fetch("/api/media-grid")
-      if (response.ok) {
-        const data = await response.json()
-        if (data.layout && data.layout.isPublished) {
-          setGridLayout(data.layout)
-        }
+    // Check screen size
+    const checkScreenSize = () => {
+      if (window.innerWidth < 640) {
+        setScreenSize('mobile')
+      } else if (window.innerWidth < 1024) {
+        setScreenSize('tablet')
+      } else {
+        setScreenSize('desktop')
       }
-    } catch (error) {
-      console.error("Error fetching grid layout:", error)
-    } finally {
-      setLoading(false)
     }
-  }
+    
+    checkScreenSize()
+    window.addEventListener('resize', checkScreenSize)
+    
+    return () => window.removeEventListener('resize', checkScreenSize)
+  }, [])
 
   if (loading) {
     return (
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+      <section className="py-20 bg-gradient-to-br from-muted/30 to-muted/20">
         <div className="container mx-auto px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-500 mt-4">Loading media grid...</p>
+            <p className="text-muted-foreground mt-4">Loading media grid...</p>
           </div>
         </div>
       </section>
@@ -100,27 +91,28 @@ export default function PublicMediaGrid() {
   }
 
   // Responsive grid settings
-  const displayWidth = isMobile ? 3 : gridLayout.width
-  const displayHeight = isMobile ? 4 : gridLayout.height
-  const displayCells = isMobile ? gridLayout.cells.slice(0, 12) : gridLayout.cells
+  const displayWidth = screenSize === 'mobile' ? 2 : gridLayout.width
+  const displayHeight = screenSize === 'mobile' ? 6 : gridLayout.height
+  const displayCells = screenSize === 'mobile' ? gridLayout.cells.slice(0, 12) : gridLayout.cells
 
   return (
-    <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+    <section className="py-20 bg-gradient-to-br from-muted/30 to-muted/20">
       <div className="container mx-auto px-4">
         
 
         {/* Grid Display */}
-        <div className="max-w-6xl mx-auto">
-          <div className="grid gap-2 sm:gap-3 bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20" style={{
+        <div className="w-full flex justify-center">
+          <div className="grid gap-1 sm:gap-2 md:gap-3 lg:gap-4 bg-card/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 lg:p-8 shadow-lg border border-border/20" style={{
             gridTemplateColumns: `repeat(${displayWidth}, 1fr)`,
-            gridTemplateRows: `repeat(${displayHeight}, 1fr)`
+            gridTemplateRows: `repeat(${displayHeight}, 1fr)`,
+            maxWidth: screenSize === 'mobile' ? '320px' : screenSize === 'tablet' ? '600px' : '1200px'
           }}>
             {displayCells.map((cell) => (
               <div
                 key={`${cell.x}-${cell.y}`}
-                className={`aspect-square rounded-lg sm:rounded-xl overflow-hidden transition-all duration-300 ${
+                className={`aspect-square rounded-md sm:rounded-lg md:rounded-xl overflow-hidden transition-all duration-300 ${
                   cell.mediaId 
-                    ? 'bg-white shadow-md sm:rounded-xl border border-gray-100 hover:shadow-xl hover:scale-[1.02]' 
+                    ? 'bg-card shadow-sm sm:shadow-md border border-border hover:shadow-lg sm:hover:shadow-xl hover:scale-[1.01] sm:hover:scale-[1.02]' 
                     : 'bg-transparent'
                 }`}
                 style={{
@@ -139,24 +131,24 @@ export default function PublicMediaGrid() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 flex items-center justify-center p-2 sm:p-4">
+                        <div className="w-full h-full bg-gradient-to-br from-muted/50 via-muted/30 to-muted/50 flex items-center justify-center p-1 sm:p-2 md:p-4">
                           <div className="text-center">
-                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-[#5B7FFF] to-purple-600 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg">
-                              <ImageIcon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                            <div className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-gradient-to-br from-[#5B7FFF] to-purple-600 rounded-full flex items-center justify-center mx-auto mb-1 sm:mb-2 md:mb-3 shadow-lg">
+                              <ImageIcon className="h-4 w-4 sm:h-6 sm:w-6 md:h-8 md:w-8 text-white" />
                             </div>
-                            <h3 className="font-semibold text-gray-900 mb-1 sm:mb-2 text-xs sm:text-sm leading-tight">
+                            <h3 className="font-semibold text-card-foreground mb-1 sm:mb-2 text-xs sm:text-sm leading-tight">
                               {cell.media.name}
                             </h3>
                             {cell.media.description && (
-                              <p className="text-xs text-gray-600 mb-2 sm:mb-3 leading-relaxed hidden sm:block">
+                              <p className="text-xs text-muted-foreground mb-1 sm:mb-2 md:mb-3 leading-relaxed hidden sm:block">
                                 {cell.media.description}
                               </p>
                             )}
-                            <div className="flex items-center justify-center gap-1 sm:gap-2 text-xs text-gray-500">
-                              <Badge variant="outline" className="text-xs bg-white/80">
+                            <div className="flex items-center justify-center gap-1 sm:gap-2 text-xs text-muted-foreground">
+                              <Badge variant="outline" className="text-xs bg-background/80">
                                 {cell.media.type.split('/')[1].toUpperCase()}
                               </Badge>
-                              <span className="text-gray-400 hidden sm:inline">•</span>
+                              <span className="text-muted-foreground/60 hidden sm:inline">•</span>
                               <span className="hidden sm:inline">{formatFileSize(cell.media.size)}</span>
                             </div>
                           </div>
@@ -166,16 +158,16 @@ export default function PublicMediaGrid() {
                     
                     {/* Size Indicator */}
                     {(cell.spanX && cell.spanX > 1) || (cell.spanY && cell.spanY > 1) ? (
-                      <div className="absolute top-2 right-2 bg-blue-500/90 text-white text-xs px-2 py-1 rounded-full">
+                      <div className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-blue-500/90 text-white text-xs px-1 py-0.5 sm:px-2 sm:py-1 rounded-full">
                         {cell.spanX || 1}×{cell.spanY || 1}
                       </div>
                     ) : null}
                     
                     {/* Hover overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center">
-                      <div className="text-center text-white p-2 sm:p-4">
-                        <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 inline-block mb-2">
-                          <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                      <div className="text-center text-white p-1 sm:p-2 md:p-4">
+                        <div className="bg-card/20 backdrop-blur-sm rounded-full p-1 sm:p-2 inline-block mb-1 sm:mb-2">
+                          <Eye className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-white" />
                         </div>
                         <p className="text-xs sm:text-sm font-medium">Харах</p>
                       </div>

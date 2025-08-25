@@ -18,12 +18,12 @@ export class BunnyVideoService {
   private baseUrl: string
 
   constructor() {
-    this.apiKey = process.env.BUNNY_STREAM_API_KEY || ''
-    this.libraryId = process.env.BUNNY_LIBRARY_ID || ''
+    this.apiKey = process.env.BUNNY_API_KEY || ''
+    this.libraryId = process.env.BUNNY_VIDEO_LIBRARY_ID || ''
     this.baseUrl = 'https://video.bunnycdn.com'
     
     if (!this.apiKey || !this.libraryId) {
-  
+      console.warn('Bunny.net credentials not configured. Check BUNNY_API_KEY and BUNNY_VIDEO_LIBRARY_ID environment variables.')
     }
   }
 

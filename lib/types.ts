@@ -3,6 +3,8 @@ export interface AuthUser {
   email: string
   name: string
   role: "student" | "admin"
+  enrolledCourses?: string[]
+  phone?: string
 }
 
 export interface Course {
@@ -17,6 +19,7 @@ export interface Course {
   videoUrl?: string
   thumbnailUrl?: string
   lessons: Lesson[]
+  subCourses?: SubCourse[]
   enrolledCount: number
   rating: number
   totalRatings: number
@@ -36,13 +39,22 @@ export interface Lesson {
   subCourseId?: string
 }
 
+export interface SubCourse {
+  _id?: string
+  title: string
+  description: string
+  lessons?: Lesson[]
+  order: number
+  isActive: boolean
+}
+
 export interface User {
   _id?: string
   name: string
   email: string
   password: string
   role: "student" | "admin"
-  enrolledCourses: string[]
+  enrolledCourses: string[] | any[] // Allow both string[] and ObjectId[]
   phone?: string
   address?: string
   bio?: string

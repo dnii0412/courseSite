@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,16 +9,20 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useAuth } from "@/lib/hooks/useAuth"
-import { User, Mail, Phone, Edit, Save, X, Lock } from "lucide-react"
+import { User, Mail, Phone, Edit, Save, X, Lock, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 
 export default function ProfilePage() {
   const { user, loading } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const [userStats, setUserStats] = useState({
     totalCourses: 0,
     completedCourses: 0
   })
+  
+  // Form state
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,27 +30,24 @@ export default function ProfilePage() {
     newPassword: "",
     confirmPassword: ""
   })
+  
+  // Original data for comparison and reset
+  const [originalData, setOriginalData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  })
+  
+  // Debug authentication state
+  console.log("🔍 Profile page - Auth state:", { user, loading })
 
-  // Initialize form data when user is loaded
-  useEffect(() => {
-    if (user) {
-      setFormData({
-        name: user.name || "",
-        email: user.email || "",
-        phone: "",
-        newPassword: "",
-        confirmPassword: ""
-      })
-      fetchUserStats()
-    }
-  }, [user])
-
-  const fetchUserStats = async () => {
+  const fetchUserStats = useCallback(async () => {
     try {
       if (!user?.id) return
       
-      // Fetch user's profile data including stats
-      const response = await fetch(`/api/auth/profile`)
+      const response = await fetch(`/api/auth/profile`, {
+        credentials: 'include'
+      })
       if (response.ok) {
         const profileData = await response.json()
         const { stats, user: userDetails } = profileData
@@ -56,71 +57,181 @@ export default function ProfilePage() {
           completedCourses: stats.completedCourses
         })
         
-        // Update form data with user details
-        setFormData({
+        // Set both form data and original data
+        const userFormData = {
           name: userDetails.name || "",
           email: userDetails.email || "",
           phone: userDetails.phone || "",
           newPassword: "",
           confirmPassword: ""
+        }
+        
+        setFormData(userFormData)
+        setOriginalData({
+          name: userDetails.name || "",
+          email: userDetails.email || "",
+          phone: userDetails.phone || ""
         })
       }
     } catch (error) {
       console.error("Error fetching user stats:", error)
     }
+  }, [user?.id])
+
+  // Initialize form data when user is loaded
+  useEffect(() => {
+    if (user) {
+      console.log("🔍 User data loaded:", user)
+      const initialData = {
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        newPassword: "",
+        confirmPassword: ""
+      }
+      setFormData(initialData)
+      setOriginalData({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || ""
+      })
+      fetchUserStats()
+    }
+  }, [user, fetchUserStats])
+
+  // Check if form has changes
+  const hasChanges = () => {
+    return (
+      formData.name !== originalData.name ||
+      formData.email !== originalData.email ||
+      formData.phone !== originalData.phone ||
+      formData.newPassword !== "" ||
+      formData.confirmPassword !== ""
+    )
   }
 
-  const handleSave = async () => {
+  // Start editing
+  const startEditing = () => {
+    setIsEditing(true)
+    setShowPassword(false)
+    // Reset password fields
+    setFormData(prev => ({
+      ...prev,
+      newPassword: "",
+      confirmPassword: ""
+    }))
+  }
+
+  // Cancel editing
+  const cancelEditing = () => {
+    setIsEditing(false)
+    setShowPassword(false)
+    // Reset form to original data
+    setFormData(prev => ({
+      ...prev,
+      name: originalData.name,
+      email: originalData.email,
+      phone: originalData.phone,
+      newPassword: "",
+      confirmPassword: ""
+    }))
+  }
+
+  // Save changes
+  const saveChanges = async () => {
+    if (!hasChanges()) {
+      setIsEditing(false)
+      return
+    }
+
+    // Validate password fields if provided
+    if (formData.newPassword || formData.confirmPassword) {
+      if (!formData.newPassword || !formData.confirmPassword) {
+        alert("Both password fields are required")
+        return
+      }
+      if (formData.newPassword !== formData.confirmPassword) {
+        alert("Passwords do not match")
+        return
+      }
+      if (formData.newPassword.length < 6) {
+        alert("Password must be at least 6 characters long")
+        return
+      }
+    }
+
+    setIsSaving(true)
+    
     try {
       const response = await fetch('/api/auth/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        credentials: 'include',
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          newPassword: formData.newPassword,
+          confirmPassword: formData.confirmPassword
+        }),
       })
 
       if (response.ok) {
-        setIsEditing(false)
+        const result = await response.json()
+        console.log("✅ Profile updated successfully:", result)
+        
+        // Update original data with new values
+        setOriginalData({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone
+        })
+        
         // Clear password fields
         setFormData(prev => ({
           ...prev,
           newPassword: "",
           confirmPassword: ""
         }))
+        
+        setIsEditing(false)
+        setShowPassword(false)
+        
         // Refresh user stats
         fetchUserStats()
-        // You could add a toast notification here
+        
+        alert("Profile updated successfully!")
       } else {
-        console.error('Failed to update profile')
+        const errorData = await response.json()
+        console.error('❌ Failed to update profile:', errorData)
+        alert(`Failed to update profile: ${errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
-      console.error('Error updating profile:', error)
+      console.error('❌ Error updating profile:', error)
+      alert(`Error updating profile: ${error}`)
+    } finally {
+      setIsSaving(false)
     }
   }
 
-  const handleCancel = () => {
-    // Reset form data
-    if (user) {
-      setFormData({
-        name: user.name || "",
-        email: user.email || "",
-        phone: "",
-        newPassword: "",
-        confirmPassword: ""
-      })
-    }
-    setIsEditing(false)
+  // Handle input changes
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-            <div className="bg-gray-200 h-64 rounded"></div>
+            <div className="h-8 bg-muted rounded w-1/4 mb-6"></div>
+            <div className="bg-muted h-64 rounded"></div>
           </div>
         </div>
         <Footer />
@@ -130,11 +241,11 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-8 text-center">
           <h1 className="text-2xl font-bold mb-4">Нэвтрэх шаардлагатай</h1>
-          <p className="text-gray-600 mb-6">Энэ хуудсыг үзэхийн тулд нэвтэрнэ үү.</p>
+          <p className="text-muted-foreground mb-6">Энэ хуудсыг үзэхийн тулд нэвтэрнэ үү.</p>
           <Link href="/login">
             <Button>Нэвтрэх</Button>
           </Link>
@@ -145,207 +256,174 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
+          {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Миний профайл</h1>
-            <p className="text-gray-600">Профайлын мэдээллээ шинэчлэх</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Миний профайл</h1>
+            <p className="text-muted-foreground">Профайлын мэдээллээ засварлах</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Profile Overview */}
-            <div className="lg:col-span-1">
+          <div className="grid gap-6 md:grid-cols-3">
+            {/* Profile Info Card */}
+            <div className="md:col-span-1">
               <Card>
                 <CardContent className="p-6 text-center">
-                  <Avatar className="w-24 h-24 mx-auto mb-4">
-                    <AvatarFallback className="bg-primary text-white text-2xl">
+                  <Avatar className="h-24 w-24 mx-auto mb-4">
+                    <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
                       {user.name?.charAt(0).toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
-                  <h2 className="text-xl font-bold text-gray-900 mb-1">{user.name}</h2>
-                  <p className="text-gray-600 mb-2">{user.email}</p>
-                  <div className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                    {user.role === "admin" ? "Админ" : "Оюутан"}
-                  </div>
+                  <h3 className="text-xl font-semibold mb-2">{user.name || "User"}</h3>
+                  <p className="text-muted-foreground mb-4">{user.email}</p>
                   
-                  <div className="mt-6 pt-6 border-t">
-                    <div className="grid grid-cols-2 gap-4 text-center">
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900">{userStats.totalCourses}</p>
-                        <p className="text-sm text-gray-600">Хичээл</p>
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900">{userStats.completedCourses}</p>
-                        <p className="text-sm text-gray-600">Дууссан хичээл</p>
-                      </div>
+                  {/* Stats */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Нийт хичээл:</span>
+                      <span className="font-semibold">{userStats.totalCourses}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Дууссан хичээл:</span>
+                      <span className="font-semibold">{userStats.completedCourses}</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Profile Information */}
-            <div className="lg:col-span-2">
+            {/* Edit Form Card */}
+            <div className="md:col-span-2">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Хувийн мэдээлэл</CardTitle>
+                  <CardTitle>Профайлын мэдээл</CardTitle>
                   {!isEditing ? (
-                    <Button variant="outline" onClick={() => setIsEditing(true)}>
+                    <Button onClick={startEditing} variant="outline" size="sm">
                       <Edit className="w-4 h-4 mr-2" />
-                      Засах
+                      Засварлах
                     </Button>
                   ) : (
                     <div className="flex gap-2">
-                      <Button onClick={handleSave} size="sm">
-                        <Save className="w-4 h-4 mr-2" />
-                        Хадгалах
-                      </Button>
-                      <Button variant="outline" onClick={handleCancel} size="sm">
+                      <Button 
+                        onClick={cancelEditing} 
+                        variant="outline" 
+                        size="sm"
+                        disabled={isSaving}
+                      >
                         <X className="w-4 h-4 mr-2" />
                         Цуцлах
+                      </Button>
+                      <Button 
+                        onClick={saveChanges} 
+                        size="sm"
+                        disabled={!hasChanges() || isSaving}
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        {isSaving ? "Хадгалж байна..." : "Хадгалах"}
                       </Button>
                     </div>
                   )}
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    {/* Name Field */}
+                    <div>
                       <Label htmlFor="name">Нэр</Label>
-                      {isEditing ? (
-                        <Input
-                          id="name"
-                          value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-                          <User className="w-4 h-4 text-gray-500" />
-                          <span>{formData.name || "Тодорхойгүй"}</span>
-                        </div>
-                      )}
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => handleInputChange("name", e.target.value)}
+                        disabled={!isEditing}
+                        className="mt-1"
+                      />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Имэйл</Label>
-                      {isEditing ? (
-                        <Input
-                          id="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-                          <Mail className="w-4 h-4 text-gray-500" />
-                          <span>{formData.email || "Тодорхойгүй"}</span>
-                        </div>
-                      )}
+                    {/* Email Field */}
+                    <div>
+                      <Label htmlFor="email">И-мэйл</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => handleInputChange("email", e.target.value)}
+                        disabled={!isEditing}
+                        className="mt-1"
+                      />
                     </div>
 
-                    <div className="space-y-2">
+                    {/* Phone Field */}
+                    <div>
                       <Label htmlFor="phone">Утасны дугаар</Label>
-                      {isEditing ? (
-                        <Input
-                          id="phone"
-                          type="tel"
-                          value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          placeholder="Утасны дугаар оруулна уу"
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-                          <Phone className="w-4 h-4 text-gray-500" />
-                          <span>{formData.phone || "Тодорхойгүй"}</span>
+                      <Input
+                        id="phone"
+                        value={formData.phone}
+                        onChange={(e) => handleInputChange("phone", e.target.value)}
+                        disabled={!isEditing}
+                        className="mt-1"
+                        placeholder="+976 99999999"
+                      />
+                    </div>
+
+                    {/* Password Fields - Only show when editing */}
+                    {isEditing && (
+                      <>
+                        <div className="border-t pt-4">
+                          <h4 className="font-medium mb-3 flex items-center">
+                            <Lock className="w-4 h-4 mr-2" />
+                            Нууц үг солих
+                          </h4>
+                          
+                          <div className="space-y-4">
+                            <div>
+                              <Label htmlFor="newPassword">Шинэ нууц үг</Label>
+                              <div className="relative mt-1">
+                                <Input
+                                  id="newPassword"
+                                  type={showPassword ? "text" : "password"}
+                                  value={formData.newPassword}
+                                  onChange={(e) => handleInputChange("newPassword", e.target.value)}
+                                  placeholder="Хоосон үлдээх бол үлдээнэ үү"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="absolute right-0 top-0 h-full px-3"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                >
+                                  {showPassword ? (
+                                    <EyeOff className="w-4 h-4" />
+                                  ) : (
+                                    <Eye className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div>
+                              <Label htmlFor="confirmPassword">Нууц үг давтах</Label>
+                              <Input
+                                id="confirmPassword"
+                                type={showPassword ? "text" : "password"}
+                                value={formData.confirmPassword}
+                                onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                                placeholder="Хоосон үлдээх бол үлдээнэ үү"
+                              />
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
+                      </>
+                    )}
                   </div>
-
-                  {/* Password Change Section */}
-                  <div className="pt-6 border-t">
-                    <h3 className="text-lg font-semibold mb-4">Нууц үг солих</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="newPassword">Шинэ нууц үг</Label>
-                        {isEditing ? (
-                          <Input
-                            id="newPassword"
-                            type="password"
-                            value={formData.newPassword}
-                            onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                            placeholder="Шинэ нууц үг оруулна уу"
-                          />
-                        ) : (
-                          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-                            <Lock className="w-4 h-4 text-gray-500" />
-                            <span className="text-gray-500">••••••••</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="confirmPassword">Нууц үг баталгаажуулах</Label>
-                        {isEditing ? (
-                          <Input
-                            id="confirmPassword"
-                            type="password"
-                            value={formData.confirmPassword}
-                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                            placeholder="Нууц үг давтаж оруулна уу"
-                          />
-                        ) : (
-                          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-                            <Lock className="w-4 h-4 text-gray-500" />
-                            <span className="text-gray-500">••••••••</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Delete Account Section */}
-                  <div className="pt-6 border-t">
-                    <h3 className="text-lg font-semibold mb-4 text-red-600">Аккаунт устгах</h3>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Энэ үйлдэл нь таны бүх мэдээллийг бүр мөсөн устгах болно. Энэ үйлдлийг буцааж болохгүй.
-                    </p>
-                    <Button 
-                      variant="destructive" 
-                      onClick={async () => {
-                        if (confirm('Та өөрийн аккаунтыг устгахдаа итгэлтэй байна уу? Энэ үйлдлийг буцааж болохгүй.')) {
-                          try {
-                            const response = await fetch('/api/auth/delete-account', {
-                              method: 'DELETE',
-                            })
-                            
-                            if (response.ok) {
-                              // Redirect to home page after successful deletion
-                              window.location.href = '/'
-                            } else {
-                              const error = await response.json()
-                              alert(`Аккаунт устгахад алдаа гарлаа: ${error.error}`)
-                            }
-                          } catch (error) {
-                            console.error('Error deleting account:', error)
-                            alert('Аккаунт устгахад алдаа гарлаа')
-                          }
-                        }
-                      }}
-                    >
-                      Аккаунт устгах
-                    </Button>
-                  </div>
-
                 </CardContent>
               </Card>
             </div>
           </div>
         </div>
       </div>
-
       <Footer />
     </div>
   )

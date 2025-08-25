@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { BookOpen, Plus, Search, Edit, Trash2, ChevronDown, ChevronRight, Video } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { bunnyVideoService } from "@/lib/bunny-video"
+
 
 interface Lesson {
   _id: string
@@ -350,17 +350,48 @@ export default function AdminCourses() {
   }
 
   const handleCreateLesson = async () => {
-    if (!selectedSubCourse || !lessonFormData.videoFile) return
+    console.log("🎯 handleCreateLesson function called!")
+    alert("Function called! Check console for details.")
+    console.log("Starting lesson creation...")
+    console.log("Selected subcourse:", selectedSubCourse)
+    console.log("Video file:", lessonFormData.videoFile)
+
+    
+    if (!selectedSubCourse || !lessonFormData.videoFile) {
+      console.log("Missing required data:", { selectedSubCourse: !!selectedSubCourse, videoFile: !!lessonFormData.videoFile })
+      return
+    }
+    
     setIsCreatingLesson(true)
     try {
-      const upload = await bunnyVideoService.uploadVideo(lessonFormData.videoFile, {
-        title: lessonFormData.title,
-        description: lessonFormData.description,
-        tags: [],
-        category: "education"
+      console.log("Starting video upload via API...")
+      console.log("File size:", lessonFormData.videoFile.size)
+      console.log("File type:", lessonFormData.videoFile.type)
+      
+      // Upload video via API route
+      const formData = new FormData()
+      formData.append("videoFile", lessonFormData.videoFile)
+      formData.append("title", lessonFormData.title)
+      formData.append("description", lessonFormData.description)
+      
+      const uploadRes = await fetch("/api/admin/upload/video", {
+        method: "POST",
+        body: formData
       })
+      
+      if (!uploadRes.ok) {
+        const uploadError = await uploadRes.json()
+        console.error("Upload failed:", uploadError)
+        toast({ title: "Error", description: uploadError.error || "Upload failed", variant: "destructive" })
+        setIsCreatingLesson(false)
+        return
+      }
+      
+      const upload = await uploadRes.json()
+      console.log("Upload result:", upload)
 
       if (!upload.success || !upload.videoId || !upload.videoUrl) {
+        console.error("Upload failed:", upload.error)
         toast({ title: "Error", description: upload.error || "Upload failed", variant: "destructive" })
         setIsCreatingLesson(false)
         return
@@ -392,6 +423,7 @@ export default function AdminCourses() {
         toast({ title: "Error", description: err.error || "Failed", variant: "destructive" })
       }
     } catch (e) {
+      console.error("Lesson creation error:", e)
       toast({ title: "Error", description: "Failed to create lesson", variant: "destructive" })
     } finally {
       setIsCreatingLesson(false)
@@ -410,7 +442,7 @@ export default function AdminCourses() {
             const filtered = prev.filter(l => l.subCourseId !== subCourseId)
             return [...filtered, ...lessonsData]
           })
-      } else {
+        } else {
           setLessons(prev => prev.filter(l => l._id !== lessonId))
         }
         toast({ title: "Deleted", description: "Lesson deleted" })
@@ -1105,9 +1137,25 @@ export default function AdminCourses() {
               />
               <Label htmlFor="lessonPreview">Preview Lesson</Label>
             </div>
-                <Button onClick={handleCreateLesson} className="w-full" disabled={!lessonFormData.videoFile || isCreatingLesson}>
-              {isCreatingLesson ? "Creating Lesson..." : "Create Lesson"}
-            </Button>
+                <Button 
+                  onClick={handleCreateLesson} 
+                  className="w-full" 
+                  disabled={false}
+                >
+                  {isCreatingLesson ? "Creating Lesson..." : "Create Lesson"}
+                </Button>
+                <div className="text-xs text-gray-500 mt-2">
+                  Debug: Video file selected: {lessonFormData.videoFile ? "Yes" : "No"} | 
+                  Title: {lessonFormData.title || "Empty"} | 
+                  Description: {lessonFormData.description || "Empty"}
+                </div>
+                <Button 
+                  onClick={() => console.log("Test button clicked!")} 
+                  variant="outline" 
+                  className="w-full mt-2"
+                >
+                  Test Button (Click to test if buttons work)
+                </Button>
           </div>
         </DialogContent>
       </Dialog>

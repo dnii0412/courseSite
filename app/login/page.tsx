@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/lib/hooks/useAuth"
 import { Header } from "@/components/header"
+import { GoogleButton } from "@/components/ui/google-button"
+import { signIn } from "next-auth/react"
 
 function LoginForm() {
   const [email, setEmail] = useState("")
@@ -66,21 +68,27 @@ function LoginForm() {
     setLoading(false)
   }
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setError("")
-    // Direct redirect to Google OAuth - no fetch needed
-    window.location.href = "/api/auth/google"
+    try {
+      await signIn("google", { 
+        callbackUrl: "/",
+        redirect: true 
+      })
+    } catch (error) {
+      setError("Google authentication failed. Please try again.")
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
       <div className="flex items-center justify-center py-12">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">Login</h2>
+            <h2 className="text-3xl font-bold text-foreground">Login</h2>
           </div>
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6 rounded-2xl border p-6 md:p-8 bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-soft animate-authIn focus-within:shadow-lg transition-all" onSubmit={handleSubmit}>
             <div>
               <Label htmlFor="email">Email</Label>
               <Input
@@ -90,6 +98,7 @@ function LoginForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="mt-1"
+                autoComplete="email"
               />
             </div>
             <div>
@@ -101,31 +110,32 @@ function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="mt-1"
+                autoComplete="current-password"
               />
             </div>
+            <div className="text-right">
+              <Link href="/reset-password" className="text-sm text-primary hover:text-primary/80 transition-colors">
+                Forgot password?
+              </Link>
+            </div>
             {error && (
-              <div className="text-red-600 text-sm text-center">{error}</div>
+              <div className="text-red-600 text-sm text-center" aria-live="polite">{error}</div>
             )}
             <Button
               type="submit"
-              className="w-full"
+              className="w-full transition-all hover:scale-[1.01] active:scale-[.99] hover:shadow-md hover:-translate-y-[1px] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
               disabled={loading}
             >
               {loading ? "Logging in..." : "Login"}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleGoogleLogin}
-            >
-              Google Login
-            </Button>
+            <GoogleButton onClick={handleGoogleLogin}>
+              Continue with Google
+            </GoogleButton>
           </form>
           <div className="text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link href="/register" className="text-blue-600 hover:text-blue-500">
+              <Link href="/register" className="text-primary hover:text-primary/80 transition-colors">
                 Sign up
               </Link>
             </p>

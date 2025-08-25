@@ -39,7 +39,8 @@ export async function POST(request: NextRequest) {
         isActive: true,
       })
 
-      
+      // Update user's enrolledCourses array
+      await db.addCourseToUser(new ObjectId(payment.userId), new ObjectId(payment.courseId))
     }
 
     return NextResponse.json({ success: true })

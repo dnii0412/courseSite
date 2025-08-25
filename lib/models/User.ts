@@ -12,6 +12,8 @@ export interface User {
   phone?: string
   address?: string
   bio?: string
+  resetToken?: string
+  resetTokenExpiry?: Date
   createdAt: Date
   updatedAt: Date
 }

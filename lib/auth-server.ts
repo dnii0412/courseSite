@@ -25,7 +25,7 @@ export function verifyToken(token: string): AuthUser | null {
   }
 }
 
-export async function createUser(name: string, email: string, password: string): Promise<AuthUser> {
+export async function createUser(name: string, email: string, password: string, phone?: string): Promise<AuthUser> {
   const existingUser = await db.getUserByEmail(email)
   if (existingUser) {
     throw new Error("User already exists")
@@ -38,6 +38,7 @@ export async function createUser(name: string, email: string, password: string):
     password: hashedPassword,
     role: "student",
     enrolledCourses: [],
+    phone,
   })
 
   return {

@@ -14,13 +14,14 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { User, LogOut, BookOpen, Home, GraduationCap } from "lucide-react"
 import { Logo } from "@/components/logo"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export function Header() {
   const { user, logout } = useAuth()
   const pathname = usePathname()
 
   return (
-    <header className="border-b bg-white">
+    <header className="border-b bg-background relative z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
@@ -31,7 +32,7 @@ export function Header() {
           <nav className="hidden md:flex items-center space-x-8">
             <Link 
               href="/" 
-              className={`text-gray-600 hover:text-primary border-b-2 pb-1 transition-colors ${
+              className={`text-muted-foreground hover:text-primary border-b-2 pb-1 transition-colors ${
                 pathname === "/" 
                   ? "border-primary text-primary" 
                   : "border-transparent"
@@ -41,7 +42,7 @@ export function Header() {
             </Link>
             <Link 
               href="/courses" 
-              className={`text-gray-600 hover:text-primary border-b-2 pb-1 transition-colors ${
+              className={`text-muted-foreground hover:text-primary border-b-2 pb-1 transition-colors ${
                 pathname === "/courses" 
                   ? "border-primary text-primary" 
                   : "border-transparent"
@@ -51,19 +52,20 @@ export function Header() {
             </Link>
           </nav>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 relative">
+            <ThemeToggle />
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                     <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-primary text-white">
+                      <AvatarFallback className="bg-primary text-primary-foreground">
                         {user.name?.charAt(0).toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuContent className="w-56 z-[9999]" align="end" forceMount sideOffset={8}>
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
                       <p className="font-medium">{user.name}</p>

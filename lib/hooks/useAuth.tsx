@@ -1,47 +1,74 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect, createContext, useContext } from "react"
+import { useSession, signIn, signOut } from "next-auth/react"
+import { useState, useEffect } from "react"
 import type { AuthUser } from "@/lib/types"
 
-interface AuthContextType {
-  user: AuthUser | null
-  loading: boolean
-  login: (email: string, password: string) => Promise<boolean>
-  register: (name: string, email: string, password: string) => Promise<boolean>
-  logout: () => Promise<void>
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null)
-  const [loading, setLoading] = useState(true)
-
+export function useAuth() {
+  const { data: session, status } = useSession()
+  const [localUser, setLocalUser] = useState<AuthUser | null>(null)
+  
+  // Check for local auth token on mount
   useEffect(() => {
-    checkAuth()
-  }, [])
-
-  const checkAuth = async () => {
-    try {
-      const response = await fetch("/api/auth/me")
-      if (response.ok) {
-        const data = await response.json()
-        setUser(data.user)
-      } else if (response.status === 401) {
-        // 401 is expected when no user is logged in - not an error
-        setUser(null)
-      } else {
-
-      }
-    } catch (error) {
+    const checkLocalAuth = async () => {
+      // Only check if we don't already have a local user and NextAuth session is not loading
+      if (localUser || status === "loading") return
       
-    } finally {
-      setLoading(false)
+      // Check if we're in the browser
+      if (typeof window === 'undefined') return
+      
+      // Check if auth-token cookie exists
+      const hasAuthToken = document.cookie.includes('auth-token=')
+      if (!hasAuthToken) {
+        console.log("No auth-token cookie found")
+        return
+      }
+      
+      try {
+        const response = await fetch('/api/auth/profile', {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const contentType = response.headers.get('content-type')
+          if (contentType && contentType.includes('application/json')) {
+            try {
+              const data = await response.json()
+              if (data.user) {
+                setLocalUser({
+                  id: data.user.id,
+                  name: data.user.name || "",
+                  email: data.user.email || "",
+                  role: data.user.role || "student"
+                })
+              }
+            } catch (jsonError) {
+              console.log("Failed to parse JSON response")
+            }
+          } else {
+            console.log("Response is not JSON, skipping")
+          }
+        } else if (response.status === 404) {
+          console.log("Profile endpoint not found, skipping")
+        }
+      } catch (error) {
+        // Silently ignore errors - user just isn't logged in
+        console.log("No local auth token found")
+      }
     }
-  }
+    
+    checkLocalAuth()
+  }, [localUser, status])
+  
+  // Use NextAuth session if available, otherwise use local user
+  const user: AuthUser | null = session?.user ? {
+    id: session.user.id || session.user.email || "",
+    name: session.user.name || "",
+    email: session.user.email || "",
+    role: "student",
+  } : localUser
 
+  const loading = status === "loading" && !localUser
+  
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const response = await fetch("/api/auth/login", {
@@ -52,52 +79,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (response.ok) {
         const data = await response.json()
-        setUser(data.user)
+        // Set local user immediately
+        setLocalUser({
+          id: data.user.id,
+          name: data.user.name || "",
+          email: data.user.email || "",
+          role: data.user.role || "student"
+        })
         return true
       }
       return false
     } catch (error) {
-      
       return false
     }
   }
 
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+  const register = async (name: string, email: string, password: string, phone?: string): Promise<boolean> => {
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, phone }),
       })
 
       if (response.ok) {
         const data = await response.json()
-        setUser(data.user)
+        // Set local user immediately after registration
+        setLocalUser({
+          id: data.user.id,
+          name: data.user.name || "",
+          email: data.user.email || "",
+          role: data.user.role || "student"
+        })
         return true
       }
       return false
     } catch (error) {
-      
       return false
     }
   }
 
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
+    // Clear local user
+    setLocalUser(null)
+    // Also try NextAuth logout if available
+    try {
+      await signOut({ redirect: false })
+    } catch (error) {
+      console.log("NextAuth logout failed, but local user cleared")
+    }
+    
+    // Clear auth token cookie
     try {
       await fetch("/api/auth/logout", { method: "POST" })
-      setUser(null)
     } catch (error) {
-      
+      console.log("Logout API call failed")
     }
   }
 
-  return <AuthContext.Provider value={{ user, loading, login, register, logout }}>{children}</AuthContext.Provider>
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+  return {
+    user,
+    loading,
+    login,
+    register,
+    logout,
   }
-  return context
 }

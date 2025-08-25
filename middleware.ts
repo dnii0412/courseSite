@@ -2,6 +2,14 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 export function middleware(request: NextRequest) {
+  const url = request.nextUrl
+  
+  // Redirect www to apex domain
+  if (url.hostname === "www.edunewera.mn") {
+    url.hostname = "edunewera.mn";
+    return NextResponse.redirect(url, 308);
+  }
+
   const { pathname } = request.nextUrl
 
   // Admin routes protection - just check if user is trying to access admin pages
@@ -26,5 +34,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/dashboard/:path*", "/courses/:path*/watch"],
+  matcher: ["/admin/:path*", "/dashboard/:path*", "/courses/:path*/watch", "/((?!api|_next/static|_next/image|favicon.ico).*)"],
 }
