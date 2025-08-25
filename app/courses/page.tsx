@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { Clock, Star, Users, Play } from "lucide-react"
+import { Star, Users, Play } from "lucide-react"
 import type { Course } from "@/lib/types"
 
 export default async function CoursesPage() {
@@ -13,9 +13,9 @@ export default async function CoursesPage() {
 
   try {
     // Use absolute URL for server-side fetching
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://edunewera.mn')
-    
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://edunewera.mn')
+
     const response = await fetch(`${baseUrl}/api/courses`, { next: { revalidate: 60 } })
     if (response.ok) {
       const data = await response.json()
@@ -74,10 +74,6 @@ export default async function CoursesPage() {
                   </p>
 
                   <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{course.duration || "2 цаг"}</span>
-                    </div>
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 text-yellow-500" />
                       <span>{course.rating || "4.8"}</span>

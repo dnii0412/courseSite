@@ -159,13 +159,13 @@ export default function AdminCourses() {
         router.push("/admin/login")
         return
       }
-      
+
       const data = await response.json()
       if (data.user.role !== "admin") {
         router.push("/admin/login")
         return
       }
-      
+
       loadData()
     } catch (error) {
       console.error("Auth check failed:", error)
@@ -202,7 +202,7 @@ export default function AdminCourses() {
       const data = await res.json()
       return data.lessons || []
     } catch (e) {
-      
+
       return []
     }
   }
@@ -218,7 +218,7 @@ export default function AdminCourses() {
     const next = new Set(expandedSubCourses)
     if (next.has(subCourseId)) {
       next.delete(subCourseId)
-      } else {
+    } else {
       next.add(subCourseId)
       const lessonsData = await fetchLessons(subCourseId)
       setLessons(prevLessons => {
@@ -232,7 +232,7 @@ export default function AdminCourses() {
   const handleCreateCourse = async () => {
     try {
       setThumbnailUploadLoading(true)
-      
+
       // Prepare course data
       const courseData = {
         title: courseFormData.title,
@@ -248,7 +248,7 @@ export default function AdminCourses() {
       // Upload thumbnail if provided
       if (courseFormData.thumbnailFile) {
         toast({ title: "Uploading thumbnail...", description: "Please wait while we upload the thumbnail." })
-        
+
         const formData = new FormData()
         formData.append('file', courseFormData.thumbnailFile)
         formData.append('name', `${courseFormData.title}_thumbnail`)
@@ -273,7 +273,7 @@ export default function AdminCourses() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(courseData)
       })
-      
+
       if (res.ok) {
         toast({ title: "Success", description: "Course created successfully" })
         const data = await (await fetch("/api/admin/courses")).json()
@@ -411,29 +411,29 @@ export default function AdminCourses() {
     console.log("Selected subcourse:", selectedSubCourse)
     console.log("Video file:", lessonFormData.videoFile)
 
-    
+
     if (!selectedSubCourse || !lessonFormData.videoFile) {
       console.log("Missing required data:", { selectedSubCourse: !!selectedSubCourse, videoFile: !!lessonFormData.videoFile })
       return
     }
-    
+
     setIsCreatingLesson(true)
     try {
       console.log("Starting video upload via API...")
       console.log("File size:", lessonFormData.videoFile.size)
       console.log("File type:", lessonFormData.videoFile.type)
-      
+
       // Upload video via API route
       const formData = new FormData()
       formData.append("videoFile", lessonFormData.videoFile)
       formData.append("title", lessonFormData.title)
       formData.append("description", lessonFormData.description)
-      
+
       const uploadRes = await fetch("/api/admin/upload/video", {
         method: "POST",
         body: formData
       })
-      
+
       if (!uploadRes.ok) {
         const uploadError = await uploadRes.json()
         console.error("Upload failed:", uploadError)
@@ -441,7 +441,7 @@ export default function AdminCourses() {
         setIsCreatingLesson(false)
         return
       }
-      
+
       const upload = await uploadRes.json()
       console.log("Upload result:", upload)
 
@@ -546,78 +546,152 @@ export default function AdminCourses() {
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Create New Course</DialogTitle>
+                  <DialogTitle>Шинэ хичээл үүсгэх</DialogTitle>
                   <DialogDescription>
-                    Create a new course by filling out the information below.
+                    Доорх мэдээллийг бөглөж шинэ хичээл үүсгэнэ үү.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="courseTitle">Title</Label>
+                      <Label htmlFor="courseTitle">Гарчиг</Label>
                       <Input
                         id="courseTitle"
                         value={courseFormData.title}
                         onChange={(e) => setCourseFormData({ ...courseFormData, title: e.target.value })}
-                        placeholder="Enter course title"
+                        placeholder="Хичээлийн гарчиг оруулна уу"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="courseCategory">Category</Label>
+                      <Label htmlFor="courseCategory">Ангилал</Label>
                       <Input
                         id="courseCategory"
                         value={courseFormData.category}
                         onChange={(e) => setCourseFormData({ ...courseFormData, category: e.target.value })}
-                        placeholder="Enter course category"
+                        placeholder="Хичээлийн ангилал оруулна уу"
                       />
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="courseDescription">Description</Label>
+                    <Label htmlFor="courseDescription">Тайлбар</Label>
                     <Textarea
                       id="courseDescription"
                       value={courseFormData.description}
                       onChange={(e) => setCourseFormData({ ...courseFormData, description: e.target.value })}
-                      placeholder="Enter course description"
+                      placeholder="Хичээлийн тайлбар оруулна уу"
                       rows={3}
                     />
                   </div>
+                  <div>
+                    <Label htmlFor="courseThumbnail">Хичээлийн зураг (Заавал биш)</Label>
+                    <div className="mt-1 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Input
+                          id="courseThumbnail"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null
+                            setCourseFormData({ ...courseFormData, thumbnailFile: file })
+                            if (file) {
+                              const reader = new FileReader()
+                              reader.onload = (e) => setThumbnailPreview(e.target?.result as string)
+                              reader.readAsDataURL(file)
+                            } else {
+                              setThumbnailPreview(null)
+                            }
+                          }}
+                          className="flex-1"
+                          disabled={thumbnailUploadLoading}
+                        />
+                        {courseFormData.thumbnailFile && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setCourseFormData({ ...courseFormData, thumbnailFile: null })
+                              setThumbnailPreview(null)
+                              const fileInput = document.getElementById('courseThumbnail') as HTMLInputElement
+                              if (fileInput) fileInput.value = ''
+                            }}
+                          >
+                            Устгах
+                          </Button>
+                        )}
+                      </div>
+
+                      {thumbnailPreview && (
+                        <div className="flex items-start gap-3 p-3 border rounded-lg bg-muted/20">
+                          <img
+                            src={thumbnailPreview}
+                            alt="Зургийн урьдчилсан харагдац"
+                            className="w-24 h-24 object-cover rounded-lg border"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground">
+                              {courseFormData.thumbnailFile?.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {courseFormData.thumbnailFile ? (courseFormData.thumbnailFile.size / 1024 / 1024).toFixed(2) + ' MB' : ''}
+                            </p>
+                            <p className="text-xs text-green-600 mt-1">
+                              ✓ Cloudinary рүү байршуулахад бэлэн
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      <p className="text-xs text-muted-foreground">
+                        Дэмжигддэг форматууд: JPEG, PNG, WebP, GIF. Хамгийн их хэмжээ: 10MB.
+                      </p>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <Label htmlFor="coursePrice">Price (₮)</Label>
+                      <Label htmlFor="coursePrice">Үнэ (₮)</Label>
                       <Input
                         id="coursePrice"
                         type="number"
                         value={courseFormData.price}
                         onChange={(e) => setCourseFormData({ ...courseFormData, price: parseInt(e.target.value) || 0 })}
-                        placeholder="Enter price"
+                        placeholder="Үнэ оруулна уу"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="courseOriginalPrice">Original Price (₮)</Label>
+                      <Label htmlFor="courseOriginalPrice">Анхны үнэ (₮)</Label>
                       <Input
                         id="courseOriginalPrice"
                         type="number"
                         value={courseFormData.originalPrice}
                         onChange={(e) => setCourseFormData({ ...courseFormData, originalPrice: parseInt(e.target.value) || 0 })}
-                        placeholder="Enter original price"
+                        placeholder="Анхны үнэ оруулна уу"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="courseLevel">Level</Label>
+                      <Label htmlFor="courseLevel">Түвшин</Label>
                       <Select value={courseFormData.level} onValueChange={(value: "beginner" | "intermediate" | "advanced") => setCourseFormData({ ...courseFormData, level: value })}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="beginner">Beginner</SelectItem>
-                          <SelectItem value="intermediate">Intermediate</SelectItem>
-                          <SelectItem value="advanced">Advanced</SelectItem>
+                          <SelectItem value="beginner">Анхан шат</SelectItem>
+                          <SelectItem value="intermediate">Дундаж</SelectItem>
+                          <SelectItem value="advanced">Ахисан шат</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
-                  <Button onClick={handleCreateCourse} className="w-full">Create Course</Button>
+                  <Button onClick={handleCreateCourse} className="w-full" disabled={thumbnailUploadLoading}>
+                    {thumbnailUploadLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        {courseFormData.thumbnailFile ? "Зураг байршуулж байна..." : "Хичээл үүсгэж байна..."}
+                      </div>
+                    ) : (
+                      "Хичээл үүсгэх"
+                    )}
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
@@ -649,7 +723,7 @@ export default function AdminCourses() {
                         <h3 className="font-medium text-lg">{course.title}</h3>
                         <p className="text-sm text-gray-500">{course.description}</p>
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                          <span>Үнэ: ${course.price}</span>
+                          <span>Үнэ: ₮{course.price}</span>
                           <span>Дэд хичээл: {getCourseSubCourses(course._id).length}</span>
                           <span>Сурагчид: {course.enrolledCount}</span>
                         </div>
@@ -670,184 +744,185 @@ export default function AdminCourses() {
                         )}
                       </Button>
                       <Button
-                            variant="outline"
-                        size="sm"
-                            onClick={() => {
-                              setSelectedCourse(course)
-                              setEditCourseFormData({
-                                title: course.title,
-                                description: course.description,
-                                price: course.price,
-                                originalPrice: course.originalPrice || 0,
-                                category: course.category,
-                                level: course.level,
-                                isActive: course.isActive
-                              })
-                              setIsEditCourseDialogOpen(true)
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          
-                          <Button variant="outline" size="sm" onClick={() => handleDeleteCourse(course._id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      {expandedCourses.has(course._id) && (
-                        <div className="border-t bg-gray-50 p-4">
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
-                              <BookOpen className="h-5 w-5 text-primary" />
-                              <h4 className="font-medium text-gray-800">Дэд хичээлүүд ({getCourseSubCourses(course._id).length})</h4>
-                            </div>
-                      <Button
                         variant="outline"
                         size="sm"
                         onClick={() => {
                           setSelectedCourse(course)
-                          setIsCreateSubCourseDialogOpen(true)
+                          setEditCourseFormData({
+                            title: course.title,
+                            description: course.description,
+                            price: course.price,
+                            originalPrice: course.originalPrice || 0,
+                            category: course.category,
+                            level: course.level,
+                            isActive: course.isActive,
+                            thumbnailFile: null
+                          })
+                          setIsEditCourseDialogOpen(true)
                         }}
                       >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Дэд хичээл нэмэх
+                        <Edit className="h-4 w-4" />
                       </Button>
-                          </div>
 
-                          <div className="space-y-3">
-                            {getCourseSubCourses(course._id).length === 0 ? (
-                              <div className="text-center py-6 text-gray-500">
-                                <BookOpen className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                                <p className="mb-3">No sub-courses found</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                                  onClick={() => {
-                                    setSelectedCourse(course)
-                                    setIsCreateSubCourseDialogOpen(true)
-                                  }}
-                      >
-                                  <Plus className="h-4 w-4 mr-2" />
-                                  Create First Sub-course
+                      <Button variant="outline" size="sm" onClick={() => handleDeleteCourse(course._id)}>
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
+                  </div>
+
+                  {expandedCourses.has(course._id) && (
+                    <div className="border-t bg-gray-50 p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-5 w-5 text-primary" />
+                          <h4 className="font-medium text-gray-800">Дэд хичээлүүд ({getCourseSubCourses(course._id).length})</h4>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedCourse(course)
+                            setIsCreateSubCourseDialogOpen(true)
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Дэд хичээл нэмэх
+                        </Button>
+                      </div>
+
+                      <div className="space-y-3">
+                        {getCourseSubCourses(course._id).length === 0 ? (
+                          <div className="text-center py-6 text-gray-500">
+                            <BookOpen className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                            <p className="mb-3">No sub-courses found</p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedCourse(course)
+                                setIsCreateSubCourseDialogOpen(true)
+                              }}
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Create First Sub-course
+                            </Button>
+                          </div>
                         ) : (
                           getCourseSubCourses(course._id).map((subCourse) => (
-                                <div key={subCourse._id} className="bg-white rounded border">
-                                  <div className="flex items-center justify-between p-3">
-                              <div className="flex items-center gap-3">
-                                <BookOpen className="h-5 w-5 text-green-600" />
-                                <div>
-                                  <h5 className="font-medium">{subCourse.title}</h5>
-                                  <p className="text-sm text-gray-500">{subCourse.description}</p>
-                                  <p className="text-xs text-gray-500">Order: {subCourse.order}</p>
+                            <div key={subCourse._id} className="bg-white rounded border">
+                              <div className="flex items-center justify-between p-3">
+                                <div className="flex items-center gap-3">
+                                  <BookOpen className="h-5 w-5 text-green-600" />
+                                  <div>
+                                    <h5 className="font-medium">{subCourse.title}</h5>
+                                    <p className="text-sm text-gray-500">{subCourse.description}</p>
+                                    <p className="text-xs text-gray-500">Order: {subCourse.order}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button variant="outline" size="sm" onClick={() => toggleSubCourseExpansion(subCourse._id)}>
+                                    {expandedSubCourses.has(subCourse._id) ? (
+                                      <ChevronDown className="h-4 w-4" />
+                                    ) : (
+                                      <ChevronRight className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedSubCourse(subCourse)
+                                      setEditSubCourseFormData({
+                                        title: subCourse.title,
+                                        description: subCourse.description,
+                                        order: subCourse.order,
+                                        isActive: subCourse.isActive
+                                      })
+                                      setIsEditSubCourseDialogOpen(true)
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="outline" size="sm" onClick={() => handleDeleteSubCourse(subCourse._id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                      <Button variant="outline" size="sm" onClick={() => toggleSubCourseExpansion(subCourse._id)}>
-                                        {expandedSubCourses.has(subCourse._id) ? (
-                                          <ChevronDown className="h-4 w-4" />
-                                        ) : (
-                                          <ChevronRight className="h-4 w-4" />
-                                        )}
-                                      </Button>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                          setSelectedSubCourse(subCourse)
-                                          setEditSubCourseFormData({
-                                            title: subCourse.title,
-                                            description: subCourse.description,
-                                            order: subCourse.order,
-                                            isActive: subCourse.isActive
-                                          })
-                                          setIsEditSubCourseDialogOpen(true)
-                                        }}
-                                      >
-                                        <Edit className="h-4 w-4" />
-                                      </Button>
-                                      <Button variant="outline" size="sm" onClick={() => handleDeleteSubCourse(subCourse._id)}>
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </div>
 
-                                  {expandedSubCourses.has(subCourse._id) && (
-                                    <div className="border-t bg-gray-25 p-3">
-                                      <div className="flex items-center justify-between mb-3">
-                                        <h6 className="font-medium text-sm text-gray-700">
-                                          Хичээлүүд ({getSubCourseLessons(subCourse._id).length})
-                                        </h6>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedSubCourse(subCourse)
-                                    setIsCreateLessonDialogOpen(true)
-                                  }}
-                                >
-                                  <Plus className="h-4 w-4 mr-2" />
-                                  Хичээл нэмэх
-                                </Button>
+                              {expandedSubCourses.has(subCourse._id) && (
+                                <div className="border-t bg-gray-25 p-3">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <h6 className="font-medium text-sm text-gray-700">
+                                      Хичээлүүд ({getSubCourseLessons(subCourse._id).length})
+                                    </h6>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedSubCourse(subCourse)
+                                        setIsCreateLessonDialogOpen(true)
+                                      }}
+                                    >
+                                      <Plus className="h-4 w-4 mr-2" />
+                                      Хичээл нэмэх
+                                    </Button>
+                                  </div>
+                                  <div className="space-y-2">
+                                    {getSubCourseLessons(subCourse._id).length === 0 ? (
+                                      <div className="text-center py-3 text-gray-500 text-sm">
+                                        <Video className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                                        <p>No lessons found</p>
                                       </div>
-                                      <div className="space-y-2">
-                                        {getSubCourseLessons(subCourse._id).length === 0 ? (
-                                          <div className="text-center py-3 text-gray-500 text-sm">
-                                            <Video className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                                            <p>No lessons found</p>
-                                          </div>
-                                        ) : (
-                                          getSubCourseLessons(subCourse._id)
-                                            .sort((a, b) => a.order - b.order)
-                                            .map((lesson) => (
-                                              <div key={lesson._id} className="flex items-center justify-between p-2 bg-white rounded border text-sm">
-                                                <div className="flex items-center gap-2">
-                                                  <Video className="h-4 w-4 text-blue-600" />
-                                                  <div>
-                                                    <p className="font-medium">{lesson.title}</p>
-                                                    <p className="text-xs text-gray-500">{lesson.description}</p>
-                                                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                                                      <span>Order: {lesson.order}</span>
+                                    ) : (
+                                      getSubCourseLessons(subCourse._id)
+                                        .sort((a, b) => a.order - b.order)
+                                        .map((lesson) => (
+                                          <div key={lesson._id} className="flex items-center justify-between p-2 bg-white rounded border text-sm">
+                                            <div className="flex items-center gap-2">
+                                              <Video className="h-4 w-4 text-blue-600" />
+                                              <div>
+                                                <p className="font-medium">{lesson.title}</p>
+                                                <p className="text-xs text-gray-500">{lesson.description}</p>
+                                                <div className="flex items-center gap-2 text-xs text-gray-400">
+                                                  <span>Order: {lesson.order}</span>
+                                                  <span>•</span>
+                                                  <span>{lesson.duration} мин</span>
+                                                  {lesson.isPreview && (
+                                                    <>
                                                       <span>•</span>
-                                                      <span>{lesson.duration} мин</span>
-                                                      {lesson.isPreview && (
-                                                        <>
-                                                          <span>•</span>
-                                                          <Badge variant="secondary" className="text-xs">Preview</Badge>
-                                                        </>
-                                                      )}
-                                                    </div>
-                                                  </div>
+                                                      <Badge variant="secondary" className="text-xs">Preview</Badge>
+                                                    </>
+                                                  )}
                                                 </div>
-                                                <div className="flex items-center gap-1">
-                                                  <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => {
-                                                      setSelectedLesson(lesson)
-                                                      setEditLessonFormData({
-                                                        title: lesson.title,
-                                                        description: lesson.description,
-                                                        order: lesson.order,
-                                                        isPreview: lesson.isPreview
-                                                      })
-                                                      setIsEditLessonDialogOpen(true)
-                                                    }}
-                                                  >
-                                                    <Edit className="h-3 w-3" />
-                                                  </Button>
-                                                  <Button variant="ghost" size="sm" onClick={() => handleDeleteLesson(lesson._id)}>
-                                                    <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
                                               </div>
-                                            ))
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                  setSelectedLesson(lesson)
+                                                  setEditLessonFormData({
+                                                    title: lesson.title,
+                                                    description: lesson.description,
+                                                    order: lesson.order,
+                                                    isPreview: lesson.isPreview
+                                                  })
+                                                  setIsEditLessonDialogOpen(true)
+                                                }}
+                                              >
+                                                <Edit className="h-3 w-3" />
+                                              </Button>
+                                              <Button variant="ghost" size="sm" onClick={() => handleDeleteLesson(lesson._id)}>
+                                                <Trash2 className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        ))
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           ))
                         )}
@@ -864,40 +939,40 @@ export default function AdminCourses() {
       <Dialog open={isCreateSubCourseDialogOpen} onOpenChange={setIsCreateSubCourseDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create New Sub-Course</DialogTitle>
+            <DialogTitle>Шинэ дэд хичээл үүсгэх</DialogTitle>
             <DialogDescription>
-              Create a new sub-course by filling out the information below.
+              Доорх мэдээллийг бөглөж шинэ дэд хичээл үүсгэнэ үү.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="subCourseTitle">Title</Label>
+              <Label htmlFor="subCourseTitle">Гарчиг</Label>
               <Input
                 id="subCourseTitle"
                 value={subCourseFormData.title}
                 onChange={(e) => setSubCourseFormData({ ...subCourseFormData, title: e.target.value })}
-                placeholder="Enter sub-course title"
+                placeholder="Дэд хичээлийн гарчиг оруулна уу"
               />
             </div>
             <div>
-              <Label htmlFor="subCourseDescription">Description</Label>
+              <Label htmlFor="subCourseDescription">Тайлбар</Label>
               <Textarea
                 id="subCourseDescription"
                 value={subCourseFormData.description}
                 onChange={(e) => setSubCourseFormData({ ...subCourseFormData, description: e.target.value })}
-                placeholder="Enter sub-course description"
+                placeholder="Дэд хичээлийн тайлбар оруулна уу"
                 rows={3}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="subCourseOrder">Order</Label>
+                <Label htmlFor="subCourseOrder">Дараалал</Label>
                 <Input
                   id="subCourseOrder"
                   type="number"
                   value={subCourseFormData.order}
-                                          onChange={(e) => setSubCourseFormData({ ...subCourseFormData, order: parseInt(e.target.value) || 1 })}
-                  placeholder="Enter order"
+                  onChange={(e) => setSubCourseFormData({ ...subCourseFormData, order: parseInt(e.target.value) || 1 })}
+                  placeholder="Дараалал оруулна уу"
                 />
               </div>
               <div className="flex items-center space-x-2">
@@ -906,224 +981,224 @@ export default function AdminCourses() {
                   checked={subCourseFormData.isActive}
                   onCheckedChange={(checked) => setSubCourseFormData({ ...subCourseFormData, isActive: checked })}
                 />
-                <Label htmlFor="subCourseActive">Active</Label>
+                <Label htmlFor="subCourseActive">Идэвхтэй</Label>
               </div>
             </div>
-            <Button onClick={handleCreateSubCourse} className="w-full">Create Sub-Course</Button>
+            <Button onClick={handleCreateSubCourse} className="w-full">Дэд хичээл үүсгэх</Button>
           </div>
         </DialogContent>
       </Dialog>
 
-          {/* Edit Course Dialog */}
-          <Dialog open={isEditCourseDialogOpen} onOpenChange={setIsEditCourseDialogOpen}>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Edit Course</DialogTitle>
-                <DialogDescription>
-                  Edit the course information below.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="editCourseTitle">Title</Label>
-                    <Input
-                      id="editCourseTitle"
-                      value={editCourseFormData.title}
-                      onChange={(e) => setEditCourseFormData({ ...editCourseFormData, title: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="editCourseCategory">Category</Label>
-                    <Input
-                      id="editCourseCategory"
-                      value={editCourseFormData.category}
-                      onChange={(e) => setEditCourseFormData({ ...editCourseFormData, category: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="editCourseDescription">Description</Label>
-                  <Textarea
-                    id="editCourseDescription"
-                    value={editCourseFormData.description}
-                    onChange={(e) => setEditCourseFormData({ ...editCourseFormData, description: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="editCoursePrice">Price (₮)</Label>
-                    <Input
-                      id="editCoursePrice"
-                      type="number"
-                      value={editCourseFormData.price}
-                                              onChange={(e) => setEditCourseFormData({ ...editCourseFormData, price: parseInt(e.target.value) || 0 })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="editCourseOriginalPrice">Original Price (₮)</Label>
-                    <Input
-                      id="editCourseOriginalPrice"
-                      type="number"
-                      value={editCourseFormData.originalPrice}
-                                              onChange={(e) => setEditCourseFormData({ ...editCourseFormData, originalPrice: parseInt(e.target.value) || 0 })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="editCourseLevel">Level</Label>
-                    <Select value={editCourseFormData.level} onValueChange={(value: "beginner" | "intermediate" | "advanced") => setEditCourseFormData({ ...editCourseFormData, level: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="beginner">Beginner</SelectItem>
-                        <SelectItem value="intermediate">Intermediate</SelectItem>
-                        <SelectItem value="advanced">Advanced</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="editCourseActive"
-                    checked={editCourseFormData.isActive}
-                    onCheckedChange={(checked) => setEditCourseFormData({ ...editCourseFormData, isActive: checked })}
-                  />
-                  <Label htmlFor="editCourseActive">Active</Label>
-                </div>
-                <Button onClick={handleUpdateCourse} className="w-full">Save</Button>
+      {/* Edit Course Dialog */}
+      <Dialog open={isEditCourseDialogOpen} onOpenChange={setIsEditCourseDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Course</DialogTitle>
+            <DialogDescription>
+              Edit the course information below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="editCourseTitle">Title</Label>
+                <Input
+                  id="editCourseTitle"
+                  value={editCourseFormData.title}
+                  onChange={(e) => setEditCourseFormData({ ...editCourseFormData, title: e.target.value })}
+                />
               </div>
-            </DialogContent>
-          </Dialog>
+              <div>
+                <Label htmlFor="editCourseCategory">Category</Label>
+                <Input
+                  id="editCourseCategory"
+                  value={editCourseFormData.category}
+                  onChange={(e) => setEditCourseFormData({ ...editCourseFormData, category: e.target.value })}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="editCourseDescription">Description</Label>
+              <Textarea
+                id="editCourseDescription"
+                value={editCourseFormData.description}
+                onChange={(e) => setEditCourseFormData({ ...editCourseFormData, description: e.target.value })}
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="editCoursePrice">Price (₮)</Label>
+                <Input
+                  id="editCoursePrice"
+                  type="number"
+                  value={editCourseFormData.price}
+                  onChange={(e) => setEditCourseFormData({ ...editCourseFormData, price: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editCourseOriginalPrice">Original Price (₮)</Label>
+                <Input
+                  id="editCourseOriginalPrice"
+                  type="number"
+                  value={editCourseFormData.originalPrice}
+                  onChange={(e) => setEditCourseFormData({ ...editCourseFormData, originalPrice: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editCourseLevel">Level</Label>
+                <Select value={editCourseFormData.level} onValueChange={(value: "beginner" | "intermediate" | "advanced") => setEditCourseFormData({ ...editCourseFormData, level: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beginner">Beginner</SelectItem>
+                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                    <SelectItem value="advanced">Advanced</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="editCourseActive"
+                checked={editCourseFormData.isActive}
+                onCheckedChange={(checked) => setEditCourseFormData({ ...editCourseFormData, isActive: checked })}
+              />
+              <Label htmlFor="editCourseActive">Active</Label>
+            </div>
+            <Button onClick={handleUpdateCourse} className="w-full">Save</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-          {/* Edit Lesson Dialog */}
-          <Dialog open={isEditLessonDialogOpen} onOpenChange={setIsEditLessonDialogOpen}>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Edit Lesson</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="editLessonTitle">Title</Label>
-                    <Input
-                      id="editLessonTitle"
-                      value={editLessonFormData.title}
-                      onChange={(e) => setEditLessonFormData({ ...editLessonFormData, title: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="editLessonOrder">Order</Label>
-                    <Input
-                      id="editLessonOrder"
-                      type="number"
-                      value={editLessonFormData.order}
-                                              onChange={(e) => setEditLessonFormData({ ...editLessonFormData, order: parseInt(e.target.value) || 1 })}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="editLessonDescription">Description</Label>
-                  <Textarea
-                    id="editLessonDescription"
-                    value={editLessonFormData.description}
-                    onChange={(e) => setEditLessonFormData({ ...editLessonFormData, description: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="editLessonPreview"
-                    checked={editLessonFormData.isPreview}
-                    onCheckedChange={(checked) => setEditLessonFormData({ ...editLessonFormData, isPreview: checked })}
-                  />
-                  <Label htmlFor="editLessonPreview">Preview Lesson</Label>
-                </div>
-                <Button
-                  onClick={async () => {
-                    if (!selectedLesson) return
-                    try {
-                      const res = await fetch(`/api/admin/lessons/${selectedLesson._id}`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(editLessonFormData)
+      {/* Edit Lesson Dialog */}
+      <Dialog open={isEditLessonDialogOpen} onOpenChange={setIsEditLessonDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Lesson</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="editLessonTitle">Title</Label>
+                <Input
+                  id="editLessonTitle"
+                  value={editLessonFormData.title}
+                  onChange={(e) => setEditLessonFormData({ ...editLessonFormData, title: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="editLessonOrder">Order</Label>
+                <Input
+                  id="editLessonOrder"
+                  type="number"
+                  value={editLessonFormData.order}
+                  onChange={(e) => setEditLessonFormData({ ...editLessonFormData, order: parseInt(e.target.value) || 1 })}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="editLessonDescription">Description</Label>
+              <Textarea
+                id="editLessonDescription"
+                value={editLessonFormData.description}
+                onChange={(e) => setEditLessonFormData({ ...editLessonFormData, description: e.target.value })}
+                rows={3}
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="editLessonPreview"
+                checked={editLessonFormData.isPreview}
+                onCheckedChange={(checked) => setEditLessonFormData({ ...editLessonFormData, isPreview: checked })}
+              />
+              <Label htmlFor="editLessonPreview">Preview Lesson</Label>
+            </div>
+            <Button
+              onClick={async () => {
+                if (!selectedLesson) return
+                try {
+                  const res = await fetch(`/api/admin/lessons/${selectedLesson._id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(editLessonFormData)
+                  })
+                  if (res.ok) {
+                    const subCourseId = selectedLesson.subCourseId
+                    if (subCourseId) {
+                      const lessonsData = await fetchLessons(subCourseId)
+                      setLessons(prev => {
+                        const filtered = prev.filter(l => l.subCourseId !== subCourseId)
+                        return [...filtered, ...lessonsData]
                       })
-                      if (res.ok) {
-                        const subCourseId = selectedLesson.subCourseId
-                        if (subCourseId) {
-                          const lessonsData = await fetchLessons(subCourseId)
-                          setLessons(prev => {
-                            const filtered = prev.filter(l => l.subCourseId !== subCourseId)
-                            return [...filtered, ...lessonsData]
-                          })
-                        }
-                        setIsEditLessonDialogOpen(false)
-                        setSelectedLesson(null)
-                        toast({ title: "Updated", description: "Lesson updated" })
-                      } else {
-                        const err = await res.json()
-                        toast({ title: "Error", description: err.error || "Failed", variant: "destructive" })
-                      }
-                    } catch (e) {
-                      toast({ title: "Error", description: "Failed to update lesson", variant: "destructive" })
                     }
-                  }}
-                  className="w-full"
-                >
-                  Save
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+                    setIsEditLessonDialogOpen(false)
+                    setSelectedLesson(null)
+                    toast({ title: "Updated", description: "Lesson updated" })
+                  } else {
+                    const err = await res.json()
+                    toast({ title: "Error", description: err.error || "Failed", variant: "destructive" })
+                  }
+                } catch (e) {
+                  toast({ title: "Error", description: "Failed to update lesson", variant: "destructive" })
+                }
+              }}
+              className="w-full"
+            >
+              Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-          {/* Edit Sub-Course Dialog */}
-          <Dialog open={isEditSubCourseDialogOpen} onOpenChange={setIsEditSubCourseDialogOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit Sub-Course</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="editSubCourseTitle">Title</Label>
-                  <Input
-                    id="editSubCourseTitle"
-                    value={editSubCourseFormData.title}
-                    onChange={(e) => setEditSubCourseFormData({ ...editSubCourseFormData, title: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="editSubCourseDescription">Description</Label>
-                  <Textarea
-                    id="editSubCourseDescription"
-                    value={editSubCourseFormData.description}
-                    onChange={(e) => setEditSubCourseFormData({ ...editSubCourseFormData, description: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="editSubCourseOrder">Order</Label>
-                    <Input
-                      id="editSubCourseOrder"
-                      type="number"
-                      value={editSubCourseFormData.order}
-                                              onChange={(e) => setEditSubCourseFormData({ ...editSubCourseFormData, order: parseInt(e.target.value) || 1 })}
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="editSubCourseActive"
-                      checked={editSubCourseFormData.isActive}
-                      onCheckedChange={(checked) => setEditSubCourseFormData({ ...editSubCourseFormData, isActive: checked })}
-                    />
-                    <Label htmlFor="editSubCourseActive">Active</Label>
-                  </div>
-                </div>
-                <Button onClick={handleUpdateSubCourse} className="w-full">Save</Button>
+      {/* Edit Sub-Course Dialog */}
+      <Dialog open={isEditSubCourseDialogOpen} onOpenChange={setIsEditSubCourseDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Sub-Course</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="editSubCourseTitle">Title</Label>
+              <Input
+                id="editSubCourseTitle"
+                value={editSubCourseFormData.title}
+                onChange={(e) => setEditSubCourseFormData({ ...editSubCourseFormData, title: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="editSubCourseDescription">Description</Label>
+              <Textarea
+                id="editSubCourseDescription"
+                value={editSubCourseFormData.description}
+                onChange={(e) => setEditSubCourseFormData({ ...editSubCourseFormData, description: e.target.value })}
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="editSubCourseOrder">Order</Label>
+                <Input
+                  id="editSubCourseOrder"
+                  type="number"
+                  value={editSubCourseFormData.order}
+                  onChange={(e) => setEditSubCourseFormData({ ...editSubCourseFormData, order: parseInt(e.target.value) || 1 })}
+                />
               </div>
-            </DialogContent>
-          </Dialog>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="editSubCourseActive"
+                  checked={editSubCourseFormData.isActive}
+                  onCheckedChange={(checked) => setEditSubCourseFormData({ ...editSubCourseFormData, isActive: checked })}
+                />
+                <Label htmlFor="editSubCourseActive">Active</Label>
+              </div>
+            </div>
+            <Button onClick={handleUpdateSubCourse} className="w-full">Save</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isCreateLessonDialogOpen} onOpenChange={setIsCreateLessonDialogOpen}>
         <DialogContent className="max-w-2xl">
@@ -1147,7 +1222,7 @@ export default function AdminCourses() {
                   id="lessonOrder"
                   type="number"
                   value={lessonFormData.order}
-                                          onChange={(e) => setLessonFormData({ ...lessonFormData, order: parseInt(e.target.value) || 1 })}
+                  onChange={(e) => setLessonFormData({ ...lessonFormData, order: parseInt(e.target.value) || 1 })}
                   placeholder="Enter order"
                 />
               </div>
@@ -1173,7 +1248,7 @@ export default function AdminCourses() {
                   if (file) {
                     toast({
                       title: "File selected",
-                          description: `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)}MB)`
+                      description: `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)}MB)`
                     })
                   }
                   setLessonFormData({ ...lessonFormData, videoFile: file })
@@ -1192,30 +1267,28 @@ export default function AdminCourses() {
               />
               <Label htmlFor="lessonPreview">Preview Lesson</Label>
             </div>
-                <Button 
-                  onClick={handleCreateLesson} 
-                  className="w-full" 
-                  disabled={false}
-                >
-                  {isCreatingLesson ? "Creating Lesson..." : "Create Lesson"}
-                </Button>
-                <div className="text-xs text-gray-500 mt-2">
-                  Debug: Video file selected: {lessonFormData.videoFile ? "Yes" : "No"} | 
-                  Title: {lessonFormData.title || "Empty"} | 
-                  Description: {lessonFormData.description || "Empty"}
-                </div>
-                <Button 
-                  onClick={() => console.log("Test button clicked!")} 
-                  variant="outline" 
-                  className="w-full mt-2"
-                >
-                  Test Button (Click to test if buttons work)
-                </Button>
+            <Button
+              onClick={handleCreateLesson}
+              className="w-full"
+              disabled={false}
+            >
+              {isCreatingLesson ? "Creating Lesson..." : "Create Lesson"}
+            </Button>
+            <div className="text-xs text-gray-500 mt-2">
+              Debug: Video file selected: {lessonFormData.videoFile ? "Yes" : "No"} |
+              Title: {lessonFormData.title || "Empty"} |
+              Description: {lessonFormData.description || "Empty"}
+            </div>
+            <Button
+              onClick={() => console.log("Test button clicked!")}
+              variant="outline"
+              className="w-full mt-2"
+            >
+              Test Button (Click to test if buttons work)
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
     </div>
   )
 }
-
-

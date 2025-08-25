@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     // Get all courses
     const courses = await db.getAllCourses()
-    
+
     return NextResponse.json({ courses })
   } catch (error) {
     console.error("Failed to fetch courses:", error)
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { title, description, price, originalPrice, category, level, isActive } = await request.json()
+    const { title, description, price, originalPrice, category, level, isActive, thumbnailUrl } = await request.json()
 
     // Validate input
     if (!title || !description || !category || !level) {
@@ -64,12 +64,13 @@ export async function POST(request: NextRequest) {
       enrolledCount: 0,
       rating: 0,
       totalRatings: 0,
-      isActive: isActive !== false
+      isActive: isActive !== false,
+      thumbnailUrl: thumbnailUrl || null
     })
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: "Course created successfully",
-      courseId 
+      courseId
     }, { status: 201 })
   } catch (error) {
     console.error("Failed to create course:", error)

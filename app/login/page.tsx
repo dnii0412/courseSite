@@ -28,28 +28,28 @@ function LoginForm() {
     if (oauthError) {
       switch (oauthError) {
         case 'oauth_not_configured':
-          setError('Google login is not configured. Please contact the administrator.')
+          setError('Google нэвтрэлт тохиргоогүй байна. Админтай холбогдоно уу.')
           break
         case 'google_auth_failed':
-          setError('Google authentication failed. Please try again.')
+          setError('Google баталгаажуулалт амжилтгүй. Дахин оролдоно уу.')
           break
         case 'no_code':
-          setError('Authentication code not received. Please try again.')
+          setError('Баталгаажуулах код хүлээн авагдсангүй. Дахин оролдоно уу.')
           break
         case 'no_id_token':
-          setError('Authentication token not received. Please try again.')
+          setError('Баталгаажуулах токен хүлээн авагдсангүй. Дахин оролдоно уу.')
           break
         case 'no_email':
-          setError('Email not provided by Google. Please try again.')
+          setError('Google-ээс имэйл өгөгдсөнгүй. Дахин оролдоно уу.')
           break
         case 'user_creation_failed':
-          setError('Failed to create user account. Please try again.')
+          setError('Хэрэглэгчийн бүртгэл үүсгэхэд алдаа гарлаа. Дахин оролдоно уу.')
           break
         case 'oauth_failed':
-          setError('OAuth authentication failed. Please try again.')
+          setError('OAuth баталгаажуулалт амжилтгүй. Дахин оролдоно уу.')
           break
         default:
-          setError('Authentication failed. Please try again.')
+          setError('Баталгаажуулалт амжилтгүй. Дахин оролдоно уу.')
       }
     }
   }, [searchParams])
@@ -66,7 +66,7 @@ function LoginForm() {
         router.push("/")
       }, 100)
     } else {
-      setError("Invalid email or password")
+      setError("Имэйл эсвэл нууц үг буруу байна")
     }
     setLoading(false)
   }
@@ -79,7 +79,7 @@ function LoginForm() {
         redirect: true 
       })
     } catch (error) {
-      setError("Google authentication failed. Please try again.")
+      setError("Google баталгаажуулалт амжилтгүй. Дахин оролдоно уу.")
     }
   }
 
@@ -89,11 +89,11 @@ function LoginForm() {
       <div className="flex items-center justify-center py-12">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-foreground">Login</h2>
+            <h2 className="text-3xl font-bold text-foreground">Нэвтрэх</h2>
           </div>
           <form className="space-y-6 rounded-2xl border p-6 md:p-8 bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-soft animate-authIn focus-within:shadow-lg transition-all" onSubmit={handleSubmit}>
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Имэйл</Label>
               <Input
                 id="email"
                 type="email"
@@ -105,7 +105,7 @@ function LoginForm() {
               />
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Нууц үг</Label>
               <Input
                 id="password"
                 type="password"
@@ -118,7 +118,7 @@ function LoginForm() {
             </div>
             <div className="text-right">
               <Link href="/reset-password" className="text-sm text-primary hover:text-primary/80 transition-colors">
-                Forgot password?
+                Нууц үгээ мартсан уу?
               </Link>
             </div>
             {error && (
@@ -129,17 +129,17 @@ function LoginForm() {
               className="w-full transition-all hover:scale-[1.01] active:scale-[.99] hover:shadow-md hover:-translate-y-[1px] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
               disabled={loading}
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? "Нэвтэрч байна..." : "Нэвтрэх"}
             </Button>
             <GoogleButton onClick={handleGoogleLogin}>
-              Continue with Google
+              Google-ээр үргэлжлүүлэх
             </GoogleButton>
           </form>
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
+              Бүртгэл байхгүй юу?{" "}
               <Link href="/register" className="text-primary hover:text-primary/80 transition-colors">
-                Sign up
+                Бүртгүүлэх
               </Link>
             </p>
           </div>
@@ -151,7 +151,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>Ачааллаж байна...</div>}>
       <LoginForm />
     </Suspense>
   )

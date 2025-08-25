@@ -81,7 +81,7 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Loading...</div>
+          <div className="text-center">Ачааллаж байна...</div>
         </div>
       </div>
     )
@@ -92,8 +92,8 @@ export default function DashboardPage() {
       <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's your learning progress.</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Хяналтын самбар</h1>
+          <p className="text-muted-foreground">Тавтай морилно уу! Таны суралцахуйн явц энд байна.</p>
 
 
         </div>
@@ -102,7 +102,7 @@ export default function DashboardPage() {
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Enrolled Courses</CardTitle>
+              <CardTitle className="text-sm font-medium">Элссэн хичээлүүд</CardTitle>
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -113,11 +113,11 @@ export default function DashboardPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Learning Status</CardTitle>
+              <CardTitle className="text-sm font-medium">Суралцах төлөв</CardTitle>
               <Trophy className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{courses.length > 0 ? 'Active' : 'No Courses'}</div>
+              <div className="text-2xl font-bold">{courses.length > 0 ? 'Идэвхтэй' : 'Хичээл байхгүй'}</div>
               <Progress value={courses.length > 0 ? 100 : 0} className="mt-2" />
             </CardContent>
           </Card>
@@ -127,14 +127,22 @@ export default function DashboardPage() {
 
         {/* My Courses */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground mb-6">My Enrolled Courses ({courses.length})</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-6">Миний элссэн хичээлүүд ({courses.length})</h2>
 
           {courses.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {courses.map((course) => (
                 <Card key={course._id} className="overflow-hidden">
-                  <div className="aspect-video bg-muted flex items-center justify-center">
-                    <Play className="w-12 h-12 text-muted-foreground" />
+                  <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
+                    {course.thumbnailUrl ? (
+                      <img
+                        src={course.thumbnailUrl}
+                        alt={course.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Play className="w-12 h-12 text-muted-foreground" />
+                    )}
                   </div>
                   <CardContent className="p-4">
                     <h3 className="font-semibold text-foreground mb-2">{course.title}</h3>
@@ -143,8 +151,8 @@ export default function DashboardPage() {
                     {/* Progress Bar */}
                     <div className="mb-3">
                       <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                        <span>Status</span>
-                        <span>{course.progress && course.progress > 0 ? `${course.progress}%` : 'Not Started'}</span>
+                        <span>Төлөв</span>
+                        <span>{course.progress && course.progress > 0 ? `${course.progress}%` : 'Эхлээгүй'}</span>
                       </div>
                       <Progress value={course.progress || 0} className="h-2" />
                     </div>
@@ -157,7 +165,7 @@ export default function DashboardPage() {
                         asChild
                       >
                         <Link href={`/courses/${course._id}`}>
-                          Continue
+                          Үргэлжлүүлэх
                         </Link>
                       </Button>
                     </div>
@@ -169,10 +177,10 @@ export default function DashboardPage() {
             <Card className="text-center py-12">
               <CardContent>
                 <BookOpen className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-foreground mb-2">No enrolled courses yet</h3>
-                <p className="text-muted-foreground mb-4">Start your learning journey by enrolling in a course.</p>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Одоогоор элссэн хичээл байхгүй</h3>
+                <p className="text-muted-foreground mb-4">Хичээлд элсэж суралцахын аялалаа эхлүүлнэ үү.</p>
                 <Button asChild className="bg-[#5B7FFF] hover:bg-[#4A6FE7]">
-                  <Link href="/courses">Browse Available Courses</Link>
+                  <Link href="/courses">Боломжтой хичээлүүдийг үзэх</Link>
                 </Button>
               </CardContent>
             </Card>

@@ -61,9 +61,9 @@ export default async function Home() {
 
   try {
     // Use absolute URL for server-side fetching
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://edunewera.mn')
-    
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://edunewera.mn')
+
     // Fetch courses
     const coursesResponse = await fetch(`${baseUrl}/api/courses`, { next: { revalidate: 60 } })
     if (coursesResponse.ok) {
@@ -150,8 +150,8 @@ export default async function Home() {
 
                 <div className="relative bg-muted rounded-lg sm:rounded-xl aspect-video mb-4 sm:mb-6 flex items-center justify-center border border-border">
                   {featuredCourse.thumbnailUrl ? (
-                    <img 
-                      src={featuredCourse.thumbnailUrl} 
+                    <img
+                      src={featuredCourse.thumbnailUrl}
                       alt={featuredCourse.title}
                       className="w-full h-full object-cover rounded-lg sm:rounded-xl"
                     />
@@ -201,8 +201,10 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Media Grid Section */}
-      <PublicMediaGrid gridLayout={gridLayout} />
+      {/* Media Grid Section - Hidden on mobile, visible on tablet and up */}
+      <div className="hidden md:block">
+        <PublicMediaGrid gridLayout={gridLayout} />
+      </div>
 
       {/* Features Section */}
       <section className="py-20 bg-muted/30">
@@ -311,51 +313,51 @@ export default async function Home() {
       {stats && (
         <section className="py-20 bg-background">
           <div className="container mx-auto px-4">
-                      <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-foreground mb-4">New Era статистик</h2>
-            <p className="text-muted-foreground text-lg">Манай платформ дээр суралцаж буй суралцагчдын амжилт</p>
-          </div>
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold text-foreground mb-4">New Era статистик</h2>
+              <p className="text-muted-foreground text-lg">Манай платформ дээр суралцаж буй суралцагчдын амжилт</p>
+            </div>
 
-                          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                <Card className="text-center p-8 border border-border shadow-lg rounded-2xl bg-card">
-                  <CardContent className="space-y-4 p-0">
-                    <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto">
-                      <Users className="w-8 h-8 text-[#5B7FFF]" />
-                    </div>
-                    <div>
-                      <div className="text-4xl font-bold text-card-foreground mb-1">{stats.totalStudents || "100+"}</div>
-                      <div className="text-card-foreground font-semibold mb-1">Нийт сурагч</div>
-                      <div className="text-sm text-muted-foreground">Идэвхтэй суралцаж буй суралцагчид</div>
-                    </div>
-                  </CardContent>
-                </Card>
+            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              <Card className="text-center p-8 border border-border shadow-lg rounded-2xl bg-card">
+                <CardContent className="space-y-4 p-0">
+                  <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto">
+                    <Users className="w-8 h-8 text-[#5B7FFF]" />
+                  </div>
+                  <div>
+                    <div className="text-4xl font-bold text-card-foreground mb-1">{stats.totalStudents || "100+"}</div>
+                    <div className="text-card-foreground font-semibold mb-1">Нийт сурагч</div>
+                    <div className="text-sm text-muted-foreground">Идэвхтэй суралцаж буй суралцагчид</div>
+                  </div>
+                </CardContent>
+              </Card>
 
-                <Card className="text-center p-8 border border-border shadow-lg rounded-2xl bg-card">
-                  <CardContent className="space-y-4 p-0">
-                    <div className="w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center mx-auto">
-                      <Star className="w-8 h-8 text-yellow-500" />
-                    </div>
-                    <div>
-                      <div className="text-4xl font-bold text-card-foreground mb-1">{stats.averageRating || "4.8/5"}</div>
-                      <div className="text-card-foreground font-semibold mb-1">Дундаж үнэлгээ</div>
-                      <div className="text-sm text-muted-foreground">Суралцагчдын сэтгэгдэл</div>
-                    </div>
-                  </CardContent>
-                </Card>
+              <Card className="text-center p-8 border border-border shadow-lg rounded-2xl bg-card">
+                <CardContent className="space-y-4 p-0">
+                  <div className="w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center mx-auto">
+                    <Star className="w-8 h-8 text-yellow-500" />
+                  </div>
+                  <div>
+                    <div className="text-4xl font-bold text-card-foreground mb-1">{stats.averageRating || "4.8/5"}</div>
+                    <div className="text-card-foreground font-semibold mb-1">Дундаж үнэлгээ</div>
+                    <div className="text-sm text-muted-foreground">Суралцагчдын сэтгэгдэл</div>
+                  </div>
+                </CardContent>
+              </Card>
 
-                <Card className="text-center p-8 border border-border shadow-lg rounded-2xl bg-card">
-                  <CardContent className="space-y-4 p-0">
-                    <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto">
-                      <Trophy className="w-8 h-8 text-green-600" />
-                    </div>
-                    <div>
-                      <div className="text-4xl font-bold text-card-foreground mb-1">{stats.completedLessons || "15,000+"}</div>
-                      <div className="text-card-foreground font-semibold mb-1">Хичээл дуусгасан</div>
-                      <div className="text-sm text-muted-foreground">Амжилттай төгссөн хичээллүүд</div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              <Card className="text-center p-8 border border-border shadow-lg rounded-2xl bg-card">
+                <CardContent className="space-y-4 p-0">
+                  <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto">
+                    <Trophy className="w-8 h-8 text-green-600" />
+                  </div>
+                  <div>
+                    <div className="text-4xl font-bold text-card-foreground mb-1">{stats.completedLessons || "15,000+"}</div>
+                    <div className="text-card-foreground font-semibold mb-1">Хичээл дуусгасан</div>
+                    <div className="text-sm text-muted-foreground">Амжилттай төгссөн хичээллүүд</div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </section>
       )}
