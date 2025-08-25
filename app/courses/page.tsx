@@ -12,7 +12,7 @@ export default async function CoursesPage() {
   let courses: Course[] = []
 
   try {
-    const response = await fetch('/api/courses', { next: { revalidate: 60 } })
+    const response = await fetch('http://localhost:3000/api/courses', { next: { revalidate: 60 } })
     if (response.ok) {
       const data = await response.json()
       courses = data.courses || []

@@ -7,7 +7,6 @@ import { Footer } from "@/components/footer"
 import PublicMediaGrid from "@/components/public-media-grid"
 import { Play, Clock, Star, Users, Trophy } from "lucide-react"
 import type { Course } from "@/lib/types"
-import { db } from "@/lib/database"
 
 interface Stats {
   totalStudents: number
@@ -61,37 +60,37 @@ export default async function Home() {
   let gridLayout: any = null
 
   try {
-    // Fetch courses
-    const coursesResponse = await fetch('/api/courses', { next: { revalidate: 60 } })
-    if (coursesResponse.ok) {
-      const coursesData = await coursesResponse.json()
-      courses = coursesData.courses || []
-    }
+         // Fetch courses
+     const coursesResponse = await fetch('http://localhost:3000/api/courses', { next: { revalidate: 60 } })
+     if (coursesResponse.ok) {
+       const coursesData = await coursesResponse.json()
+       courses = coursesData.courses || []
+     }
 
-    // Fetch stats
-    const statsResponse = await fetch('/api/stats', { next: { revalidate: 300 } })
-    if (statsResponse.ok) {
-      const statsData = await statsResponse.json()
-      stats = statsData.stats
-    }
+     // Fetch stats
+     const statsResponse = await fetch('http://localhost:3000/api/stats', { next: { revalidate: 300 } })
+     if (statsResponse.ok) {
+       const statsData = await statsResponse.json()
+       stats = statsData.stats
+     }
 
-    // Fetch features
-    const featuresResponse = await fetch('/api/features', { next: { revalidate: 3600 } })
-    if (featuresResponse.ok) {
-      const featuresData = await featuresResponse.json()
-      if (featuresData.features) {
-        features = featuresData.features
-      }
-    }
+     // Fetch features
+     const featuresResponse = await fetch('http://localhost:3000/api/features', { next: { revalidate: 3600 } })
+     if (featuresResponse.ok) {
+       const featuresData = await featuresResponse.json()
+       if (featuresData.features) {
+         features = featuresData.features
+       }
+     }
 
-    // Fetch media grid layout
-    const gridResponse = await fetch('/api/media-grid', { next: { revalidate: 300 } })
-    if (gridResponse.ok) {
-      const gridData = await gridResponse.json()
-      if (gridData.layout && gridData.layout.isPublished) {
-        gridLayout = gridData.layout
-      }
-    }
+     // Fetch media grid layout
+     const gridResponse = await fetch('http://localhost:3000/api/media-grid', { next: { revalidate: 300 } })
+     if (gridResponse.ok) {
+       const gridData = await gridResponse.json()
+       if (gridData.layout && gridData.layout.isPublished) {
+         gridLayout = gridData.layout
+       }
+     }
   } catch (error) {
     console.error("Error fetching data:", error)
     // Use fallback data if fetching fails

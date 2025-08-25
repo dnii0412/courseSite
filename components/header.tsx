@@ -20,6 +20,10 @@ export function Header() {
   const { user, logout } = useAuth()
   const pathname = usePathname()
 
+  console.log("🔍 Header - User state:", user)
+  console.log("🔍 Header - User type:", typeof user)
+  console.log("🔍 Header - User ID:", user?.id)
+
   return (
     <header className="border-b bg-background relative z-50">
       <div className="container mx-auto px-4 py-4">

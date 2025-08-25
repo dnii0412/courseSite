@@ -17,23 +17,21 @@ export function useAuth() {
       // Check if we're in the browser
       if (typeof window === 'undefined') return
       
-      // Check if auth-token cookie exists
-      const hasAuthToken = document.cookie.includes('auth-token=')
-      if (!hasAuthToken) {
-        console.log("No auth-token cookie found")
-        return
-      }
-      
+      console.log("🔍 Checking local auth...")
       try {
         const response = await fetch('/api/auth/profile', {
           credentials: 'include'
         })
+        console.log("🔍 Profile response status:", response.status)
         if (response.ok) {
           const contentType = response.headers.get('content-type')
+          console.log("🔍 Content type:", contentType)
           if (contentType && contentType.includes('application/json')) {
             try {
               const data = await response.json()
+              console.log("🔍 Profile data:", data)
               if (data.user) {
+                console.log("🔍 Setting local user:", data.user)
                 setLocalUser({
                   id: data.user.id,
                   name: data.user.name || "",
@@ -71,25 +69,31 @@ export function useAuth() {
   
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      console.log("🔍 Attempting login for:", email)
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       })
 
+      console.log("🔍 Login response status:", response.status)
       if (response.ok) {
         const data = await response.json()
+        console.log("🔍 Login response data:", data)
         // Set local user immediately
-        setLocalUser({
+        const userData = {
           id: data.user.id,
           name: data.user.name || "",
           email: data.user.email || "",
           role: data.user.role || "student"
-        })
+        }
+        console.log("🔍 Setting local user after login:", userData)
+        setLocalUser(userData)
         return true
       }
       return false
     } catch (error) {
+      console.error("🔍 Login error:", error)
       return false
     }
   }
