@@ -65,7 +65,7 @@ export class Database {
       const client = await this.getClient()
       const db = client.db("new-era-platform")
       
-      console.log("🔍 Database updateUser called with:", { id: id.toString(), updates })
+      // Updating user data
       
       const result = await db
         .collection("users")

@@ -141,14 +141,12 @@ export function useAuth() {
 
   const refreshUser = async (): Promise<void> => {
     try {
-      console.log("🔄 Refreshing user data...")
       const response = await fetch('/api/auth/profile', {
         credentials: 'include',
         cache: 'no-cache' // Force fresh data
       })
       if (response.ok) {
         const data = await response.json()
-        console.log("✅ Refreshed user data:", data.user)
         if (data.user) {
           setLocalUser({
             id: data.user.id,
@@ -158,11 +156,9 @@ export function useAuth() {
             enrolledCourses: data.user.enrolledCourses || []
           })
         }
-      } else {
-        console.log("❌ Failed to refresh user data, status:", response.status)
       }
     } catch (error) {
-      console.log("❌ Failed to refresh user data:", error)
+      // Silent error handling
     }
   }
 

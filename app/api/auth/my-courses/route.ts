@@ -36,10 +36,8 @@ export async function GET(request: NextRequest) {
 
     // Get user with enrolled courses
     const userData = await db.getUserById(new ObjectId(userId))
-    console.log("📖 User data fetched:", !!userData, "Enrolled courses:", userData?.enrolledCourses?.length || 0)
     
     if (!userData || !userData.enrolledCourses || userData.enrolledCourses.length === 0) {
-      console.log("❌ No user data or no enrolled courses")
       return NextResponse.json({
         courses: [],
         enrolledCourses: []
@@ -48,7 +46,6 @@ export async function GET(request: NextRequest) {
 
     // Fetch courses that user has access to
     const courses = []
-    console.log("🔍 Fetching courses for enrolled course IDs:", userData.enrolledCourses.map(id => id.toString()))
     
     for (const courseId of userData.enrolledCourses) {
       try {

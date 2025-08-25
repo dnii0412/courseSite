@@ -45,7 +45,6 @@ export default function DashboardPage() {
         console.log("🔐 Auth check status:", authCheck.status)
 
         if (!authCheck.ok) {
-          console.log("❌ User not authenticated")
           setLoading(false)
           return
         }

@@ -38,8 +38,7 @@ export default function ProfilePage() {
     phone: "",
   })
   
-  // Debug authentication state
-  console.log("🔍 Profile page - Auth state:", { user, loading })
+  // Authentication state handled silently
 
   const fetchUserStats = useCallback(async () => {
     try {
@@ -81,7 +80,6 @@ export default function ProfilePage() {
   // Initialize form data when user is loaded
   useEffect(() => {
     if (user) {
-      console.log("🔍 User data loaded:", user)
       const initialData = {
         name: user.name || "",
         email: user.email || "",
