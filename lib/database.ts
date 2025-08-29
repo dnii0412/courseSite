@@ -64,10 +64,15 @@ export class Database {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
     
+    console.log("Database updateUser called with:", { userId: userId.toString(), updates })
+    console.log("Phone field in updates:", { phone: updates.phone, phoneType: typeof updates.phone, phoneLength: updates.phone?.length })
+    
     const result = await db.collection("users").updateOne(
       { _id: userId },
       { $set: { ...updates, updatedAt: new Date() } }
     )
+    
+    console.log("Database update result:", { modifiedCount: result.modifiedCount, matchedCount: result.matchedCount })
     
     return result.modifiedCount > 0
   }
@@ -684,7 +689,7 @@ export class Database {
     const db = client.db("new-era-platform")
     // Get all sub-courses for this course first
     const subCourses = await db.collection("subcourses").find({ courseId: courseId }).toArray()
-    const subCourseIds = subCourses.map(sc => sc._id)
+    const subCourseIds = subCourses.map((sc: any) => sc._id)
     
     // Find lessons that belong to any of these sub-courses
     return await db.collection("lessons").find({ 

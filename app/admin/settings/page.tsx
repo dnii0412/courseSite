@@ -114,6 +114,19 @@ export default function AdminSettings() {
     checkAuth()
   }, [])
 
+  // Ensure settings are properly initialized
+  useEffect(() => {
+    if (!loading && settings) {
+      // Ensure allowedFileTypes is always an array
+      if (!Array.isArray(settings.allowedFileTypes)) {
+        setSettings(prev => ({
+          ...prev,
+          allowedFileTypes: ["mp4", "avi", "mov", "wmv", "flv", "webm"]
+        }))
+      }
+    }
+  }, [loading, settings])
+
   const checkAuth = async () => {
     try {
       const response = await fetch("/api/admin/check", {
@@ -142,13 +155,28 @@ export default function AdminSettings() {
       const response = await fetch("/api/admin/settings")
       if (response.ok) {
         const data = await response.json()
-        setSettings(data.settings)
+        // Merge API response with default settings to ensure all fields exist
+        const mergedSettings = {
+          ...settings, // Start with current default settings
+          ...data.settings, // Override with API response
+          allowedFileTypes: data.settings?.allowedFileTypes || ["mp4", "avi", "mov", "wmv", "flv", "webm"],
+          stats: {
+            ...settings.stats,
+            ...data.settings?.stats
+          },
+          features: {
+            ...settings.features,
+            ...data.settings?.features
+          }
+        }
+        setSettings(mergedSettings)
       } else {
         // Use default settings if API fails
-  
+        console.log("API failed, using default settings")
       }
     } catch (error) {
-
+      console.error("Error fetching settings:", error)
+      // Use default settings if API fails
     } finally {
       setLoading(false)
     }
@@ -189,10 +217,17 @@ export default function AdminSettings() {
   }
 
   const handleInputChange = (key: keyof PlatformSettings, value: any) => {
-    setSettings(prev => ({ ...prev, [key]: value }))
+    setSettings(prev => {
+      // Special handling for allowedFileTypes to ensure it's always an array
+      if (key === "allowedFileTypes") {
+        const fileTypes = Array.isArray(value) ? value : value.split(", ").map((t: string) => t.trim()).filter((t: string) => t)
+        return { ...prev, [key]: fileTypes }
+      }
+      return { ...prev, [key]: value }
+    })
   }
 
-  if (loading) {
+  if (loading || !settings.allowedFileTypes) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -375,8 +410,8 @@ export default function AdminSettings() {
                   <Label htmlFor="allowedFileTypes">Зөвшөөрөгдсөн файлын төрлүүд</Label>
                   <Input
                     id="allowedFileTypes"
-                    value={settings.allowedFileTypes.join(", ")}
-                    onChange={(e) => handleInputChange("allowedFileTypes", e.target.value.split(", ").map(t => t.trim()))}
+                    value={(settings.allowedFileTypes || ["mp4", "avi", "mov", "wmv"]).join(", ")}
+                    onChange={(e) => handleInputChange("allowedFileTypes", e.target.value ? e.target.value.split(", ").map((t: string) => t.trim()) : [])}
                     placeholder="mp4, avi, mov, wmv"
                   />
                 </div>

@@ -22,6 +22,7 @@ export default function ProfilePage() {
     totalCourses: 0,
     completedCourses: 0
   })
+  const [statsLoading, setStatsLoading] = useState(true)
   
   // Form state
   const [formData, setFormData] = useState({
@@ -38,10 +39,103 @@ export default function ProfilePage() {
     email: "",
     phone: "",
   })
-  
-  // Authentication state handled silently
+
+  // Safe access to userStats with fallbacks
+  const safeUserStats = {
+    totalCourses: userStats?.totalCourses || 0,
+    completedCourses: userStats?.completedCourses || 0
+  }
+
+  // Safe stats display component
+  const SafeStatsDisplay = () => {
+    try {
+      const safeStats = safeUserStats || { totalCourses: 0, completedCourses: 0 }
+      
+      return (
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground">Нийт хичээл:</span>
+            <span className="font-semibold">
+              {statsLoading ? "..." : (safeStats.totalCourses ?? 0)}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground">Дууссан хичээл:</span>
+            <span className="font-semibold">
+              {statsLoading ? "..." : (safeStats.completedCourses ?? 0)}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground">Элссэн курс:</span>
+            <span className="font-semibold">
+              {user?.enrolledCourses?.length ?? 0}
+            </span>
+          </div>
+        </div>
+      )
+    } catch (error) {
+      return (
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground">Нийт хичээл:</span>
+            <span className="font-semibold">0</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground">Дууссан хичээл:</span>
+            <span className="font-semibold">0</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground">Элссэн курс:</span>
+            <span className="font-semibold">0</span>
+          </div>
+        </div>
+      )
+    }
+  }
 
   const fetchUserStats = useCallback(async () => {
+    try {
+      setStatsLoading(true)
+      if (!user?.id) {
+        setUserStats({ totalCourses: 0, completedCourses: 0 })
+        return
+      }
+      
+      const response = await fetch(`/api/auth/my-stats`, {
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        const statsData = await response.json()
+        
+        if (statsData?.stats) {
+          setUserStats({
+            totalCourses: statsData.stats.enrolledCourses ?? 0,
+            completedCourses: statsData.stats.completedLessons ?? 0
+          })
+        } else {
+          setUserStats({
+            totalCourses: 0,
+            completedCourses: 0
+          })
+        }
+      } else {
+        setUserStats({
+          totalCourses: 0,
+          completedCourses: 0
+        })
+      }
+    } catch (error) {
+      setUserStats({
+        totalCourses: 0,
+        completedCourses: 0
+      })
+    } finally {
+      setStatsLoading(false)
+    }
+  }, [user?.id])
+
+  const fetchUserProfile = useCallback(async () => {
     try {
       if (!user?.id) return
       
@@ -50,90 +144,176 @@ export default function ProfilePage() {
       })
       if (response.ok) {
         const profileData = await response.json()
-        const { stats, user: userDetails } = profileData
         
-        setUserStats({
-          totalCourses: stats.totalCourses,
-          completedCourses: stats.completedCourses
-        })
-        
-        // Set both form data and original data
-        const userFormData = {
-          name: userDetails.name || "",
-          email: userDetails.email || "",
-          phone: userDetails.phone || "",
-          newPassword: "",
-          confirmPassword: ""
+        if (profileData.user) {
+          const { user: userDetails } = profileData
+          
+          const userFormData = {
+            name: userDetails.name || "",
+            email: userDetails.email || "",
+            phone: userDetails.phone || "",
+            newPassword: "",
+            confirmPassword: ""
+          }
+          
+          setFormData(userFormData)
+          setOriginalData({
+            name: userDetails.name || "",
+            email: userDetails.email || "",
+            phone: userDetails.phone || ""
+          })
         }
-        
-        setFormData(userFormData)
-        setOriginalData({
-          name: userDetails.name || "",
-          email: userDetails.email || "",
-          phone: userDetails.phone || ""
-        })
       }
     } catch (error) {
-      console.error("Error fetching user stats:", error)
+      // Handle error silently
     }
   }, [user?.id])
 
   // Initialize form data when user is loaded
   useEffect(() => {
-    if (user) {
-      const initialData = {
+    if (user && user.id) {
+      const timer = setTimeout(() => {
+        fetchUserProfile()
+        fetchUserStats()
+      }, 100)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [user?.id, fetchUserProfile, fetchUserStats])
+
+  // Initialize form data from user object when user changes
+  useEffect(() => {
+    if (user && !formData.name) {
+      const initialFormData = {
         name: user.name || "",
         email: user.email || "",
         phone: user.phone || "",
         newPassword: "",
         confirmPassword: ""
       }
-      setFormData(initialData)
+      setFormData(initialFormData)
       setOriginalData({
         name: user.name || "",
         email: user.email || "",
         phone: user.phone || ""
       })
-      fetchUserStats()
     }
-  }, [user?.id]) // Only depend on user.id to prevent infinite loop
+  }, [user, formData.name])
 
   // Check if form has changes
   const hasChanges = () => {
-    return (
-      formData.name !== originalData.name ||
-      formData.email !== originalData.email ||
-      formData.phone !== originalData.phone ||
-      formData.newPassword !== "" ||
-      formData.confirmPassword !== ""
-    )
+    try {
+      if (!originalData?.name || !originalData?.email) {
+        return false
+      }
+      
+      return (
+        formData.name !== originalData.name ||
+        formData.email !== originalData.email ||
+        formData.phone !== originalData.phone ||
+        formData.newPassword !== "" ||
+        formData.confirmPassword !== ""
+      )
+    } catch (error) {
+      return false
+    }
+  }
+
+  // Validate form data
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Name is required",
+        variant: "destructive"
+      })
+      return false
+    }
+
+    if (!formData.email.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Email is required",
+        variant: "destructive"
+      })
+      return false
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid email address",
+        variant: "destructive"
+      })
+      return false
+    }
+
+    if (formData.phone && formData.phone.trim()) {
+      const phoneRegex = /^[\+]?[0-9\s\-\(\)]{8,}$/
+      if (!phoneRegex.test(formData.phone.trim())) {
+        toast({
+          title: "Validation Error",
+          description: "Please enter a valid phone number",
+          variant: "destructive"
+        })
+        return false
+      }
+    }
+
+    return true
   }
 
   // Start editing
   const startEditing = () => {
-    setIsEditing(true)
-    setShowPassword(false)
-    // Reset password fields
-    setFormData(prev => ({
-      ...prev,
-      newPassword: "",
-      confirmPassword: ""
-    }))
+    try {
+      if (!originalData?.name || !originalData?.email) {
+        return
+      }
+      
+      if (!userStats || typeof userStats.totalCourses === 'undefined') {
+        return
+      }
+      
+      setIsEditing(true)
+      setShowPassword(false)
+      setFormData(prev => ({
+        ...prev,
+        newPassword: "",
+        confirmPassword: ""
+      }))
+    } catch (error) {
+      // Handle error silently
+    }
   }
 
   // Cancel editing
   const cancelEditing = () => {
-    setIsEditing(false)
-    setShowPassword(false)
-    // Reset form to original data
-    setFormData(prev => ({
-      ...prev,
-      name: originalData.name,
-      email: originalData.email,
-      phone: originalData.phone,
-      newPassword: "",
-      confirmPassword: ""
-    }))
+    if (hasChanges()) {
+      if (confirm("You have unsaved changes. Are you sure you want to cancel?")) {
+        setIsEditing(false)
+        setShowPassword(false)
+        setFormData(prev => ({
+          ...prev,
+          name: originalData.name,
+          email: originalData.email,
+          phone: originalData.phone,
+          newPassword: "",
+          confirmPassword: ""
+        }))
+      }
+    } else {
+      setIsEditing(false)
+      setShowPassword(false)
+      setFormData(prev => ({
+        ...prev,
+        name: originalData.name,
+        email: originalData.email,
+        phone: originalData.phone,
+        newPassword: "",
+        confirmPassword: ""
+      }))
+    }
   }
 
   // Save changes
@@ -143,18 +323,33 @@ export default function ProfilePage() {
       return
     }
 
-    // Validate password fields if provided
+    if (!validateForm()) {
+      return
+    }
+
     if (formData.newPassword || formData.confirmPassword) {
       if (!formData.newPassword || !formData.confirmPassword) {
-        alert("Both password fields are required")
+        toast({
+          title: "Validation Error",
+          description: "Both password fields are required",
+          variant: "destructive"
+        })
         return
       }
       if (formData.newPassword !== formData.confirmPassword) {
-        alert("Passwords do not match")
+        toast({
+          title: "Validation Error",
+          description: "Passwords do not match",
+          variant: "destructive"
+        })
         return
       }
       if (formData.newPassword.length < 6) {
-        alert("Password must be at least 6 characters long")
+        toast({
+          title: "Validation Error",
+          description: "Password must be at least 6 characters long",
+          variant: "destructive"
+        })
         return
       }
     }
@@ -162,41 +357,69 @@ export default function ProfilePage() {
     setIsSaving(true)
     
     try {
+      const requestBody = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        newPassword: formData.newPassword,
+        confirmPassword: formData.confirmPassword
+      }
+      
       const response = await fetch('/api/auth/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          newPassword: formData.newPassword,
-          confirmPassword: formData.confirmPassword
-        }),
+        body: JSON.stringify(requestBody),
       })
 
-      if (response.ok) {
-        const result = await response.json()
-        if (result.success) {
-          toast({
-            title: "Success!",
-            description: "Profile updated successfully.",
-          })
-          // Refresh user data
-          await refreshUser()
-        } else {
-          alert(`Failed to update profile: ${result.error || 'Unknown error'}`)
+      const result = await response.json()
+
+      if (response.ok && result.success) {
+        let updateMessage = "Profile updated successfully."
+        const updates = []
+        
+        if (formData.name !== originalData.name) updates.push("name")
+        if (formData.email !== originalData.email) updates.push("email")
+        if (formData.phone !== originalData.phone) updates.push("phone")
+        if (formData.newPassword) updates.push("password")
+        
+        if (updates.length > 0) {
+          updateMessage = `Updated: ${updates.join(", ")}`
         }
+        
+        toast({
+          title: "Success!",
+          description: updateMessage,
+        })
+        
+        await refreshUser()
+        await fetchUserProfile()
+        await fetchUserStats()
+        
+        setFormData(prev => ({
+          ...prev,
+          newPassword: "",
+          confirmPassword: ""
+        }))
+        
+        setIsEditing(false)
       } else {
-        const errorData = await response.json()
-        console.error('❌ Failed to update profile:', errorData)
-        alert(`Failed to update profile: ${errorData.error || 'Unknown error'}`)
+        if (response.status >= 500) {
+          toast({
+            title: "Server Error",
+            description: "Failed to update profile. Please try again later.",
+            variant: "destructive"
+          })
+        }
       }
     } catch (error) {
-      console.error('❌ Error updating profile:', error)
-      alert(`Error updating profile: ${error}`)
+      toast({
+        title: "Connection Error",
+        description: "Please check your internet connection and try again.",
+        variant: "destructive"
+      })
     } finally {
       setIsSaving(false)
     }
@@ -241,6 +464,22 @@ export default function ProfilePage() {
     )
   }
 
+  if (!user.id) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8 text-center">
+          <h1 className="text-2xl font-bold mb-4">Хэрэглэгчийн мэдээлэл дутуу</h1>
+          <p className="text-muted-foreground mb-6">Хэрэглэгчийн мэдээлэл олдсонгүй. Дахин нэвтэрнэ үү.</p>
+          <Link href="/login">
+            <Button>Дахин нэвтрэх</Button>
+          </Link>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -260,23 +499,23 @@ export default function ProfilePage() {
                 <CardContent className="p-6 text-center">
                   <Avatar className="h-24 w-24 mx-auto mb-4">
                     <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                      {user.name?.charAt(0).toUpperCase() || "U"}
+                      {formData.name?.charAt(0).toUpperCase() || user.name?.charAt(0).toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
-                  <h3 className="text-xl font-semibold mb-2">{user.name || "User"}</h3>
-                  <p className="text-muted-foreground mb-4">{user.email}</p>
+                  <h3 className="text-xl font-semibold mb-2">
+                    {formData.name || user.name || "User"}
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    {formData.email || user.email}
+                  </p>
+                  {(formData.phone || user.phone) && (
+                    <p className="text-muted-foreground mb-4">
+                      📱 {formData.phone || user.phone}
+                    </p>
+                  )}
                   
                   {/* Stats */}
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">Нийт хичээл:</span>
-                      <span className="font-semibold">{userStats.totalCourses}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">Дууссан хичээл:</span>
-                      <span className="font-semibold">{userStats.completedCourses}</span>
-                    </div>
-                  </div>
+                  <SafeStatsDisplay />
                 </CardContent>
               </Card>
             </div>
@@ -287,9 +526,14 @@ export default function ProfilePage() {
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Профайлын мэдээл</CardTitle>
                   {!isEditing ? (
-                    <Button onClick={startEditing} variant="outline" size="sm">
+                    <Button 
+                      onClick={startEditing} 
+                      variant="outline" 
+                      size="sm"
+                      disabled={statsLoading || !originalData.name || !originalData.email || !userStats || typeof userStats.totalCourses === 'undefined'}
+                    >
                       <Edit className="w-4 h-4 mr-2" />
-                      Засварлах
+                      {statsLoading ? "Уншиж байна..." : "Засварлах"}
                     </Button>
                   ) : (
                     <div className="flex gap-2">
@@ -322,7 +566,7 @@ export default function ProfilePage() {
                         id="name"
                         value={formData.name}
                         onChange={(e) => handleInputChange("name", e.target.value)}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isSaving}
                         className="mt-1"
                       />
                     </div>
@@ -335,7 +579,7 @@ export default function ProfilePage() {
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleInputChange("email", e.target.value)}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isSaving}
                         className="mt-1"
                       />
                     </div>
@@ -347,7 +591,7 @@ export default function ProfilePage() {
                         id="phone"
                         value={formData.phone}
                         onChange={(e) => handleInputChange("phone", e.target.value)}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isSaving}
                         className="mt-1"
                         placeholder="+976 99999999"
                       />
@@ -372,6 +616,7 @@ export default function ProfilePage() {
                                   value={formData.newPassword}
                                   onChange={(e) => handleInputChange("newPassword", e.target.value)}
                                   placeholder="Хоосон үлдээх бол үлдээнэ үү"
+                                  disabled={isSaving}
                                 />
                                 <Button
                                   type="button"
@@ -379,6 +624,7 @@ export default function ProfilePage() {
                                   size="sm"
                                   className="absolute right-0 top-0 h-full px-3"
                                   onClick={() => setShowPassword(!showPassword)}
+                                  disabled={isSaving}
                                 >
                                   {showPassword ? (
                                     <EyeOff className="w-4 h-4" />
@@ -388,7 +634,7 @@ export default function ProfilePage() {
                                 </Button>
                               </div>
                             </div>
-
+                            
                             <div>
                               <Label htmlFor="confirmPassword">Нууц үг давтах</Label>
                               <Input
@@ -397,6 +643,7 @@ export default function ProfilePage() {
                                 value={formData.confirmPassword}
                                 onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                                 placeholder="Хоосон үлдээх бол үлдээнэ үү"
+                                disabled={isSaving}
                               />
                             </div>
                           </div>
@@ -410,6 +657,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+      
       <Footer />
     </div>
   )
