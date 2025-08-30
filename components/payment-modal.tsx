@@ -86,8 +86,8 @@ export function PaymentModal({ course, onClose }: PaymentModalProps) {
             clearInterval(checkInterval)
             alert("Төлбөр амжилттай төлөгдлөө! Хичээлд бүртгэгдлээ.")
             onClose()
-            // Use faster refresh instead of full page reload
-            window.location.href = window.location.pathname + "?payment_success=true"
+            // Redirect immediately to show course access
+            window.location.href = window.location.pathname + "?payment_success=true&t=" + Date.now()
           }
         }
 

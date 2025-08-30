@@ -74,6 +74,9 @@ export async function POST(request: NextRequest) {
           isActive: true,
         })
 
+        // Update user's enrolledCourses array
+        await db.addCourseToUser(new ObjectId(user.id), new ObjectId(payment.courseId))
+
         return NextResponse.json({ status: "completed", payment: { ...payment, status: "completed" } })
       }
     }
@@ -97,6 +100,9 @@ export async function POST(request: NextRequest) {
             progress: 0,
             isActive: true,
           })
+
+          // Update user's enrolledCourses array
+          await db.addCourseToUser(new ObjectId(user.id), new ObjectId(payment.courseId))
 
           return NextResponse.json({ status: "completed", payment: { ...payment, status: "completed" } })
         }

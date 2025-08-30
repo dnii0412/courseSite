@@ -143,18 +143,29 @@ export function useAuth() {
     try {
       const response = await fetch('/api/auth/profile', {
         credentials: 'include',
-        cache: 'no-cache' // Force fresh data
+        cache: 'no-cache', // Force fresh data
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       })
       if (response.ok) {
         const data = await response.json()
         if (data.user) {
-          setLocalUser({
+          const userData = {
             id: data.user.id,
             name: data.user.name || "",
             email: data.user.email || "",
             role: data.user.role || "student",
             enrolledCourses: data.user.enrolledCourses || []
-          })
+          }
+          setLocalUser(userData)
+
+          // Also trigger a re-render by updating a timestamp
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('userUpdated', { detail: userData }))
+          }
         }
       }
     } catch (error) {

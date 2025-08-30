@@ -30,18 +30,16 @@ export function CourseEnrollmentClient({ course }: CourseEnrollmentClientProps) 
 
     const checkPaymentAndEnrollment = async () => {
         try {
-            // Reduce initial delay from 2s to 500ms
-            await new Promise(resolve => setTimeout(resolve, 500))
-            
-            // Try multiple times with shorter intervals for faster response
+            // Start checking immediately - no initial delay
             let attempts = 0
-            const maxAttempts = 6 // Total 3 seconds max (6 * 500ms)
-            
+            const maxAttempts = 10 // Total 5 seconds max (10 * 500ms)
+
             while (attempts < maxAttempts) {
                 const response = await fetch('/api/payments/verify-and-enroll', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache',
                     },
                     body: JSON.stringify({
                         courseId: course._id
@@ -54,17 +52,23 @@ export function CourseEnrollmentClient({ course }: CourseEnrollmentClientProps) 
                         // Refresh user data to get latest enrollment
                         await refreshUser()
                         setCheckingPayment(false)
+
+                        // Force a page refresh to ensure UI updates immediately
+                        setTimeout(() => {
+                            window.location.reload()
+                        }, 100)
+
                         return // Success, exit early
                     }
                 }
-                
+
                 attempts++
                 if (attempts < maxAttempts) {
                     // Wait 500ms before next attempt
                     await new Promise(resolve => setTimeout(resolve, 500))
                 }
             }
-            
+
             setCheckingPayment(false)
         } catch (error) {
             console.error("Error checking payment:", error)
