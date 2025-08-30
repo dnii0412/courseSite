@@ -10,12 +10,12 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
-import { 
-  Upload, 
-  Image as ImageIcon, 
-  Trash2, 
-  Save, 
-  X, 
+import {
+  Upload,
+  Image as ImageIcon,
+  Trash2,
+  Save,
+  X,
   Settings
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -101,19 +101,19 @@ export default function AdminMediaGrid() {
           const rect = canvasElement.getBoundingClientRect()
           const newX = e.clientX - rect.left - moveOffset.x
           const newY = e.clientY - rect.top - moveOffset.y
-          
+
           console.log('New position:', { newX, newY, moveOffset })
-          
+
           // Constrain to canvas bounds
           const constrainedX = Math.max(0, Math.min(newX, canvasLayout.canvasWidth - selectedImage.width))
           const constrainedY = Math.max(0, Math.min(newY, canvasLayout.canvasHeight - selectedImage.height))
-          
+
           console.log('Constrained position:', { constrainedX, constrainedY })
-          
+
           setCanvasLayout(prev => ({
             ...prev,
-            images: prev.images.map(img => 
-              img.id === selectedImage.id 
+            images: prev.images.map(img =>
+              img.id === selectedImage.id
                 ? { ...img, x: constrainedX, y: constrainedY }
                 : img
             )
@@ -154,13 +154,13 @@ export default function AdminMediaGrid() {
         router.push("/admin/login")
         return
       }
-      
+
       const data = await response.json()
       if (data.user.role !== "admin") {
         router.push("/admin/login")
         return
       }
-      
+
       fetchMediaItems()
       fetchCanvasLayout()
     } catch (error) {
@@ -193,8 +193,25 @@ export default function AdminMediaGrid() {
       if (response.ok) {
         const data = await response.json()
         if (data.layout) {
-          // Convert old grid format to new canvas format if needed
-          if (data.layout.cells) {
+          // Check if layout has images array (new format) or cells array (old format)
+          if (data.layout.images && Array.isArray(data.layout.images)) {
+            // New canvas format - use directly
+            setCanvasLayout({
+              id: data.layout.id || "default",
+              name: data.layout.name || "Main Canvas",
+              canvasWidth: data.layout.canvasWidth || 800,
+              canvasHeight: data.layout.canvasHeight || 400,
+              images: data.layout.images,
+              isPublished: data.layout.isPublished || true,
+              isLive: data.layout.isLive || false,
+              lastSaved: data.layout.lastSaved || new Date().toISOString()
+            })
+            setCanvasSettings({
+              width: data.layout.canvasWidth || 800,
+              height: data.layout.canvasHeight || 400
+            })
+          } else if (data.layout.cells) {
+            // Old grid format - convert to new canvas format
             const images = data.layout.cells
               .filter((cell: any) => cell.mediaId && cell.media)
               .map((cell: any, index: number) => ({
@@ -207,20 +224,21 @@ export default function AdminMediaGrid() {
                 height: (cell.spanY || 1) * 100,
                 zIndex: index
               }))
-            
+
             setCanvasLayout(prev => ({
               ...prev,
               images,
               canvasWidth: (data.layout.width || 6) * 100,
               canvasHeight: (data.layout.height || 4) * 100
             }))
+            setCanvasSettings({
+              width: (data.layout.width || 6) * 100,
+              height: (data.layout.height || 4) * 100
+            })
           } else {
-            setCanvasLayout(data.layout)
+            // No images or cells - initialize empty canvas
+            initializeCanvas()
           }
-          setCanvasSettings({
-            width: data.layout.canvasWidth || 1200,
-            height: data.layout.canvasHeight || 800
-          })
         } else {
           initializeCanvas()
         }
@@ -234,8 +252,8 @@ export default function AdminMediaGrid() {
   }
 
   const initializeCanvas = () => {
-    setCanvasLayout(prev => ({ 
-      ...prev, 
+    setCanvasLayout(prev => ({
+      ...prev,
       images: [],
       canvasWidth: 1200,
       canvasHeight: 800
@@ -277,11 +295,11 @@ export default function AdminMediaGrid() {
           title: "Success",
           description: "Media uploaded successfully"
         })
-        
+
         // Add new media item to the list
         const newMediaItem = { ...data.mediaItem, id: data.mediaId }
         setMediaItems(prev => [newMediaItem, ...prev])
-        
+
         // Reset form and close dialog
         setUploadForm({ name: '', description: '', file: null })
         setShowUploadDialog(false)
@@ -323,8 +341,8 @@ export default function AdminMediaGrid() {
   const handleImageResize = (image: PlacedImage, newWidth: number, newHeight: number) => {
     setCanvasLayout(prev => ({
       ...prev,
-      images: prev.images.map(img => 
-        img.id === image.id 
+      images: prev.images.map(img =>
+        img.id === image.id
           ? { ...img, width: newWidth, height: newHeight }
           : img
       )
@@ -336,7 +354,7 @@ export default function AdminMediaGrid() {
       ...prev,
       images: prev.images.filter(img => img.id !== image.id)
     }))
-    
+
     toast({
       title: "Success",
       description: "Image removed from canvas"
@@ -351,16 +369,16 @@ export default function AdminMediaGrid() {
   const handleUpdateImage = (updatedImage: PlacedImage) => {
     setCanvasLayout(prev => ({
       ...prev,
-      images: prev.images.map(img => 
-        img.id === updatedImage.id 
+      images: prev.images.map(img =>
+        img.id === updatedImage.id
           ? { ...img, ...updatedImage }
           : img
       )
     }))
-    
+
     setShowEditDialog(false)
     setSelectedImage(null)
-    
+
     toast({
       title: "Success",
       description: `Image updated: ${Math.round(updatedImage.width)}×${Math.round(updatedImage.height)} at position (${Math.round(updatedImage.x)}, ${Math.round(updatedImage.y)})`
@@ -429,7 +447,7 @@ export default function AdminMediaGrid() {
           description: "Media item deleted successfully"
         })
         setMediaItems(prev => prev.filter(item => item._id !== mediaId))
-        
+
         // Remove from canvas images
         setCanvasLayout(prev => ({
           ...prev,
@@ -453,9 +471,9 @@ export default function AdminMediaGrid() {
   }
 
   const updateCanvasSize = () => {
-    setCanvasLayout(prev => ({ 
-      ...prev, 
-      canvasWidth: canvasSettings.width, 
+    setCanvasLayout(prev => ({
+      ...prev,
+      canvasWidth: canvasSettings.width,
       canvasHeight: canvasSettings.height
     }))
     toast({
@@ -518,18 +536,17 @@ export default function AdminMediaGrid() {
                   {mediaItems.map((item, index) => (
                     <div
                       key={item._id || `media-${index}`}
-                      className={`p-3 border rounded-lg cursor-grab active:cursor-grabbing transition-colors ${
-                        selectedMedia?._id === item._id 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
+                      className={`p-3 border rounded-lg cursor-grab active:cursor-grabbing transition-colors ${selectedMedia?._id === item._id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
                       onClick={() => setSelectedMedia(item)}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
                           {item.cloudinarySecureUrl ? (
-                            <img 
-                              src={item.cloudinarySecureUrl} 
+                            <img
+                              src={item.cloudinarySecureUrl}
                               alt={item.name}
                               className="w-full h-full object-cover"
                             />
@@ -560,7 +577,7 @@ export default function AdminMediaGrid() {
                       </div>
                     </div>
                   ))}
-                  
+
                   {mediaItems.length === 0 && (
                     <div className="text-center py-8 text-gray-500">
                       <ImageIcon className="h-12 w-12 mx-auto mb-2 text-gray-300" />
@@ -620,9 +637,9 @@ export default function AdminMediaGrid() {
                     </p>
                   </div>
                 )}
-                
+
                 {/* Canvas Area */}
-                <div 
+                <div
                   data-canvas
                   className="relative border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 overflow-hidden"
                   style={{
@@ -637,7 +654,7 @@ export default function AdminMediaGrid() {
                       const rect = e.currentTarget.getBoundingClientRect()
                       const x = e.clientX - rect.left
                       const y = e.clientY - rect.top
-                      
+
                       const newImage: PlacedImage = {
                         id: `img-${Date.now()}`,
                         mediaId: selectedMedia._id || '',
@@ -648,12 +665,12 @@ export default function AdminMediaGrid() {
                         height: 200,
                         zIndex: canvasLayout.images.length
                       }
-                      
+
                       setCanvasLayout(prev => ({
                         ...prev,
                         images: [...prev.images, newImage]
                       }))
-                      
+
                       setSelectedMedia(null)
                       toast({
                         title: "Success",
@@ -716,169 +733,169 @@ export default function AdminMediaGrid() {
                       {selectedImage?.id === image.id && (
                         <div className="absolute inset-0 border-2 border-blue-500 rounded pointer-events-none" />
                       )}
-                      
+
                       {/* Moving Overlay */}
                       {isMovingImage && selectedImage?.id === image.id && (
                         <div className="absolute inset-0 bg-blue-500 bg-opacity-20 rounded pointer-events-none" />
                       )}
 
-                                                {/* Resize Handles */}
-                          {selectedImage?.id === image.id && (
-                            <>
-                              {/* Top-left resize handle */}
-                              <div
-                                className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 rounded-full cursor-nw-resize z-10"
-                                onMouseDown={(e) => {
-                                  e.stopPropagation()
-                                  const startX = e.clientX
-                                  const startY = e.clientY
-                                  const startWidth = image.width
-                                  const startHeight = image.height
-                                  const startImageX = image.x
-                                  const startImageY = image.y
-                                  
-                                  const handleMouseMove = (moveEvent: MouseEvent) => {
-                                    const deltaX = moveEvent.clientX - startX
-                                    const deltaY = moveEvent.clientY - startY
-                                    
-                                    const newWidth = Math.max(50, startWidth - deltaX)
-                                    const newHeight = Math.max(50, startHeight - deltaY)
-                                    const newX = startImageX + (startWidth - newWidth)
-                                    const newY = startImageY + (startHeight - newHeight)
-                                    
-                                    setCanvasLayout(prev => ({
-                                      ...prev,
-                                      images: prev.images.map(img => 
-                                        img.id === image.id 
-                                          ? { ...img, width: newWidth, height: newHeight, x: newX, y: newY }
-                                          : img
-                                      )
-                                    }))
-                                  }
-                                  
-                                  const handleMouseUp = () => {
-                                    document.removeEventListener('mousemove', handleMouseMove)
-                                    document.removeEventListener('mouseup', handleMouseUp)
-                                  }
-                                  
-                                  document.addEventListener('mousemove', handleMouseMove)
-                                  document.addEventListener('mouseup', handleMouseUp)
-                                }}
-                              />
-                              {/* Top-right resize handle */}
-                              <div
-                                className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-ne-resize z-10"
-                                onMouseDown={(e) => {
-                                  e.stopPropagation()
-                                  const startX = e.clientX
-                                  const startY = e.clientY
-                                  const startWidth = image.width
-                                  const startHeight = image.height
-                                  const startImageY = image.y
-                                  
-                                  const handleMouseMove = (moveEvent: MouseEvent) => {
-                                    const deltaX = moveEvent.clientX - startX
-                                    const deltaY = moveEvent.clientY - startY
-                                    
-                                    const newWidth = Math.max(50, startWidth + deltaX)
-                                    const newHeight = Math.max(50, startHeight - deltaY)
-                                    const newY = startImageY + (startHeight - newHeight)
-                                    
-                                    setCanvasLayout(prev => ({
-                                      ...prev,
-                                      images: prev.images.map(img => 
-                                        img.id === image.id 
-                                          ? { ...img, width: newWidth, height: newHeight, y: newY }
-                                          : img
-                                      )
-                                    }))
-                                  }
-                                  
-                                  const handleMouseUp = () => {
-                                    document.removeEventListener('mousemove', handleMouseMove)
-                                    document.removeEventListener('mouseup', handleMouseUp)
-                                  }
-                                  
-                                  document.addEventListener('mousemove', handleMouseMove)
-                                  document.addEventListener('mouseup', handleMouseUp)
-                                }}
-                              />
-                              {/* Bottom-left resize handle */}
-                              <div
-                                className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 rounded-full cursor-sw-resize z-10"
-                                onMouseDown={(e) => {
-                                  e.stopPropagation()
-                                  const startX = e.clientX
-                                  const startY = e.clientY
-                                  const startWidth = image.width
-                                  const startHeight = image.height
-                                  const startImageX = image.x
-                                  
-                                  const handleMouseMove = (moveEvent: MouseEvent) => {
-                                    const deltaX = moveEvent.clientX - startX
-                                    const deltaY = moveEvent.clientY - startY
-                                    
-                                    const newWidth = Math.max(50, startWidth - deltaX)
-                                    const newHeight = Math.max(50, startHeight + deltaY)
-                                    const newX = startImageX + (startWidth - newWidth)
-                                    
-                                    setCanvasLayout(prev => ({
-                                      ...prev,
-                                      images: prev.images.map(img => 
-                                        img.id === image.id 
-                                          ? { ...img, width: newWidth, height: newHeight, x: newX }
-                                          : img
-                                      )
-                                    }))
-                                  }
-                                  
-                                  const handleMouseUp = () => {
-                                    document.removeEventListener('mousemove', handleMouseMove)
-                                    document.removeEventListener('mouseup', handleMouseUp)
-                                  }
-                                  
-                                  document.addEventListener('mousemove', handleMouseMove)
-                                  document.addEventListener('mouseup', handleMouseUp)
-                                }}
-                              />
-                              {/* Bottom-right resize handle */}
-                              <div
-                                className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-se-resize z-10"
-                                onMouseDown={(e) => {
-                                  e.stopPropagation()
-                                  const startX = e.clientX
-                                  const startY = e.clientY
-                                  const startWidth = image.width
-                                  const startHeight = image.height
-                                  
-                                  const handleMouseMove = (moveEvent: MouseEvent) => {
-                                    const deltaX = moveEvent.clientX - startX
-                                    const deltaY = moveEvent.clientY - startY
-                                    
-                                    const newWidth = Math.max(50, startWidth + deltaX)
-                                    const newHeight = Math.max(50, startHeight + deltaY)
-                                    
-                                    setCanvasLayout(prev => ({
-                                      ...prev,
-                                      images: prev.images.map(img => 
-                                        img.id === image.id 
-                                          ? { ...img, width: newWidth, height: newHeight }
-                                          : img
-                                      )
-                                    }))
-                                  }
-                                  
-                                  const handleMouseUp = () => {
-                                    document.removeEventListener('mousemove', handleMouseMove)
-                                    document.removeEventListener('mouseup', handleMouseUp)
-                                  }
-                                  
-                                  document.addEventListener('mousemove', handleMouseMove)
-                                  document.addEventListener('mouseup', handleMouseUp)
-                                }}
-                              />
-                            </>
-                          )}
+                      {/* Resize Handles */}
+                      {selectedImage?.id === image.id && (
+                        <>
+                          {/* Top-left resize handle */}
+                          <div
+                            className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 rounded-full cursor-nw-resize z-10"
+                            onMouseDown={(e) => {
+                              e.stopPropagation()
+                              const startX = e.clientX
+                              const startY = e.clientY
+                              const startWidth = image.width
+                              const startHeight = image.height
+                              const startImageX = image.x
+                              const startImageY = image.y
+
+                              const handleMouseMove = (moveEvent: MouseEvent) => {
+                                const deltaX = moveEvent.clientX - startX
+                                const deltaY = moveEvent.clientY - startY
+
+                                const newWidth = Math.max(50, startWidth - deltaX)
+                                const newHeight = Math.max(50, startHeight - deltaY)
+                                const newX = startImageX + (startWidth - newWidth)
+                                const newY = startImageY + (startHeight - newHeight)
+
+                                setCanvasLayout(prev => ({
+                                  ...prev,
+                                  images: prev.images.map(img =>
+                                    img.id === image.id
+                                      ? { ...img, width: newWidth, height: newHeight, x: newX, y: newY }
+                                      : img
+                                  )
+                                }))
+                              }
+
+                              const handleMouseUp = () => {
+                                document.removeEventListener('mousemove', handleMouseMove)
+                                document.removeEventListener('mouseup', handleMouseUp)
+                              }
+
+                              document.addEventListener('mousemove', handleMouseMove)
+                              document.addEventListener('mouseup', handleMouseUp)
+                            }}
+                          />
+                          {/* Top-right resize handle */}
+                          <div
+                            className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-ne-resize z-10"
+                            onMouseDown={(e) => {
+                              e.stopPropagation()
+                              const startX = e.clientX
+                              const startY = e.clientY
+                              const startWidth = image.width
+                              const startHeight = image.height
+                              const startImageY = image.y
+
+                              const handleMouseMove = (moveEvent: MouseEvent) => {
+                                const deltaX = moveEvent.clientX - startX
+                                const deltaY = moveEvent.clientY - startY
+
+                                const newWidth = Math.max(50, startWidth + deltaX)
+                                const newHeight = Math.max(50, startHeight - deltaY)
+                                const newY = startImageY + (startHeight - newHeight)
+
+                                setCanvasLayout(prev => ({
+                                  ...prev,
+                                  images: prev.images.map(img =>
+                                    img.id === image.id
+                                      ? { ...img, width: newWidth, height: newHeight, y: newY }
+                                      : img
+                                  )
+                                }))
+                              }
+
+                              const handleMouseUp = () => {
+                                document.removeEventListener('mousemove', handleMouseMove)
+                                document.removeEventListener('mouseup', handleMouseUp)
+                              }
+
+                              document.addEventListener('mousemove', handleMouseMove)
+                              document.addEventListener('mouseup', handleMouseUp)
+                            }}
+                          />
+                          {/* Bottom-left resize handle */}
+                          <div
+                            className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 rounded-full cursor-sw-resize z-10"
+                            onMouseDown={(e) => {
+                              e.stopPropagation()
+                              const startX = e.clientX
+                              const startY = e.clientY
+                              const startWidth = image.width
+                              const startHeight = image.height
+                              const startImageX = image.x
+
+                              const handleMouseMove = (moveEvent: MouseEvent) => {
+                                const deltaX = moveEvent.clientX - startX
+                                const deltaY = moveEvent.clientY - startY
+
+                                const newWidth = Math.max(50, startWidth - deltaX)
+                                const newHeight = Math.max(50, startHeight + deltaY)
+                                const newX = startImageX + (startWidth - newWidth)
+
+                                setCanvasLayout(prev => ({
+                                  ...prev,
+                                  images: prev.images.map(img =>
+                                    img.id === image.id
+                                      ? { ...img, width: newWidth, height: newHeight, x: newX }
+                                      : img
+                                  )
+                                }))
+                              }
+
+                              const handleMouseUp = () => {
+                                document.removeEventListener('mousemove', handleMouseMove)
+                                document.removeEventListener('mouseup', handleMouseUp)
+                              }
+
+                              document.addEventListener('mousemove', handleMouseMove)
+                              document.addEventListener('mouseup', handleMouseUp)
+                            }}
+                          />
+                          {/* Bottom-right resize handle */}
+                          <div
+                            className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-se-resize z-10"
+                            onMouseDown={(e) => {
+                              e.stopPropagation()
+                              const startX = e.clientX
+                              const startY = e.clientY
+                              const startWidth = image.width
+                              const startHeight = image.height
+
+                              const handleMouseMove = (moveEvent: MouseEvent) => {
+                                const deltaX = moveEvent.clientX - startX
+                                const deltaY = moveEvent.clientY - startY
+
+                                const newWidth = Math.max(50, startWidth + deltaX)
+                                const newHeight = Math.max(50, startHeight + deltaY)
+
+                                setCanvasLayout(prev => ({
+                                  ...prev,
+                                  images: prev.images.map(img =>
+                                    img.id === image.id
+                                      ? { ...img, width: newWidth, height: newHeight }
+                                      : img
+                                  )
+                                }))
+                              }
+
+                              const handleMouseUp = () => {
+                                document.removeEventListener('mousemove', handleMouseMove)
+                                document.removeEventListener('mouseup', handleMouseUp)
+                              }
+
+                              document.addEventListener('mousemove', handleMouseMove)
+                              document.addEventListener('mouseup', handleMouseUp)
+                            }}
+                          />
+                        </>
+                      )}
 
                       {/* Image Controls */}
                       <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -927,7 +944,7 @@ export default function AdminMediaGrid() {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Moving Instructions */}
                   {isMovingImage && selectedImage && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -975,12 +992,12 @@ export default function AdminMediaGrid() {
                       />
                     </div>
                   </div>
-                  
+
                   <Button onClick={updateCanvasSize} variant="outline" size="sm">
                     <Settings className="h-4 w-4 mr-2" />
                     Update Canvas Size
                   </Button>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="published">Published</Label>
@@ -1082,8 +1099,8 @@ export default function AdminMediaGrid() {
               <div className="text-center">
                 <div className="w-24 h-24 mx-auto mb-2 rounded overflow-hidden">
                   {selectedImage.media.cloudinarySecureUrl ? (
-                    <img 
-                      src={selectedImage.media.cloudinarySecureUrl} 
+                    <img
+                      src={selectedImage.media.cloudinarySecureUrl}
                       alt={selectedImage.media.name}
                       className="w-full h-full object-cover"
                     />
@@ -1122,7 +1139,7 @@ export default function AdminMediaGrid() {
                     Image width in pixels
                   </p>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="imageHeight">Height (px)</Label>
                   <div className="flex items-center gap-2">
