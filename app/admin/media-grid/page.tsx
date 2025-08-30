@@ -35,21 +35,23 @@ interface MediaItem {
   cloudinarySecureUrl?: string // Added for Cloudinary URL
 }
 
-interface GridCell {
+interface PlacedImage {
+  id: string
+  mediaId: string
+  media: MediaItem
   x: number
   y: number
-  mediaId?: string
-  media?: MediaItem
-  spanX?: number
-  spanY?: number
-}
-
-interface GridLayout {
-  id: string
-  name: string
   width: number
   height: number
-  cells: GridCell[]
+  zIndex: number
+}
+
+interface CanvasLayout {
+  id: string
+  name: string
+  canvasWidth: number
+  canvasHeight: number
+  images: PlacedImage[]
   isPublished: boolean
   isLive: boolean
   lastSaved: string
@@ -57,12 +59,12 @@ interface GridLayout {
 
 export default function AdminMediaGrid() {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
-  const [gridLayout, setGridLayout] = useState<GridLayout>({
+  const [canvasLayout, setCanvasLayout] = useState<CanvasLayout>({
     id: "default",
-    name: "Main Grid",
-    width: 6,
-    height: 4,
-    cells: [],
+    name: "Main Canvas",
+    canvasWidth: 1200,
+    canvasHeight: 800,
+    images: [],
     isPublished: true,
     isLive: false,
     lastSaved: new Date().toISOString()
@@ -72,14 +74,15 @@ export default function AdminMediaGrid() {
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null)
-  const [editingCell, setEditingCell] = useState<GridCell | null>(null)
+  const [selectedImage, setSelectedImage] = useState<PlacedImage | null>(null)
   const [showUploadDialog, setShowUploadDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
-  const [gridSettings, setGridSettings] = useState({
-    width: 6,
-    height: 4
+  const [canvasSettings, setCanvasSettings] = useState({
+    width: 1200,
+    height: 800
   })
-  const [draggedMedia, setDraggedMedia] = useState<MediaItem | null>(null)
+  const [isMovingImage, setIsMovingImage] = useState(false)
+  const [moveOffset, setMoveOffset] = useState({ x: 0, y: 0 })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const { toast } = useToast()
@@ -87,6 +90,60 @@ export default function AdminMediaGrid() {
   useEffect(() => {
     checkAuth()
   }, [])
+
+  // Global mouse move handler for smooth image moving
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (isMovingImage && selectedImage) {
+        console.log('Global mousemove: Moving image', selectedImage.media.name)
+        const canvasElement = document.querySelector('[data-canvas]') as HTMLElement
+        if (canvasElement) {
+          const rect = canvasElement.getBoundingClientRect()
+          const newX = e.clientX - rect.left - moveOffset.x
+          const newY = e.clientY - rect.top - moveOffset.y
+          
+          console.log('New position:', { newX, newY, moveOffset })
+          
+          // Constrain to canvas bounds
+          const constrainedX = Math.max(0, Math.min(newX, canvasLayout.canvasWidth - selectedImage.width))
+          const constrainedY = Math.max(0, Math.min(newY, canvasLayout.canvasHeight - selectedImage.height))
+          
+          console.log('Constrained position:', { constrainedX, constrainedY })
+          
+          setCanvasLayout(prev => ({
+            ...prev,
+            images: prev.images.map(img => 
+              img.id === selectedImage.id 
+                ? { ...img, x: constrainedX, y: constrainedY }
+                : img
+            )
+          }))
+        }
+      }
+    }
+
+    const handleGlobalMouseUp = () => {
+      setIsMovingImage(false)
+    }
+
+    if (isMovingImage) {
+      document.addEventListener('mousemove', handleGlobalMouseMove)
+      document.addEventListener('mouseup', handleGlobalMouseUp)
+      // Prevent text selection while moving
+      document.body.style.userSelect = 'none'
+      document.body.style.cursor = 'grabbing'
+    } else {
+      document.body.style.userSelect = ''
+      document.body.style.cursor = ''
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove)
+      document.removeEventListener('mouseup', handleGlobalMouseUp)
+      document.body.style.userSelect = ''
+      document.body.style.cursor = ''
+    }
+  }, [isMovingImage, selectedImage, moveOffset, canvasLayout.canvasWidth, canvasLayout.canvasHeight])
 
   const checkAuth = async () => {
     try {
@@ -105,7 +162,7 @@ export default function AdminMediaGrid() {
       }
       
       fetchMediaItems()
-      fetchGridLayout()
+      fetchCanvasLayout()
     } catch (error) {
       console.error("Auth error:", error)
       router.push("/admin/login")
@@ -130,37 +187,59 @@ export default function AdminMediaGrid() {
     }
   }
 
-  const fetchGridLayout = async () => {
+  const fetchCanvasLayout = async () => {
     try {
       const response = await fetch("/api/admin/media-grid/layout")
       if (response.ok) {
         const data = await response.json()
         if (data.layout) {
-          setGridLayout(data.layout)
-          setGridSettings({
-            width: data.layout.width,
-            height: data.layout.height
+          // Convert old grid format to new canvas format if needed
+          if (data.layout.cells) {
+            const images = data.layout.cells
+              .filter((cell: any) => cell.mediaId && cell.media)
+              .map((cell: any, index: number) => ({
+                id: `img-${index}`,
+                mediaId: cell.mediaId,
+                media: cell.media,
+                x: cell.x * 100,
+                y: cell.y * 100,
+                width: (cell.spanX || 1) * 100,
+                height: (cell.spanY || 1) * 100,
+                zIndex: index
+              }))
+            
+            setCanvasLayout(prev => ({
+              ...prev,
+              images,
+              canvasWidth: (data.layout.width || 6) * 100,
+              canvasHeight: (data.layout.height || 4) * 100
+            }))
+          } else {
+            setCanvasLayout(data.layout)
+          }
+          setCanvasSettings({
+            width: data.layout.canvasWidth || 1200,
+            height: data.layout.canvasHeight || 800
           })
         } else {
-          initializeGrid()
+          initializeCanvas()
         }
       } else {
-        initializeGrid()
+        initializeCanvas()
       }
     } catch (error) {
-      console.error("Error fetching grid layout:", error)
-      initializeGrid()
+      console.error("Error fetching canvas layout:", error)
+      initializeCanvas()
     }
   }
 
-  const initializeGrid = () => {
-    const cells: GridCell[] = []
-    for (let y = 0; y < gridLayout.height; y++) {
-      for (let x = 0; x < gridLayout.width; x++) {
-        cells.push({ x, y })
-      }
-    }
-    setGridLayout(prev => ({ ...prev, cells }))
+  const initializeCanvas = () => {
+    setCanvasLayout(prev => ({ 
+      ...prev, 
+      images: [],
+      canvasWidth: 1200,
+      canvasHeight: 800
+    }))
   }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -233,82 +312,59 @@ export default function AdminMediaGrid() {
     setSelectedMedia(mediaItem)
   }
 
-  const handleCellClick = (cell: GridCell) => {
-    if (selectedMedia) {
-      const updatedCells = gridLayout.cells.map(c => 
-        c.x === cell.x && c.y === cell.y 
-          ? { 
-              ...c, 
-              mediaId: selectedMedia._id, 
-              media: selectedMedia,
-              spanX: 1,  // Default to 1x1, can be edited later
-              spanY: 1
-            }
-          : c
+
+
+  const handleImageSelect = (image: PlacedImage) => {
+    setSelectedImage(image)
+  }
+
+
+
+  const handleImageResize = (image: PlacedImage, newWidth: number, newHeight: number) => {
+    setCanvasLayout(prev => ({
+      ...prev,
+      images: prev.images.map(img => 
+        img.id === image.id 
+          ? { ...img, width: newWidth, height: newHeight }
+          : img
       )
-      setGridLayout(prev => ({ ...prev, cells: updatedCells }))
-      setSelectedMedia(null)
-      toast({
-        title: "Success",
-        description: `Added ${selectedMedia.name} to grid position (${cell.x}, ${cell.y}). Click the image to edit size.`
-      })
-    }
+    }))
   }
 
-  const handleRemoveFromGrid = (cell: GridCell) => {
-    const updatedCells = gridLayout.cells.map(c => 
-      c.x === cell.x && c.y === cell.y 
-        ? { ...c, mediaId: undefined, media: undefined }
-        : c
-    )
-    setGridLayout(prev => ({ ...prev, cells: updatedCells }))
+  const handleRemoveImage = (image: PlacedImage) => {
+    setCanvasLayout(prev => ({
+      ...prev,
+      images: prev.images.filter(img => img.id !== image.id)
+    }))
+    
     toast({
       title: "Success",
-      description: "Removed media from grid"
+      description: "Image removed from canvas"
     })
   }
 
-  const handleEditCell = (cell: GridCell) => {
-    if (cell.mediaId && cell.media) {
-      setEditingCell(cell)
-      setShowEditDialog(true)
-    } else {
-      console.error('Cannot edit cell - missing mediaId or media:', cell)
-      toast({
-        title: "Error",
-        description: "Cannot edit this cell - no media found",
-        variant: "destructive"
-      })
-    }
+  const handleEditImage = (image: PlacedImage) => {
+    setSelectedImage(image)
+    setShowEditDialog(true)
   }
 
-  const handleUpdateCell = (updatedCell: GridCell) => {
-    const updatedCells = gridLayout.cells.map(c => 
-      c.x === updatedCell.x && c.y === updatedCell.y 
-        ? { ...c, ...updatedCell }
-        : c
-    )
+  const handleUpdateImage = (updatedImage: PlacedImage) => {
+    setCanvasLayout(prev => ({
+      ...prev,
+      images: prev.images.map(img => 
+        img.id === updatedImage.id 
+          ? { ...img, ...updatedImage }
+          : img
+      )
+    }))
     
-    setGridLayout(prev => ({ ...prev, cells: updatedCells }))
     setShowEditDialog(false)
-    setEditingCell(null)
+    setSelectedImage(null)
     
     toast({
       title: "Success",
-      description: `Cell updated: ${updatedCell.spanX || 1}×${updatedCell.spanY || 1} at position (${updatedCell.x}, ${updatedCell.y})`
+      description: `Image updated: ${Math.round(updatedImage.width)}×${Math.round(updatedImage.height)} at position (${Math.round(updatedImage.x)}, ${Math.round(updatedImage.y)})`
     })
-  }
-
-  // Check if a cell is occupied by another image's span
-  const isCellOccupied = (x: number, y: number) => {
-    return gridLayout.cells.some(cell => 
-      cell.mediaId && 
-      x >= cell.x && 
-      x < cell.x + (cell.spanX || 1) && 
-      y >= cell.y && 
-      y < cell.y + (cell.spanY || 1) &&
-      !(x === cell.x && y === cell.y) // Don't mark the main cell as occupied
-    )
   }
 
   // Test if a Cloudinary URL is accessible
@@ -329,7 +385,7 @@ export default function AdminMediaGrid() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...gridLayout,
+          ...canvasLayout,
           lastSaved: new Date().toISOString()
         })
       })
@@ -337,13 +393,13 @@ export default function AdminMediaGrid() {
       if (response.ok) {
         toast({
           title: "Success",
-          description: "Grid layout saved successfully"
+          description: "Canvas layout saved successfully"
         })
-        setGridLayout(prev => ({ ...prev, lastSaved: new Date().toISOString() }))
+        setCanvasLayout(prev => ({ ...prev, lastSaved: new Date().toISOString() }))
       } else {
         toast({
           title: "Error",
-          description: "Failed to save grid layout",
+          description: "Failed to save canvas layout",
           variant: "destructive"
         })
       }
@@ -351,7 +407,7 @@ export default function AdminMediaGrid() {
       console.error("Save error:", error)
       toast({
         title: "Error",
-        description: "Failed to save grid layout",
+        description: "Failed to save canvas layout",
         variant: "destructive"
       })
     } finally {
@@ -374,11 +430,11 @@ export default function AdminMediaGrid() {
         })
         setMediaItems(prev => prev.filter(item => item._id !== mediaId))
         
-        // Remove from grid cells
-        const updatedCells = gridLayout.cells.map(cell => 
-          cell.mediaId === mediaId ? { ...cell, mediaId: undefined, media: undefined } : cell
-        )
-        setGridLayout(prev => ({ ...prev, cells: updatedCells }))
+        // Remove from canvas images
+        setCanvasLayout(prev => ({
+          ...prev,
+          images: prev.images.filter(img => img.mediaId !== mediaId)
+        }))
       } else {
         toast({
           title: "Error",
@@ -396,22 +452,15 @@ export default function AdminMediaGrid() {
     }
   }
 
-  const updateGridSize = () => {
-    const cells: GridCell[] = []
-    for (let y = 0; y < gridSettings.height; y++) {
-      for (let x = 0; x < gridSettings.width; x++) {
-        cells.push({ x, y })
-      }
-    }
-    setGridLayout(prev => ({ 
+  const updateCanvasSize = () => {
+    setCanvasLayout(prev => ({ 
       ...prev, 
-      width: gridSettings.width, 
-      height: gridSettings.height,
-      cells 
+      canvasWidth: canvasSettings.width, 
+      canvasHeight: canvasSettings.height
     }))
     toast({
       title: "Success",
-      description: "Grid size updated successfully"
+      description: "Canvas size updated successfully"
     })
   }
 
@@ -474,31 +523,6 @@ export default function AdminMediaGrid() {
                           ? 'border-blue-500 bg-blue-50' 
                           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                       }`}
-                      draggable={true}
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData('text/plain', item._id || '')
-                        e.dataTransfer.effectAllowed = 'copy'
-                        setDraggedMedia(item)
-                        // Set drag image to show the actual image
-                        if (item.cloudinarySecureUrl) {
-                          const img = new Image()
-                          img.src = item.cloudinarySecureUrl
-                          img.onload = () => {
-                            const canvas = document.createElement('canvas')
-                            const ctx = canvas.getContext('2d')
-                            if (ctx) {
-                              canvas.width = 120
-                              canvas.height = 120
-                              ctx.drawImage(img, 0, 0, 120, 120)
-                              e.dataTransfer.setDragImage(canvas, 60, 60)
-                            }
-                          }
-                        }
-                        setSelectedMedia(item)
-                      }}
-                      onDragEnd={() => {
-                        setDraggedMedia(null)
-                      }}
                       onClick={() => setSelectedMedia(item)}
                     >
                       <div className="flex items-center gap-3">
@@ -554,7 +578,7 @@ export default function AdminMediaGrid() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Grid Canvas ({gridLayout.width}x{gridLayout.height})</CardTitle>
+                  <CardTitle>Canvas Editor ({canvasLayout.canvasWidth}×{canvasLayout.canvasHeight}px)</CardTitle>
                   <div className="flex items-center gap-2">
                     <Button onClick={handleSave} disabled={saving}>
                       <Save className="h-4 w-4 mr-2" />
@@ -564,20 +588,14 @@ export default function AdminMediaGrid() {
                 </div>
                 <div className="flex items-center justify-between text-sm text-gray-500">
                   <p>
-                    💡 <strong>Tip:</strong> Hover over placed images to see edit controls. Click on images to edit their size and position.
+                    💡 <strong>Tip:</strong> Click on a media item to select it, then click anywhere on the canvas to place it. Drag images to move them, resize handles to change size.
                   </p>
                   <div className="text-right">
-                    <p>Placed: {gridLayout.cells.filter(c => c.mediaId).length} images</p>
-                    <p>Total Span: {gridLayout.cells.reduce((total, c) => total + ((c.spanX || 1) * (c.spanY || 1)), 0)} cells</p>
+                    <p>Placed: {canvasLayout.images.length} images</p>
+                    <p>Canvas Size: {canvasLayout.canvasWidth}×{canvasLayout.canvasHeight}px</p>
                   </div>
                 </div>
-                {draggedMedia && (
-                  <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-700">
-                      🖱️ <strong>Dragging:</strong> {draggedMedia.name} - Drop it on a grid cell to place it
-                    </p>
-                  </div>
-                )}
+
               </CardHeader>
               <CardContent>
                 {selectedMedia && (
@@ -603,258 +621,375 @@ export default function AdminMediaGrid() {
                   </div>
                 )}
                 
-                <div className="grid gap-1" style={{
-                  gridTemplateColumns: `repeat(${gridLayout.width}, minmax(100px, 1fr))`,
-                  gridTemplateRows: `repeat(${gridLayout.height}, minmax(100px, 1fr))`
-                }}>
-                  {gridLayout.cells.map((cell, index) => {
-                    
-                    return (
+                {/* Canvas Area */}
+                <div 
+                  data-canvas
+                  className="relative border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 overflow-hidden"
+                  style={{
+                    width: `${canvasLayout.canvasWidth}px`,
+                    height: `${canvasLayout.canvasHeight}px`,
+                    maxWidth: '100%',
+                    maxHeight: '600px'
+                  }}
+                  onMouseDown={(e) => {
+                    // Only handle canvas clicks when not moving an image
+                    if (!isMovingImage && selectedMedia) {
+                      const rect = e.currentTarget.getBoundingClientRect()
+                      const x = e.clientX - rect.left
+                      const y = e.clientY - rect.top
+                      
+                      const newImage: PlacedImage = {
+                        id: `img-${Date.now()}`,
+                        mediaId: selectedMedia._id || '',
+                        media: selectedMedia,
+                        x,
+                        y,
+                        width: 200, // Default size
+                        height: 200,
+                        zIndex: canvasLayout.images.length
+                      }
+                      
+                      setCanvasLayout(prev => ({
+                        ...prev,
+                        images: [...prev.images, newImage]
+                      }))
+                      
+                      setSelectedMedia(null)
+                      toast({
+                        title: "Success",
+                        description: `Added ${selectedMedia.name} to canvas at position (${Math.round(x)}, ${Math.round(y)})`
+                      })
+                    }
+                  }}
+                >
+                  {/* Canvas Background Grid */}
+                  <div className="absolute inset-0 opacity-20">
+                    <div className="w-full h-full" style={{
+                      backgroundImage: `
+                        linear-gradient(to right, #e5e7eb 1px, transparent 1px),
+                        linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
+                      `,
+                      backgroundSize: '20px 20px'
+                    }} />
+                  </div>
+
+                  {/* Placed Images */}
+                  {canvasLayout.images.map((image) => (
                     <div
-                      key={`cell-${cell.x}-${cell.y}-${index}`}
-                      className={`min-w-[100px] min-h-[100px] border border-gray-200 rounded flex items-center justify-center cursor-pointer transition-colors overflow-hidden ${
-                        cell.mediaId 
-                          ? 'bg-blue-100 border-blue-300' 
-                          : isCellOccupied(cell.x, cell.y)
-                          ? 'bg-gray-200 border-gray-300 cursor-not-allowed'
-                          : 'bg-gray-50 hover:bg-gray-100'
-                      }`}
-                      onDragOver={(e) => {
-                        e.preventDefault()
-                        if (!isCellOccupied(cell.x, cell.y)) {
-                          e.currentTarget.style.borderColor = '#3B82F6'
-                          e.currentTarget.style.backgroundColor = '#DBEAFE'
+                      key={image.id}
+                      className="absolute cursor-move group"
+                      style={{
+                        left: `${image.x}px`,
+                        top: `${image.y}px`,
+                        width: `${image.width}px`,
+                        height: `${image.height}px`,
+                        zIndex: image.zIndex
+                      }}
+                      onMouseDown={(e) => {
+                        if (e.button === 0) { // Left click only
+                          e.stopPropagation()
+                          e.preventDefault()
+                          console.log('Image mousedown: Starting move for', image.media.name)
+                          setSelectedImage(image)
+                          // Calculate offset from mouse to image position
+                          const rect = e.currentTarget.getBoundingClientRect()
+                          const offsetX = e.clientX - rect.left
+                          const offsetY = e.clientY - rect.top
+                          console.log('Move offset:', { offsetX, offsetY })
+                          setMoveOffset({
+                            x: offsetX,
+                            y: offsetY
+                          })
+                          setIsMovingImage(true)
                         }
                       }}
-                      onDragLeave={(e) => {
-                        e.currentTarget.style.borderColor = ''
-                        e.currentTarget.style.backgroundColor = ''
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault()
-                        e.currentTarget.style.borderColor = ''
-                        e.currentTarget.style.backgroundColor = ''
-                        
-                        const mediaId = e.dataTransfer.getData('text/plain')
-                        if (mediaId && !isCellOccupied(cell.x, cell.y)) {
-                          const mediaItem = mediaItems.find(item => item._id === mediaId)
-                          if (mediaItem) {
-                            // Use the same logic as handleCellClick
-                            const updatedCells = gridLayout.cells.map(c => 
-                              c.x === cell.x && c.y === cell.y 
-                                ? { 
-                                    ...c, 
-                                    mediaId: mediaItem._id, 
-                                    media: mediaItem,
-                                    spanX: 1,  // Default to 1x1, can be edited later
-                                    spanY: 1
-                                  }
-                                : c
-                            )
-                            setGridLayout(prev => ({ ...prev, cells: updatedCells }))
-                            setSelectedMedia(null)
-                            toast({
-                              title: "Success",
-                              description: `Added ${mediaItem.name} to grid position (${cell.x}, ${cell.y}) via drag & drop. Click the image to edit size.`
-                            })
-                          }
-                        }
-                      }}
-                      onClick={() => !isCellOccupied(cell.x, cell.y) && handleCellClick(cell)}
                     >
-                      {cell.mediaId && cell.media ? (
-                        <div className="w-full h-full relative group bg-yellow-100">
-                          <img 
-                            src={cell.media.cloudinarySecureUrl || ''} 
-                            alt={cell.media.name}
-                            className="w-full h-full object-cover object-center"
-                            style={{
-                              minWidth: '100%',
-                              minHeight: '100%',
-                              maxWidth: '100%',
-                              maxHeight: '100%',
-                              display: 'block'
-                            }}
-                            onLoad={(event) => {
-                              
-                            }}
-                            onError={(e) => {
-                              console.error('Image failed to load:', {
-                                mediaId: cell.mediaId,
-                                cloudinaryUrl: cell.media?.cloudinarySecureUrl,
-                                media: cell.media,
-                                target: e.currentTarget
-                              })
-                              // Instead of hiding, show a fallback
-                              e.currentTarget.style.display = 'none'
-                              // Show fallback content
-                              const fallback = e.currentTarget.nextElementSibling as HTMLElement
-                              if (fallback) {
-                                fallback.style.display = 'flex'
-                              }
-                            }}
-                            onAbort={() => {
-                              
-                            }}
-                          />
-                          
-                          {/* Fallback content when image fails to load */}
-                          <div className="w-full h-full bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-2" style={{ display: 'none' }}>
-                            <div className="text-center">
-                              <ImageIcon className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                              <div className="text-xs text-blue-900 font-medium">{cell.media?.name}</div>
-                              <div className="text-xs text-blue-700">Image failed to load</div>
-                              <div className="text-xs text-blue-500 mt-1">URL: {cell.media?.cloudinarySecureUrl?.substring(0, 30)}...</div>
-                            </div>
-                          </div>
-                          
-                          {/* Debug: Show if image is loaded */}
-                          <div className="absolute bottom-1 left-1 bg-black bg-opacity-70 text-white text-xs px-1 py-0.5 rounded">
-                            {cell.media?.cloudinarySecureUrl ? '✓' : '✗'}
-                          </div>
-                          
-                          <div className="absolute top-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 py-0.5 rounded">
-                            {cell.x},{cell.y}
-                          </div>
-                          
-                          {/* Cell Properties Indicator */}
-                          {(cell.spanX && cell.spanX > 1) || (cell.spanY && cell.spanY > 1) ? (
-                            <div className="absolute top-1 left-12 bg-blue-500/90 text-white text-xs px-1 py-0.5 rounded">
-                              {cell.spanX || 1}×{cell.spanY || 1}
-                            </div>
-                          ) : null}
-                          
-                          {/* Edit and Remove Controls */}
-                          <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="flex gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0 bg-white/90 hover:bg-white text-gray-700"
-                                onClick={(e) => {
+                      {/* Image */}
+                      <img
+                        src={image.media.cloudinarySecureUrl || ''}
+                        alt={image.media.name}
+                        className="w-full h-full object-cover rounded shadow-lg"
+                        draggable={false}
+                      />
+
+                      {/* Selection Border */}
+                      {selectedImage?.id === image.id && (
+                        <div className="absolute inset-0 border-2 border-blue-500 rounded pointer-events-none" />
+                      )}
+                      
+                      {/* Moving Overlay */}
+                      {isMovingImage && selectedImage?.id === image.id && (
+                        <div className="absolute inset-0 bg-blue-500 bg-opacity-20 rounded pointer-events-none" />
+                      )}
+
+                                                {/* Resize Handles */}
+                          {selectedImage?.id === image.id && (
+                            <>
+                              {/* Top-left resize handle */}
+                              <div
+                                className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 rounded-full cursor-nw-resize z-10"
+                                onMouseDown={(e) => {
                                   e.stopPropagation()
-                                  handleEditCell(cell)
+                                  const startX = e.clientX
+                                  const startY = e.clientY
+                                  const startWidth = image.width
+                                  const startHeight = image.height
+                                  const startImageX = image.x
+                                  const startImageY = image.y
+                                  
+                                  const handleMouseMove = (moveEvent: MouseEvent) => {
+                                    const deltaX = moveEvent.clientX - startX
+                                    const deltaY = moveEvent.clientY - startY
+                                    
+                                    const newWidth = Math.max(50, startWidth - deltaX)
+                                    const newHeight = Math.max(50, startHeight - deltaY)
+                                    const newX = startImageX + (startWidth - newWidth)
+                                    const newY = startImageY + (startHeight - newHeight)
+                                    
+                                    setCanvasLayout(prev => ({
+                                      ...prev,
+                                      images: prev.images.map(img => 
+                                        img.id === image.id 
+                                          ? { ...img, width: newWidth, height: newHeight, x: newX, y: newY }
+                                          : img
+                                      )
+                                    }))
+                                  }
+                                  
+                                  const handleMouseUp = () => {
+                                    document.removeEventListener('mousemove', handleMouseMove)
+                                    document.removeEventListener('mouseup', handleMouseUp)
+                                  }
+                                  
+                                  document.addEventListener('mousemove', handleMouseMove)
+                                  document.addEventListener('mouseup', handleMouseUp)
                                 }}
-                                title="Edit cell properties"
-                              >
-                                <Settings className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0 bg-red-500/90 hover:bg-red-500 text-white"
-                                onClick={(e) => {
+                              />
+                              {/* Top-right resize handle */}
+                              <div
+                                className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-ne-resize z-10"
+                                onMouseDown={(e) => {
                                   e.stopPropagation()
-                                  handleRemoveFromGrid(cell)
+                                  const startX = e.clientX
+                                  const startY = e.clientY
+                                  const startWidth = image.width
+                                  const startHeight = image.height
+                                  const startImageY = image.y
+                                  
+                                  const handleMouseMove = (moveEvent: MouseEvent) => {
+                                    const deltaX = moveEvent.clientX - startX
+                                    const deltaY = moveEvent.clientY - startY
+                                    
+                                    const newWidth = Math.max(50, startWidth + deltaX)
+                                    const newHeight = Math.max(50, startHeight - deltaY)
+                                    const newY = startImageY + (startHeight - newHeight)
+                                    
+                                    setCanvasLayout(prev => ({
+                                      ...prev,
+                                      images: prev.images.map(img => 
+                                        img.id === image.id 
+                                          ? { ...img, width: newWidth, height: newHeight, y: newY }
+                                          : img
+                                      )
+                                    }))
+                                  }
+                                  
+                                  const handleMouseUp = () => {
+                                    document.removeEventListener('mousemove', handleMouseMove)
+                                    document.removeEventListener('mouseup', handleMouseUp)
+                                  }
+                                  
+                                  document.addEventListener('mousemove', handleMouseMove)
+                                  document.addEventListener('mouseup', handleMouseUp)
                                 }}
-                                title="Remove from grid"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                          
-                          {/* Click to Edit Overlay */}
-                          <div 
-                            className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center cursor-pointer"
+                              />
+                              {/* Bottom-left resize handle */}
+                              <div
+                                className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 rounded-full cursor-sw-resize z-10"
+                                onMouseDown={(e) => {
+                                  e.stopPropagation()
+                                  const startX = e.clientX
+                                  const startY = e.clientY
+                                  const startWidth = image.width
+                                  const startHeight = image.height
+                                  const startImageX = image.x
+                                  
+                                  const handleMouseMove = (moveEvent: MouseEvent) => {
+                                    const deltaX = moveEvent.clientX - startX
+                                    const deltaY = moveEvent.clientY - startY
+                                    
+                                    const newWidth = Math.max(50, startWidth - deltaX)
+                                    const newHeight = Math.max(50, startHeight + deltaY)
+                                    const newX = startImageX + (startWidth - newWidth)
+                                    
+                                    setCanvasLayout(prev => ({
+                                      ...prev,
+                                      images: prev.images.map(img => 
+                                        img.id === image.id 
+                                          ? { ...img, width: newWidth, height: newHeight, x: newX }
+                                          : img
+                                      )
+                                    }))
+                                  }
+                                  
+                                  const handleMouseUp = () => {
+                                    document.removeEventListener('mousemove', handleMouseMove)
+                                    document.removeEventListener('mouseup', handleMouseUp)
+                                  }
+                                  
+                                  document.addEventListener('mousemove', handleMouseMove)
+                                  document.addEventListener('mouseup', handleMouseUp)
+                                }}
+                              />
+                              {/* Bottom-right resize handle */}
+                              <div
+                                className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 rounded-full cursor-se-resize z-10"
+                                onMouseDown={(e) => {
+                                  e.stopPropagation()
+                                  const startX = e.clientX
+                                  const startY = e.clientY
+                                  const startWidth = image.width
+                                  const startHeight = image.height
+                                  
+                                  const handleMouseMove = (moveEvent: MouseEvent) => {
+                                    const deltaX = moveEvent.clientX - startX
+                                    const deltaY = moveEvent.clientY - startY
+                                    
+                                    const newWidth = Math.max(50, startWidth + deltaX)
+                                    const newHeight = Math.max(50, startHeight + deltaY)
+                                    
+                                    setCanvasLayout(prev => ({
+                                      ...prev,
+                                      images: prev.images.map(img => 
+                                        img.id === image.id 
+                                          ? { ...img, width: newWidth, height: newHeight }
+                                          : img
+                                      )
+                                    }))
+                                  }
+                                  
+                                  const handleMouseUp = () => {
+                                    document.removeEventListener('mousemove', handleMouseMove)
+                                    document.removeEventListener('mouseup', handleMouseUp)
+                                  }
+                                  
+                                  document.addEventListener('mousemove', handleMouseMove)
+                                  document.addEventListener('mouseup', handleMouseUp)
+                                }}
+                              />
+                            </>
+                          )}
+
+                      {/* Image Controls */}
+                      <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 bg-white/90 hover:bg-white text-gray-700"
                             onClick={(e) => {
                               e.stopPropagation()
-                              handleEditCell(cell)
+                              handleEditImage(image)
                             }}
+                            title="Edit image properties"
                           >
-                            <div className="opacity-0 hover:opacity-100 transition-opacity text-white text-center">
-                              <Settings className="h-4 w-4 mx-auto mb-1" />
-                              <span className="text-xs">Click to Edit</span>
-                            </div>
-                          </div>
+                            <Settings className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 bg-red-500/90 hover:bg-red-500 text-white"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleRemoveImage(image)
+                            }}
+                            title="Remove image"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
                         </div>
-                      ) : cell.mediaId ? (
-                        // Fallback: show mediaId even if media object is missing
-                        <div className="w-full h-full relative group bg-blue-100 border-blue-300 flex items-center justify-center">
-                          <div className="text-center">
-                            <ImageIcon className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                            <div className="text-xs text-blue-900 font-medium">Media ID: {cell.mediaId}</div>
-                            <div className="text-xs text-blue-700">Click to edit</div>
-                          </div>
-                          <div className="absolute top-1 right-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 bg-white/90 hover:bg-white text-gray-700"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleEditCell(cell)
-                              }}
-                              title="Edit cell properties"
-                            >
-                              <Settings className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ) : isCellOccupied(cell.x, cell.y) ? (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-xs text-gray-500 text-center">
-                            <div className="w-4 h-4 bg-blue-200 rounded-full mx-auto mb-1"></div>
-                            <span>Part of image</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-xs text-gray-400">
-                          {cell.x},{cell.y}
-                        </div>
-                      )}
+                      </div>
+
+                      {/* Image Info */}
+                      <div className="absolute bottom-1 left-1 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                        {Math.round(image.width)}×{Math.round(image.height)}
+                      </div>
                     </div>
-                  )})}
+                  ))}
+
+                  {/* Canvas Click Instructions */}
+                  {selectedMedia && !isMovingImage && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg">
+                        <p className="text-sm font-medium">
+                          Click anywhere to place "{selectedMedia.name}"
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Moving Instructions */}
+                  {isMovingImage && selectedImage && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
+                        <p className="text-sm font-medium">
+                          Moving "{selectedImage.media.name}" - Release to drop
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Layout Controls */}
+            {/* Canvas Controls */}
             <Card className="mt-6">
               <CardHeader>
-                <CardTitle>Layout Controls</CardTitle>
+                <CardTitle>Canvas Controls</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="gridWidth">Grid Width</Label>
+                      <Label htmlFor="canvasWidth">Canvas Width (px)</Label>
                       <Input
-                        id="gridWidth"
+                        id="canvasWidth"
                         type="number"
-                        min="1"
-                        max="12"
-                        value={gridSettings.width}
-                        onChange={(e) => setGridSettings(prev => ({ ...prev, width: parseInt(e.target.value) || 1 }))}
+                        min="400"
+                        max="2000"
+                        step="50"
+                        value={canvasSettings.width}
+                        onChange={(e) => setCanvasSettings(prev => ({ ...prev, width: parseInt(e.target.value) || 1200 }))}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="gridHeight">Grid Height</Label>
+                      <Label htmlFor="canvasHeight">Canvas Height (px)</Label>
                       <Input
-                        id="gridHeight"
+                        id="canvasHeight"
                         type="number"
-                        min="1"
-                        max="8"
-                        value={gridSettings.height}
-                        onChange={(e) => setGridSettings(prev => ({ ...prev, height: parseInt(e.target.value) || 1 }))}
+                        min="300"
+                        max="1500"
+                        step="50"
+                        value={canvasSettings.height}
+                        onChange={(e) => setCanvasSettings(prev => ({ ...prev, height: parseInt(e.target.value) || 800 }))}
                       />
                     </div>
                   </div>
                   
-                  <Button onClick={updateGridSize} variant="outline" size="sm">
+                  <Button onClick={updateCanvasSize} variant="outline" size="sm">
                     <Settings className="h-4 w-4 mr-2" />
-                    Update Grid Size
+                    Update Canvas Size
                   </Button>
                   
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="published">Published</Label>
-                      <p className="text-sm text-gray-500">Make grid visible to users</p>
+                      <p className="text-sm text-gray-500">Make canvas visible to users</p>
                     </div>
                     <Switch
                       id="published"
-                      checked={gridLayout.isPublished}
-                      onCheckedChange={(checked) => setGridLayout(prev => ({ ...prev, isPublished: checked }))}
+                      checked={canvasLayout.isPublished}
+                      onCheckedChange={(checked) => setCanvasLayout(prev => ({ ...prev, isPublished: checked }))}
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -864,15 +999,15 @@ export default function AdminMediaGrid() {
                     </div>
                     <Switch
                       id="live"
-                      checked={gridLayout.isLive}
-                      onCheckedChange={(checked) => setGridLayout(prev => ({ ...prev, isLive: checked }))}
+                      checked={canvasLayout.isLive}
+                      onCheckedChange={(checked) => setCanvasLayout(prev => ({ ...prev, isLive: checked }))}
                     />
                   </div>
                   <div className="text-sm text-gray-500">
-                    {mediaItems.length} items • Last saved: {formatDate(gridLayout.lastSaved)}
+                    {mediaItems.length} items • Last saved: {formatDate(canvasLayout.lastSaved)}
                   </div>
                   <p className="text-xs text-gray-400">
-                    Tip: Click a media item to select it, then click a grid cell to place it.
+                    Tip: Click a media item to select it, then click anywhere on the canvas to place it. Drag images to move them.
                   </p>
                 </div>
               </CardContent>
@@ -932,24 +1067,24 @@ export default function AdminMediaGrid() {
         </DialogContent>
       </Dialog>
 
-      {/* Cell Edit Dialog */}
+      {/* Image Edit Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Cell Properties</DialogTitle>
+            <DialogTitle>Edit Image Properties</DialogTitle>
             <DialogDescription>
-              Customize how this media item appears in the grid
+              Customize how this image appears on the canvas
             </DialogDescription>
           </DialogHeader>
-          {editingCell && editingCell.media && (
+          {selectedImage && selectedImage.media && (
             <div className="space-y-4">
               {/* Media Preview */}
               <div className="text-center">
                 <div className="w-24 h-24 mx-auto mb-2 rounded overflow-hidden">
-                  {editingCell.media.cloudinarySecureUrl ? (
+                  {selectedImage.media.cloudinarySecureUrl ? (
                     <img 
-                      src={editingCell.media.cloudinarySecureUrl} 
-                      alt={editingCell.media.name}
+                      src={selectedImage.media.cloudinarySecureUrl} 
+                      alt={selectedImage.media.name}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -958,55 +1093,57 @@ export default function AdminMediaGrid() {
                     </div>
                   )}
                 </div>
-                <p className="text-sm font-medium">{editingCell.media.name}</p>
-                <p className="text-xs text-gray-500">Position: ({editingCell.x}, {editingCell.y})</p>
+                <p className="text-sm font-medium">{selectedImage.media.name}</p>
+                <p className="text-xs text-gray-500">Position: ({Math.round(selectedImage.x)}, {Math.round(selectedImage.y)})</p>
               </div>
 
-              {/* Cell Properties */}
+              {/* Image Properties */}
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="cellSpanX">Width (columns)</Label>
+                  <Label htmlFor="imageWidth">Width (px)</Label>
                   <div className="flex items-center gap-2">
                     <Input
-                      id="cellSpanX"
+                      id="imageWidth"
                       type="number"
-                      min="1"
-                      max="6"
-                      value={editingCell.spanX || 1}
-                      onChange={(e) => setEditingCell(prev => prev ? {
-                        ...prev,
-                        spanX: parseInt(e.target.value) || 1
-                      } : null)}
+                      min="50"
+                      max="1000"
+                      step="10"
+                      value={Math.round(selectedImage.width)}
+                      onChange={(e) => {
+                        const newWidth = parseInt(e.target.value) || 200
+                        handleImageResize(selectedImage, newWidth, selectedImage.height)
+                      }}
                     />
                     <span className="text-xs text-gray-500">
-                      Current: {editingCell.spanX || 1} column{editingCell.spanX !== 1 ? 's' : ''}
+                      Current: {Math.round(selectedImage.width)}px
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    How many grid columns this image should span
+                    Image width in pixels
                   </p>
                 </div>
                 
                 <div>
-                  <Label htmlFor="cellSpanY">Height (rows)</Label>
+                  <Label htmlFor="imageHeight">Height (px)</Label>
                   <div className="flex items-center gap-2">
                     <Input
-                      id="cellSpanY"
+                      id="imageHeight"
                       type="number"
-                      min="1"
-                      max="4"
-                      value={editingCell.spanY || 1}
-                      onChange={(e) => setEditingCell(prev => prev ? {
-                        ...prev,
-                        spanY: parseInt(e.target.value) || 1
-                      } : null)}
+                      min="50"
+                      max="1000"
+                      step="10"
+                      value={Math.round(selectedImage.height)}
+                      onChange={(e) => {
+                        const newHeight = parseInt(e.target.value) || 200
+                        handleImageResize(selectedImage, selectedImage.width, newHeight)
+                      }}
                     />
                     <span className="text-xs text-gray-500">
-                      Current: {editingCell.spanY || 1} row{editingCell.spanY !== 1 ? 's' : ''}
+                      Current: {Math.round(selectedImage.height)}px
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    How many grid rows this image should span
+                    Image height in pixels
                   </p>
                 </div>
               </div>
@@ -1015,8 +1152,8 @@ export default function AdminMediaGrid() {
                 <Button variant="outline" onClick={() => setShowEditDialog(false)}>
                   Cancel
                 </Button>
-                <Button onClick={() => editingCell && handleUpdateCell(editingCell)}>
-                  Update Cell
+                <Button onClick={() => selectedImage && handleUpdateImage(selectedImage)}>
+                  Update Image
                 </Button>
               </div>
             </div>
