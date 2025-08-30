@@ -516,29 +516,83 @@ export default function AdminCourses() {
         description: "Please wait while we upload your video file.",
       })
 
-      // First, upload video to Bunny.net
-      const formDataToSend = new FormData()
-      formDataToSend.append('videoFile', formData.videoFile)
-      formDataToSend.append('title', formData.title || 'Untitled Lesson')
-      formDataToSend.append('description', formData.description || '')
+      // First, initialize TUS upload to Bunny.net
+      const videoFile = formData.videoFile
+      const fileSize = videoFile.size
+      const fileName = videoFile.name
+      const contentType = videoFile.type
 
-      const uploadResponse = await fetch('/api/admin/upload/video', {
+      console.log('🚀 Starting TUS upload for:', fileName)
+      console.log('📊 File size:', (fileSize / (1024 * 1024)).toFixed(2), 'MB')
+
+      // Initialize TUS upload
+      const tusInitResponse = await fetch('/api/admin/upload/tus', {
         method: 'POST',
         credentials: 'include',
-        body: formDataToSend
+        headers: {
+          'Content-Type': 'application/json',
+          'Upload-Length': fileSize.toString(),
+          'Upload-Metadata': `filename ${encodeURIComponent(fileName)},contentType ${encodeURIComponent(contentType)}`,
+          'Tus-Resumable': '1.0.0'
+        }
       })
 
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json()
-        throw new Error(`Failed to upload video: ${errorData.error || uploadResponse.statusText}`)
+      if (!tusInitResponse.ok) {
+        const errorData = await tusInitResponse.json()
+        throw new Error(`Failed to initialize TUS upload: ${errorData.error || tusInitResponse.statusText}`)
       }
 
-      const uploadResult = await uploadResponse.json()
+      const tusInitResult = await tusInitResponse.json()
 
-      if (!uploadResult.success || !uploadResult.videoId || !uploadResult.videoUrl) {
-        throw new Error('Video upload failed')
+      if (!tusInitResult.success || !tusInitResult.uploadUrl || !tusInitResult.videoId) {
+        throw new Error('TUS upload initialization failed')
       }
 
+      console.log('✅ TUS upload initialized:', tusInitResult.uploadId)
+      console.log('🔗 Upload URL:', tusInitResult.uploadUrl)
+
+      // Now upload the file using TUS protocol
+      const chunkSize = 5 * 1024 * 1024 // 5MB chunks (under Vercel's limit)
+      const totalChunks = Math.ceil(fileSize / chunkSize)
+      let uploadedBytes = 0
+
+      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+        const start = chunkIndex * chunkSize
+        const end = Math.min(start + chunkSize, fileSize)
+        const chunk = videoFile.slice(start, end)
+        
+        console.log(`📤 Uploading chunk ${chunkIndex + 1}/${totalChunks}: ${(chunk.size / (1024 * 1024)).toFixed(2)} MB`)
+
+        const chunkResponse = await fetch(tusInitResult.uploadUrl, {
+          method: 'PATCH',
+          headers: {
+            'Content-Length': chunk.size.toString(),
+            'Upload-Offset': uploadedBytes.toString(),
+            'Tus-Resumable': '1.0.0',
+            'Content-Type': 'application/octet-stream'
+          },
+          body: chunk
+        })
+
+        if (!chunkResponse.ok) {
+          const errorData = await chunkResponse.json()
+          throw new Error(`Failed to upload chunk ${chunkIndex + 1}: ${errorData.error || chunkResponse.statusText}`)
+        }
+
+        const chunkResult = await chunkResponse.json()
+        uploadedBytes = chunkResult.offset
+
+        // Update progress
+        const progress = ((chunkIndex + 1) / totalChunks * 100).toFixed(1)
+        toast({
+          title: "Uploading video...",
+          description: `Progress: ${progress}% (${chunkIndex + 1}/${totalChunks} chunks)`,
+        })
+
+        console.log(`✅ Chunk ${chunkIndex + 1} uploaded. Progress: ${progress}%`)
+      }
+
+      console.log('🎉 All chunks uploaded successfully!')
       toast({
         title: "Video uploaded successfully!",
         description: "Now creating lesson in database...",
@@ -555,8 +609,8 @@ export default function AdminCourses() {
           subCourseId: subCourseId,
           order: formData.order || 1,
           isPreview: formData.isPreview || false,
-          bunnyVideoId: uploadResult.videoId,
-          videoUrl: uploadResult.videoUrl
+          bunnyVideoId: tusInitResult.videoId,
+          videoUrl: `https://iframe.mediadelivery.net/embed/487497/${tusInitResult.videoId}` // Generate video URL
         })
       })
 
