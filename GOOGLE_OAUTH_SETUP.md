@@ -22,8 +22,8 @@ To enable Google login functionality, you need to set up Google OAuth credential
    - Add authorized domains (localhost for development)
 
 5. **Set Authorized Redirect URIs**
-   - Add: `http://localhost:3000/api/auth/google/callback`
-   - For production: `https://yourdomain.com/api/auth/google/callback`
+   - Add: `http://localhost:3000/api/auth/callback/google`
+   - For production: `https://yourdomain.com/api/auth/callback/google`
 
 6. **Get Your Credentials**
    - Copy the Client ID and Client Secret
@@ -31,9 +31,10 @@ To enable Google login functionality, you need to set up Google OAuth credential
 7. **Add to Environment Variables**
    Create a `.env.local` file in your project root:
    ```
-   GOOGLE_CLIENT_ID=your_client_id_here
-   GOOGLE_CLIENT_SECRET=your_client_secret_here
-   NEXT_PUBLIC_BASE_URL=http://localhost:3000
+   AUTH_GOOGLE_ID=your_client_id_here
+   AUTH_GOOGLE_SECRET=your_client_secret_here
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=your_nextauth_secret_here
    ```
 
 ## Testing:

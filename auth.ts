@@ -53,18 +53,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               name: user.name || "Google User",
               email: user.email!,
               role: "student" as const,
-              oauthProvider: "google",
+              oauthProvider: "google" as const,
               oauthId: user.id,
-              createdAt: new Date(),
-              updatedAt: new Date()
+              enrolledCourses: [], // Initialize as empty array
             };
 
-            const newUser = await db.createUser(userData);
-            user.id = newUser.insertedId.toString();
+            const newUserId = await db.createUser(userData);
+            user.id = newUserId.toString();
             user.enrolledCourses = [];
           } else {
             user.id = existingUser._id.toString();
-            user.enrolledCourses = existingUser.enrolledCourses || [];
+            user.enrolledCourses = existingUser.enrolledCourses?.map(id => id.toString()) || [];
           }
 
           return true;

@@ -34,11 +34,18 @@ export class Database {
   async createUser(user: Omit<User, "_id" | "createdAt" | "updatedAt">): Promise<ObjectId> {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
-    const result = await db.collection("users").insertOne({
+    
+    // Ensure enrolledCourses is an array of ObjectIds
+    const userData = {
       ...user,
+      enrolledCourses: Array.isArray(user.enrolledCourses) 
+        ? user.enrolledCourses 
+        : [],
       createdAt: new Date(),
       updatedAt: new Date(),
-    })
+    }
+    
+    const result = await db.collection("users").insertOne(userData)
     return result.insertedId
   }
 

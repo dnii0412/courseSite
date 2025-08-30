@@ -5,6 +5,8 @@ export interface AuthUser {
   role: "student" | "admin"
   enrolledCourses?: string[]
   phone?: string
+  oauthProvider?: "google"
+  oauthId?: string
 }
 
 export interface Course {

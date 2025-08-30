@@ -254,7 +254,7 @@ export function PaymentModal({ course, onClose }: PaymentModalProps) {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-blue-600 dark:text-blue-300">Банк:</span>
-                    <span className="font-medium text-blue-800 dark:text-blue-200">[Банкны нэр]</span>
+                    <span className="font-medium text-blue-800 dark:text-blue-200">TDB (Худалдаа хөгжлийн банк)</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-blue-600 dark:text-blue-300">Данс:</span>
@@ -273,6 +273,16 @@ export function PaymentModal({ course, onClose }: PaymentModalProps) {
                 </div>
               </div>
 
+              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800 mb-4">
+                <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">Гүйлгээний утга:</h4>
+                <div className="text-sm text-green-700 dark:text-green-300 mb-2">
+                  <p className="mb-2">Гүйлгээ хийхдээ дараах мэдээллийг <strong>заавал</strong> бичнэ үү:</p>
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border font-mono text-sm">
+                    {user?.name} - {user?.email} - {course.title}
+                  </div>
+                </div>
+              </div>
+
               <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
                 <h4 className="font-semibold text-orange-800 dark:text-orange-200 mb-2">Төлбөр шилжүүлсний дараа:</h4>
                 <div className="text-sm text-orange-700 dark:text-orange-300">
@@ -280,6 +290,7 @@ export function PaymentModal({ course, onClose }: PaymentModalProps) {
                   <div className="flex items-center justify-center bg-orange-100 dark:bg-orange-800/50 p-3 rounded-lg">
                     <span className="text-lg font-bold text-orange-800 dark:text-orange-200">99638369</span>
                   </div>
+                  <p className="mt-2 text-xs">Гүйлгээний утганд нэр, имэйл заавал бичсэн эсэхийг шалгана уу!</p>
                 </div>
               </div>
 

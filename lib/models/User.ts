@@ -4,10 +4,12 @@ export interface User {
   _id?: ObjectId
   name: string
   email: string
-  password: string
+  password?: string // Optional for OAuth users
   role: "student" | "admin"
   enrolledCourses: ObjectId[]
   googleId?: string
+  oauthProvider?: "google" // OAuth provider
+  oauthId?: string // OAuth user ID
   profilePicture?: string
   phone?: string
   address?: string
