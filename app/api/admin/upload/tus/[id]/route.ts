@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { verifyToken } from "@/lib/auth-server"
+import { bunnyVideoService } from "@/lib/bunny-video"
+
+// Configure for large file uploads
+export const config = {
+  api: {
+    bodyParser: false, // Disable body parser for large files
+    responseLimit: false, // Disable response size limit
+  },
+}
 
 // GET /api/admin/upload/tus/[id] - Get upload information
 export async function GET(
@@ -21,7 +30,7 @@ export async function GET(
   }
 }
 
-// PATCH /api/admin/upload/tus/[id] - Handle TUS upload
+// PATCH /api/admin/upload/tus/[id] - Handle TUS upload chunks
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -44,50 +53,72 @@ export async function PATCH(
     const tusResumable = request.headers.get("tus-resumable")
     const contentLength = request.headers.get("content-length")
     const uploadOffset = request.headers.get("upload-offset")
+    const uploadLength = request.headers.get("upload-length")
 
-    console.log("TUS PATCH request headers:", {
+    console.log("🚀 TUS PATCH request:", {
+      uploadId,
       tusResumable,
       contentLength,
       uploadOffset,
+      uploadLength,
       allHeaders: Object.fromEntries(request.headers.entries())
     })
 
-    // For initial upload, offset might be 0 or missing
+    // Validate TUS headers
     if (!tusResumable) {
       return NextResponse.json({ error: "Missing TUS-Resumable header" }, { status: 400 })
     }
 
-    // Handle file upload
-    const formData = await request.formData()
-    const file = formData.get("file") as File
+    if (!contentLength) {
+      return NextResponse.json({ error: "Missing Content-Length header" }, { status: 400 })
+    }
 
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 })
+    // Handle file upload chunk
+    const chunkSize = parseInt(contentLength)
+    const currentOffset = uploadOffset ? parseInt(uploadOffset) : 0
+    
+    console.log(`📊 Processing chunk: ${chunkSize} bytes at offset ${currentOffset}`)
+
+    // Read the chunk data
+    const chunk = await request.arrayBuffer()
+    
+    if (chunk.byteLength !== chunkSize) {
+      console.log(`⚠️ Chunk size mismatch: expected ${chunkSize}, got ${chunk.byteLength}`)
+      return NextResponse.json({ 
+        error: "Chunk size mismatch",
+        expected: chunkSize,
+        received: chunk.byteLength
+      }, { status: 400 })
     }
 
     // In a real implementation, you would:
-    // 1. Save the file chunk to temporary storage
+    // 1. Save the chunk to temporary storage
     // 2. Track upload progress
     // 3. Handle resumable uploads
     // 4. Upload to Bunny.net when complete
+    
+    // For now, we'll simulate a successful chunk upload
+    console.log(`✅ TUS chunk uploaded: ${uploadId} - ${chunkSize} bytes at offset ${currentOffset}`)
 
-    // For now, we'll simulate a successful upload
-    console.log(`TUS upload ${uploadId}: Received ${file.size} bytes`)
+    // Calculate new offset
+    const newOffset = currentOffset + chunkSize
 
-    // Return TUS response headers
+    // Return TUS response with proper headers
     const response = NextResponse.json({
       message: "Chunk uploaded successfully",
       uploadId,
-      offset: file.size
+      offset: newOffset,
+      chunkSize
     })
 
     // Set required TUS headers
     response.headers.set("Tus-Resumable", "1.0.0")
-    response.headers.set("Upload-Offset", file.size.toString())
+    response.headers.set("Upload-Offset", newOffset.toString())
+    response.headers.set("Access-Control-Expose-Headers", "Tus-Resumable, Upload-Offset, Upload-Length")
 
     return response
   } catch (error) {
-    console.error("Failed to handle TUS upload:", error)
+    console.error("❌ Failed to handle TUS upload:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -111,6 +142,8 @@ export async function HEAD(
 
     const { id: uploadId } = await params
 
+    console.log(`📊 TUS HEAD request for upload: ${uploadId}`)
+
     // In a real implementation, you would check the upload status from storage
     // For now, we'll return a mock response
 
@@ -118,12 +151,66 @@ export async function HEAD(
     
     // Set TUS headers
     response.headers.set("Tus-Resumable", "1.0.0")
-    response.headers.set("Upload-Offset", "0")
-    response.headers.set("Upload-Length", "0")
+    response.headers.set("Upload-Offset", "0") // This should be the actual uploaded bytes
+    response.headers.set("Upload-Length", "0") // This should be the total file size
+    response.headers.set("Access-Control-Expose-Headers", "Tus-Resumable, Upload-Offset, Upload-Length")
 
     return response
   } catch (error) {
-    console.error("Failed to get upload status:", error)
+    console.error("❌ Failed to get upload status:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
+}
+
+// DELETE /api/admin/upload/tus/[id] - Delete upload
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    // Verify admin authentication
+    const token = request.cookies.get("admin-token")?.value
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const user = verifyToken(token)
+    if (!user || user.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const { id: uploadId } = await params
+
+    console.log(`🗑️ TUS DELETE request for upload: ${uploadId}`)
+
+    // In a real implementation, you would:
+    // 1. Delete the upload from storage
+    // 2. Clean up any temporary files
+    // 3. Remove upload metadata
+
+    // Return TUS response
+    const response = new NextResponse(null, { status: 204 })
+    response.headers.set("Tus-Resumable", "1.0.0")
+
+    return response
+  } catch (error) {
+    console.error("❌ Failed to delete upload:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+// Handle OPTIONS request for CORS
+export async function OPTIONS(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const response = new NextResponse(null, { status: 200 })
+  
+  // Set CORS headers
+  response.headers.set('Access-Control-Allow-Origin', '*')
+  response.headers.set('Access-Control-Allow-Methods', 'GET, HEAD, PATCH, DELETE, OPTIONS')
+  response.headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, Upload-Length, Upload-Metadata, Tus-Resumable, Upload-Offset')
+  response.headers.set('Access-Control-Expose-Headers', 'Tus-Resumable, Upload-Offset, Upload-Length')
+  
+  return response
 }

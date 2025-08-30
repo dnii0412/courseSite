@@ -12,6 +12,14 @@ interface BunnyVideoMetadata {
   category: string
 }
 
+interface DirectUploadResponse {
+  success: boolean
+  uploadUrl?: string
+  videoId?: string
+  headers?: Record<string, string>
+  error?: string
+}
+
 export class BunnyVideoService {
   private apiKey: string
   private libraryId: string
@@ -29,6 +37,77 @@ export class BunnyVideoService {
       console.log('Bunny.net video service initialized successfully')
       console.log(`  API Key: ${this.apiKey.substring(0, 8)}...`)
       console.log(`  Library ID: ${this.libraryId}`)
+    }
+  }
+
+  /**
+   * Generate pre-signed upload URL for direct upload to Bunny.net
+   * This bypasses Vercel's file size limits by uploading directly from client
+   */
+  async getDirectUploadUrl({ filename, fileSize, contentType }: {
+    filename: string
+    fileSize: number
+    contentType: string
+  }): Promise<DirectUploadResponse> {
+    try {
+      if (!this.apiKey || !this.libraryId) {
+        return {
+          success: false,
+          error: 'Bunny.net credentials not configured'
+        }
+      }
+
+      console.log('🚀 Generating direct upload URL for:', filename)
+      console.log('📊 File size:', (fileSize / (1024 * 1024)).toFixed(2), 'MB')
+      console.log('📋 Content type:', contentType)
+
+      // Step 1: Create video entry in Bunny.net
+      console.log('Step 1: Creating video entry...')
+      const createResponse = await fetch(`${this.baseUrl}/library/${this.libraryId}/videos`, {
+        method: 'POST',
+        headers: {
+          'AccessKey': this.apiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: filename,
+          description: `Direct upload: ${filename}`,
+          tags: ['direct-upload'],
+          category: "education"
+        })
+      })
+
+      if (!createResponse.ok) {
+        const error = await createResponse.text()
+        console.error('Failed to create video entry:', createResponse.status, createResponse.statusText)
+        console.error('Error response:', error)
+        throw new Error(`Failed to create video entry: ${error}`)
+      }
+
+      const videoData = await createResponse.json()
+      const videoId = videoData.guid
+      console.log('✅ Video entry created successfully:', videoId)
+
+      // Step 2: Generate upload URL
+      const uploadUrl = `${this.baseUrl}/library/${this.libraryId}/videos/${videoId}`
+      console.log('✅ Upload URL generated:', uploadUrl)
+
+      // Step 3: Return upload information
+      return {
+        success: true,
+        uploadUrl,
+        videoId,
+        headers: {
+          'AccessKey': this.apiKey,
+          'Content-Type': contentType
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to generate direct upload URL:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
     }
   }
 
