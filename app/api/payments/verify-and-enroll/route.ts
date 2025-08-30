@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     // Check if user has a completed payment for this course
     const client = await (await import("@/lib/mongodb")).default
     const db_conn = client.db("new-era-platform")
-    
+
     const payment = await db_conn.collection("payments").findOne({
       userId: new ObjectId(user.id),
       courseId: new ObjectId(courseId),
@@ -56,36 +56,44 @@ export async function POST(request: NextRequest) {
     })
 
     if (existingEnrollment) {
-      // Update user's enrolledCourses array if not already there
-      const dbUser = await db_conn.collection("users").findOne({ _id: new ObjectId(user.id) })
-      if (dbUser && !dbUser.enrolledCourses?.includes(courseId)) {
-        await db_conn.collection("users").updateOne(
-          { _id: new ObjectId(user.id) },
-          { $addToSet: { enrolledCourses: courseId } }
-        )
-      }
+      // Ensure user has course in enrolledCourses array (single operation)
+      await db_conn.collection("users").updateOne(
+        { _id: new ObjectId(user.id) },
+        { $addToSet: { enrolledCourses: courseId } }
+      )
       return NextResponse.json({ message: "Already enrolled", enrolled: true })
     }
 
-    // Create enrollment
-    const enrollmentResult = await db_conn.collection("enrollments").insertOne({
-      userId: new ObjectId(user.id),
-      courseId: new ObjectId(courseId),
-      paymentId: payment._id,
-      enrolledAt: new Date(),
-      completedLessons: [],
-      progress: 0,
-      isActive: true,
-    })
+    // Use MongoDB transactions for atomic enrollment (faster and more reliable)
+    const mongoSession = client.startSession()
+    let enrollmentResult
 
-    // Update user's enrolledCourses array
-    await db_conn.collection("users").updateOne(
-      { _id: new ObjectId(user.id) },
-      { $addToSet: { enrolledCourses: courseId } }
-    )
+    try {
+      await mongoSession.withTransaction(async () => {
+        // Create enrollment and update user in a single transaction
+        enrollmentResult = await db_conn.collection("enrollments").insertOne({
+          userId: new ObjectId(user.id),
+          courseId: new ObjectId(courseId),
+          paymentId: payment._id,
+          enrolledAt: new Date(),
+          completedLessons: [],
+          progress: 0,
+          isActive: true,
+        }, { session: mongoSession })
 
-    return NextResponse.json({ 
-      message: "Enrollment created successfully", 
+        // Update user's enrolledCourses array
+        await db_conn.collection("users").updateOne(
+          { _id: new ObjectId(user.id) },
+          { $addToSet: { enrolledCourses: courseId } },
+          { session: mongoSession }
+        )
+      })
+    } finally {
+      await mongoSession.endSession()
+    }
+
+    return NextResponse.json({
+      message: "Enrollment created successfully",
       enrolled: true,
       enrollmentId: enrollmentResult.insertedId.toString()
     })

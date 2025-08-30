@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -22,6 +22,7 @@ interface EnrolledCourse {
 export default function LearnPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, loading: authLoading, refreshUser } = useAuth()
   const { toast } = useToast()
   const [course, setCourse] = useState<Course | null>(null)
@@ -41,16 +42,16 @@ export default function LearnPage() {
           throw new Error("Failed to fetch course")
         }
         const courseData = await courseResponse.json()
-        
+
         const targetCourse = courseData.course
         if (!targetCourse) {
           throw new Error("Course not found")
         }
-        
+
         console.log("Fetched course data:", targetCourse)
         console.log("Subcourses:", targetCourse.subCourses)
         console.log("Lessons:", targetCourse.lessons)
-        
+
         setCourse(targetCourse)
 
         // Check if user is enrolled in this course
@@ -71,8 +72,17 @@ export default function LearnPage() {
           setSubCourses(targetCourse.subCourses)
         }
 
-        // Set first lesson as selected by default
-        if (targetCourse.lessons?.length > 0) {
+        // Set lesson from URL parameter or first lesson as default
+        const lessonParam = searchParams.get('lesson')
+        if (lessonParam && targetCourse.lessons) {
+          const specificLesson = targetCourse.lessons.find(lesson => lesson._id === lessonParam)
+          if (specificLesson) {
+            setSelectedLesson(specificLesson)
+          } else {
+            // If lesson not found, default to first lesson
+            setSelectedLesson(targetCourse.lessons[0] || null)
+          }
+        } else if (targetCourse.lessons?.length > 0) {
           setSelectedLesson(targetCourse.lessons[0])
         }
 
@@ -103,7 +113,7 @@ export default function LearnPage() {
     if (params.id && !authLoading) {
       fetchData()
     }
-  }, [params.id, user, authLoading, router])
+  }, [params.id, user, authLoading, router, searchParams])
 
   // Refresh user data when component mounts (in case admin granted access)
   useEffect(() => {
@@ -313,7 +323,7 @@ export default function LearnPage() {
                 <div className="space-y-4">
                   {subCourses.map((subCourse) => {
                     const subCourseLessons = course.lessons?.filter(lesson => lesson.subCourseId === subCourse._id) || []
-                    
+
                     return (
                       <div key={subCourse._id} className="space-y-2">
                         {/* Sub-course header */}
@@ -334,51 +344,51 @@ export default function LearnPage() {
                           {subCourseLessons
                             .sort((a, b) => a.order - b.order)
                             .map((lesson) => (
-                            <div
-                              key={lesson._id}
-                              className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedLesson?._id === lesson._id
-                                ? 'border-primary bg-primary/5'
-                                : 'border-border hover:border-primary/50'
-                                }`}
-                              onClick={() => handleLessonSelect(lesson)}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2 min-w-0 flex-1">
-                                  {getLessonIcon(lesson)}
-                                  <span className="font-medium text-sm text-foreground truncate">
-                                    {lesson.order}. {lesson.title}
-                                  </span>
+                              <div
+                                key={lesson._id}
+                                className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedLesson?._id === lesson._id
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-primary/50'
+                                  }`}
+                                onClick={() => handleLessonSelect(lesson)}
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    {getLessonIcon(lesson)}
+                                    <span className="font-medium text-sm text-foreground truncate">
+                                      {lesson.order}. {lesson.title}
+                                    </span>
+                                  </div>
+                                  <div className="ml-2 flex-shrink-0">
+                                    {getLessonBadge(lesson)}
+                                  </div>
                                 </div>
-                                <div className="ml-2 flex-shrink-0">
-                                  {getLessonBadge(lesson)}
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Clock className="w-3 h-3" />
+                                    <span>{lesson.duration} мин</span>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      if (lesson._id) handleMarkAsDone(lesson._id)
+                                    }}
+                                    className={`h-6 px-2 ${lesson._id && isLessonCompleted(lesson._id) ? 'text-green-600' : 'text-muted-foreground hover:text-green-600'}`}
+                                  >
+                                    {lesson._id && isLessonCompleted(lesson._id) ? (
+                                      <Check className="w-3 h-3" />
+                                    ) : (
+                                      <Check className="w-3 h-3" />
+                                    )}
+                                  </Button>
                                 </div>
                               </div>
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                  <Clock className="w-3 h-3" />
-                                  <span>{lesson.duration} мин</span>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    if (lesson._id) handleMarkAsDone(lesson._id)
-                                  }}
-                                  className={`h-6 px-2 ${lesson._id && isLessonCompleted(lesson._id) ? 'text-green-600' : 'text-muted-foreground hover:text-green-600'}`}
-                                >
-                                  {lesson._id && isLessonCompleted(lesson._id) ? (
-                                    <Check className="w-3 h-3" />
-                                  ) : (
-                                    <Check className="w-3 h-3" />
-                                  )}
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
+                            ))}
+                        </div>
                       </div>
-                    </div>
-                  )
+                    )
                   })}
 
                   {/* Show lessons without sub-course if any */}

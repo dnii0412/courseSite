@@ -78,7 +78,11 @@ export interface Payment {
   courseId: string
   amount: number
   status: "pending" | "completed" | "failed"
+  paymentMethod?: "qpay" | "byl" | "bank_transfer"
   qpayTransactionId?: string
+  bylInvoiceId?: number
+  bylCheckoutId?: number
+  bankTransferReference?: string
   createdAt: Date
   updatedAt: Date
 }

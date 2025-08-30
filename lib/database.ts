@@ -191,6 +191,15 @@ export class Database {
     return result.deletedCount > 0
   }
 
+  async getCourseEnrollmentCount(courseId: ObjectId): Promise<number> {
+    const client = await this.getClient()
+    const db = client.db("new-era-platform")
+    return await db.collection("enrollments").countDocuments({ 
+      courseId, 
+      isActive: true 
+    })
+  }
+
   // Payment operations
   async createPayment(payment: Omit<Payment, "_id" | "createdAt" | "updatedAt">): Promise<ObjectId> {
     const client = await this.getClient()

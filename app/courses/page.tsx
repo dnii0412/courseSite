@@ -1,30 +1,106 @@
+"use client"
+
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { Star, Users, Play } from "lucide-react"
+import { Filter } from "lucide-react"
 import type { Course } from "@/lib/types"
-import { getDisplayTitle, getDisplayDescription, getDisplayCategory } from "@/lib/course-utils"
+import { getDisplayTitle, getDisplayDescription } from "@/lib/course-utils"
+import { useAuth } from "@/lib/hooks/useAuth"
+import { useEffect, useState } from "react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CourseCard } from "@/components/course/CourseCard"
+import { CourseCardSkeleton } from "@/components/course/CourseCard.skeleton"
 
-export default async function CoursesPage() {
-  // Server-side data fetching
-  let courses: Course[] = []
+interface CourseWithProgress extends Course {
+  progress?: number
+  completedLessons?: number
+  enrollmentId?: string
+}
 
-  try {
-    // Use absolute URL for server-side fetching
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://edunewera.mn')
+type SortOption = "all" | "enrolled" | "not-enrolled"
 
-    const response = await fetch(`${baseUrl}/api/courses`, { next: { revalidate: 60 } })
-    if (response.ok) {
-      const data = await response.json()
-      courses = data.courses || []
+export default function CoursesPage() {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const [allCourses, setAllCourses] = useState<Course[]>([])
+  const [dataLoading, setDataLoading] = useState(true)
+  const [sortOption, setSortOption] = useState<SortOption>("all")
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setDataLoading(true)
+
+        // Always show all available courses on the main courses page
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL ||
+          (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://edunewera.mn')
+
+        const response = await fetch(`${baseUrl}/api/courses`)
+        if (response.ok) {
+          const data = await response.json()
+          setAllCourses(data.courses || [])
+        }
+      } catch (error) {
+        console.error("Error fetching courses:", error)
+      } finally {
+        setDataLoading(false)
+      }
     }
-  } catch (error) {
-    console.error("Error fetching courses:", error)
-    courses = []
+
+    if (!loading) {
+      fetchCourses()
+    }
+  }, [loading])
+
+  if (loading || dataLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Ачааллаж байна...</div>
+        </div>
+      </div>
+    )
+  }
+
+  // Helper function to check if user is enrolled in a specific course
+  const isUserEnrolledInCourse = (courseId: string) => {
+    return user?.enrolledCourses?.includes(courseId) || false
+  }
+
+  // Filter courses based on sort option
+  const displayCourses = allCourses.filter(course => {
+    if (!user) return true // Show all courses if user is not logged in
+
+    switch (sortOption) {
+      case "enrolled":
+        return isUserEnrolledInCourse(course._id || '')
+      case "not-enrolled":
+        return !isUserEnrolledInCourse(course._id || '')
+      case "all":
+      default:
+        return true
+    }
+  })
+
+  // Handler functions for course actions
+  const handleCourseOpen = (courseId: string) => {
+    router.push(`/courses/${courseId}`)
+  }
+
+  const handleCourseBuy = (courseId: string) => {
+    if (!user) {
+      router.push('/register')
+      return
+    }
+    router.push(`/courses/${courseId}`)
+  }
+
+  const handleCourseContinue = (courseId: string) => {
+    router.push(`/courses/${courseId}/learn`)
   }
 
   return (
@@ -34,67 +110,64 @@ export default async function CoursesPage() {
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16">
         <div className="text-center space-y-6">
-          <h1 className="text-5xl lg:text-6xl font-bold text-foreground">Бүх хичээлүүд</h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Мэргэжлийн багш нартай, чанартай видео хичээллүүдээр таны ур чадварыг хөгжүүлнэ
-          </p>
+          <h1 className="text-5xl lg:text-6xl font-bold text-foreground">
+            Бүх хичээлүүд
+          </h1>
         </div>
       </section>
 
+      {/* Sorting Controls */}
+      {user && (
+        <section className="container mx-auto px-4 pb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Filter className="w-5 h-5 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Хичээл шүүх:</span>
+              <Select value={sortOption} onValueChange={(value: SortOption) => setSortOption(value)}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Хичээл сонгох" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Бүх хичээлүүд</SelectItem>
+                  <SelectItem value="enrolled">Миний худалдаж авсан</SelectItem>
+                  <SelectItem value="not-enrolled">Худалдаж аваагүй</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {displayCourses.length} хичээл олдлоо
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Courses Grid */}
       <section className="container mx-auto px-4 pb-20">
-        {courses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {courses.map((course) => (
-              <Card key={course._id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                <div className="aspect-video bg-muted relative">
-                  {course.thumbnailUrl ? (
-                    <img
-                      src={course.thumbnailUrl}
-                      alt={course.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center">
-                      <Play className="w-16 h-16 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className="absolute top-4 right-4">
-                    <Badge className="bg-[#5B7FFF] text-white">
-                      {course.category || "Хичээл"}
-                    </Badge>
-                  </div>
-                </div>
-
-                <CardHeader className="p-6">
-                  <CardTitle className="text-xl font-bold text-card-foreground mb-2">
-                    {getDisplayTitle(course.title)}
-                  </CardTitle>
-                  <p className="text-muted-foreground line-clamp-2 mb-4">
-                    {getDisplayDescription(course.title, course.description)}
-                  </p>
-
-                  <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 text-yellow-500" />
-                      <span>{course.rating || "4.8"}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      <span>{course.enrolledCount || 0}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="text-2xl font-bold text-[#5B7FFF]">
-                      ₮{course.price?.toLocaleString() || "0"}
-                    </div>
-                    <Button asChild className="bg-[#5B7FFF] hover:bg-[#4A6FE7]">
-                      <Link href={`/courses/${course._id}`}>Дэлгэрэнгүй</Link>
-                    </Button>
-                  </div>
-                </CardHeader>
-              </Card>
+        {dataLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <CourseCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : displayCourses.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayCourses.map((course) => (
+              <CourseCard
+                key={course._id}
+                id={course._id || ''}
+                title={getDisplayTitle(course.title)}
+                description={getDisplayDescription(course.title, course.description)}
+                thumbnailUrl={course.thumbnailUrl}
+                rating={course.rating}
+                studentsCount={course.enrolledCount}
+                priceMnt={course.price}
+                isEnrolled={isUserEnrolledInCourse(course._id || '')}
+                progressPct={0} // TODO: Add progress tracking
+                teacherBadge={course.category}
+                onOpen={handleCourseOpen}
+                onBuy={handleCourseBuy}
+                onContinue={handleCourseContinue}
+              />
             ))}
           </div>
         ) : (

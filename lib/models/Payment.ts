@@ -11,7 +11,8 @@ export interface Payment {
   bylInvoiceId?: number
   bylCheckoutId?: number
   status: "pending" | "completed" | "failed" | "refunded"
-  paymentMethod: "qpay" | "byl"
+  paymentMethod: "qpay" | "byl" | "bank_transfer"
+  bankTransferReference?: string
   createdAt: Date
   updatedAt: Date
 }

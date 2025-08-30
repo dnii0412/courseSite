@@ -30,25 +30,38 @@ export function CourseEnrollmentClient({ course }: CourseEnrollmentClientProps) 
 
     const checkPaymentAndEnrollment = async () => {
         try {
-            // Wait a bit for webhook to process
-            await new Promise(resolve => setTimeout(resolve, 2000))
+            // Reduce initial delay from 2s to 500ms
+            await new Promise(resolve => setTimeout(resolve, 500))
             
-            // Try to verify payment and create enrollment if needed
-            const response = await fetch('/api/payments/verify-and-enroll', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    courseId: course._id
+            // Try multiple times with shorter intervals for faster response
+            let attempts = 0
+            const maxAttempts = 6 // Total 3 seconds max (6 * 500ms)
+            
+            while (attempts < maxAttempts) {
+                const response = await fetch('/api/payments/verify-and-enroll', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        courseId: course._id
+                    })
                 })
-            })
 
-            if (response.ok) {
-                const data = await response.json()
-                if (data.enrolled) {
-                    // Refresh user data to get latest enrollment
-                    await refreshUser()
+                if (response.ok) {
+                    const data = await response.json()
+                    if (data.enrolled) {
+                        // Refresh user data to get latest enrollment
+                        await refreshUser()
+                        setCheckingPayment(false)
+                        return // Success, exit early
+                    }
+                }
+                
+                attempts++
+                if (attempts < maxAttempts) {
+                    // Wait 500ms before next attempt
+                    await new Promise(resolve => setTimeout(resolve, 500))
                 }
             }
             
@@ -81,8 +94,11 @@ export function CourseEnrollmentClient({ course }: CourseEnrollmentClientProps) 
                             Төлбөр шалгаж байна...
                         </div>
                         <p className="text-sm text-blue-600/80 dark:text-blue-400/80">
-                            Таны төлбөр амжилттай төлөгдсөн эсэхийг шалгаж байна
+                            Төлбөр баталгаажуулж хичээлд бүртгэж байна. Энэ нь хэдхэн секунд үргэлжилнэ.
                         </p>
+                        <div className="mt-3 text-xs text-blue-500 dark:text-blue-300">
+                            Хуудсыг хаахгүй байна уу...
+                        </div>
                     </div>
                 </div>
             )

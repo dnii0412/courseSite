@@ -61,9 +61,9 @@ export async function POST(request: NextRequest) {
       })
 
       // Create Byl checkout
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
-         process.env.NODE_ENV === 'production' ? 'https://edunewera.mn' : 'http://localhost:3000')
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL ||
+        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
+          process.env.NODE_ENV === 'production' ? 'https://edunewera.mn' : 'http://localhost:3000')
       const checkoutData = {
         cancel_url: `${baseUrl}/courses/${courseId}`,
         success_url: `${baseUrl}/courses/${courseId}?payment_success=true`,
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
             quantity: 1
           }
         ],
-        phone_number_collection: true,
+        phone_number_collection: false,
         customer_email: user.email,
         client_reference_id: courseId
       }

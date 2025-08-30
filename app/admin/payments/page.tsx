@@ -17,11 +17,12 @@ interface Payment {
   amount: number
   currency: string
   status: "pending" | "completed" | "failed" | "refunded"
-  paymentMethod: "qpay" | "byl"
+  paymentMethod: "qpay" | "byl" | "bank_transfer"
   qpayInvoiceId?: string
   qpayTransactionId?: string
   bylInvoiceId?: number
   bylCheckoutId?: number
+  bankTransferReference?: string
   createdAt: string
   user?: {
     name: string
@@ -44,6 +45,7 @@ export default function AdminPayments() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [methodFilter, setMethodFilter] = useState("all")
   const [stats, setStats] = useState<PaymentStats>({
     total: 0,
     successful: 0,
@@ -66,13 +68,13 @@ export default function AdminPayments() {
         router.push("/admin/login")
         return
       }
-      
+
       const data = await response.json()
       if (data.user.role !== "admin") {
         router.push("/admin/login")
         return
       }
-      
+
       fetchPayments()
     } catch (error) {
 
@@ -153,8 +155,44 @@ export default function AdminPayments() {
         return <Badge className="bg-blue-100 text-blue-800">QPay</Badge>
       case "byl":
         return <Badge className="bg-purple-100 text-purple-800">Byl</Badge>
+      case "bank_transfer":
+        return <Badge className="bg-green-100 text-green-800">Банк шилжүүлэг</Badge>
       default:
         return <Badge variant="secondary">{paymentMethod}</Badge>
+    }
+  }
+
+  const confirmBankTransfer = async (paymentId: string, reference?: string) => {
+    try {
+      const response = await fetch("/api/payments/bank-transfer/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentId,
+          transactionReference: reference
+        }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Амжилттай",
+          description: "Банк шилжүүлгийн төлбөр баталгаажлаа",
+        })
+        fetchPayments() // Refresh the list
+      } else {
+        const error = await response.json()
+        toast({
+          title: "Алдаа",
+          description: error.error || "Төлбөр баталгаажуулахад алдаа гарлаа",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Алдаа",
+        description: "Төлбөр баталгаажуулахад алдаа гарлаа",
+        variant: "destructive"
+      })
     }
   }
 
@@ -172,21 +210,22 @@ export default function AdminPayments() {
     const now = new Date()
     const diffInMs = now.getTime() - date.getTime()
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
-    
+
     if (diffInDays === 0) return "Today"
     if (diffInDays === 1) return "1 day ago"
     return `${diffInDays} days ago`
   }
 
   const filteredPayments = payments.filter(payment => {
-    const matchesSearch = 
+    const matchesSearch =
       payment.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.course?.title?.toLowerCase().includes(searchTerm.toLowerCase())
-    
+
     const matchesStatus = statusFilter === "all" || payment.status === statusFilter
-    
-    return matchesSearch && matchesStatus
+    const matchesMethod = methodFilter === "all" || payment.paymentMethod === methodFilter
+
+    return matchesSearch && matchesStatus && matchesMethod
   })
 
   if (loading) {
@@ -277,6 +316,17 @@ export default function AdminPayments() {
                 <SelectItem value="refunded">Буцаагдсан</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={methodFilter} onValueChange={setMethodFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Бүх төрөл</SelectItem>
+                <SelectItem value="qpay">QPay</SelectItem>
+                <SelectItem value="byl">Byl</SelectItem>
+                <SelectItem value="bank_transfer">Банк шилжүүлэг</SelectItem>
+              </SelectContent>
+            </Select>
             <Button variant="outline" onClick={handleRefresh}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Шинэчлэх
@@ -315,10 +365,27 @@ export default function AdminPayments() {
                         {getStatusBadge(payment.status)}
                         {getPaymentMethodBadge(payment.paymentMethod)}
                       </div>
+                      {payment.bankTransferReference && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Ref: {payment.bankTransferReference}
+                        </div>
+                      )}
                     </div>
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {payment.paymentMethod === "bank_transfer" && payment.status === "pending" && (
+                        <Button
+                          onClick={() => confirmBankTransfer(payment._id, payment.bankTransferReference)}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Баталгаажуулах
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))

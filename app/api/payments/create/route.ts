@@ -18,8 +18,8 @@ export async function POST(request: NextRequest) {
 
     const { courseId, phoneNumber } = await request.json()
 
-    if (!courseId || !phoneNumber) {
-      return NextResponse.json({ error: "Course ID and phone number are required" }, { status: 400 })
+    if (!courseId) {
+      return NextResponse.json({ error: "Course ID is required" }, { status: 400 })
     }
 
     // Test database connection first
@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
       await db.getStats() // Simple database test
     } catch (dbError) {
       console.error("Database connection error:", dbError)
-      return NextResponse.json({ 
-        error: "Database connection failed", 
+      return NextResponse.json({
+        error: "Database connection failed",
         details: dbError instanceof Error ? dbError.message : "Unknown database error"
       }, { status: 500 })
     }
@@ -66,16 +66,16 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("Payment creation error:", error)
-    
+
     // Log more details for debugging
     if (error instanceof Error) {
       console.error("Error name:", error.name)
       console.error("Error message:", error.message)
       console.error("Error stack:", error.stack)
     }
-    
-    return NextResponse.json({ 
-      error: "Failed to create payment", 
+
+    return NextResponse.json({
+      error: "Failed to create payment",
       details: error instanceof Error ? error.message : "Unknown error",
       timestamp: new Date().toISOString()
     }, { status: 500 })

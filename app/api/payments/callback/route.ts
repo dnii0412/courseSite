@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const payment = await db_conn.collection("payments").findOne({ qpayInvoiceId: invoice_id })
 
     if (!payment) {
-      
+
       return NextResponse.json({ error: "Payment not found" }, { status: 404 })
     }
 
