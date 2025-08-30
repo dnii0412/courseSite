@@ -524,6 +524,12 @@ export default function AdminCourses() {
 
       console.log('🚀 Starting TUS upload for:', fileName)
       console.log('📊 File size:', (fileSize / (1024 * 1024)).toFixed(2), 'MB')
+      console.log('📋 File details:', {
+        name: fileName,
+        size: fileSize,
+        type: contentType,
+        lastModified: videoFile.lastModified
+      })
 
       // Initialize TUS upload
       const tusInitResponse = await fetch('/api/admin/upload/tus', {
@@ -534,7 +540,12 @@ export default function AdminCourses() {
           'Upload-Length': fileSize.toString(),
           'Upload-Metadata': `filename ${encodeURIComponent(fileName)},contentType ${encodeURIComponent(contentType)}`,
           'Tus-Resumable': '1.0.0'
-        }
+        },
+        body: JSON.stringify({
+          filename: fileName,
+          fileSize: fileSize,
+          contentType: contentType
+        })
       })
 
       if (!tusInitResponse.ok) {

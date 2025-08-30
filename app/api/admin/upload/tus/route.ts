@@ -118,14 +118,30 @@ export async function POST(request: NextRequest) {
     const fileExtension = filename.split('.').pop()?.toLowerCase()
     const allowedExtensions = ["mp4", "avi", "mov", "wmv", "flv", "webm"]
     
+    console.log('🔍 File type validation details:', {
+      contentType,
+      fileExtension,
+      allowedTypes,
+      allowedExtensions,
+      contentTypeInAllowedTypes: allowedTypes.includes(contentType),
+      fileExtensionInAllowedExtensions: fileExtension && allowedExtensions.includes(fileExtension)
+    })
+    
     const isValidType = allowedTypes.includes(contentType) || 
                        (fileExtension && allowedExtensions.includes(fileExtension))
     
     if (!isValidType) {
       console.log("❌ Invalid file type:", { contentType, fileExtension })
+      console.log("❌ Validation failed - neither content type nor extension is allowed")
       return NextResponse.json({ 
         error: "Unsupported file type",
-        details: { contentType, fileExtension, allowedTypes, allowedExtensions }
+        details: { 
+          contentType, 
+          fileExtension, 
+          allowedTypes, 
+          allowedExtensions,
+          reason: "File type not in allowed list and extension not recognized"
+        }
       }, { status: 400 })
     }
 
