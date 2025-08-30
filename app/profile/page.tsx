@@ -65,27 +65,17 @@ export default function ProfilePage() {
               {statsLoading ? "..." : (safeStats.completedCourses ?? 0)}
             </span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">Элссэн курс:</span>
-            <span className="font-semibold">
-              {user?.enrolledCourses?.length ?? 0}
-            </span>
-          </div>
         </div>
       )
     } catch (error) {
       return (
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">Нийт хичээл:</span>
+            <span className="text-muted-foreground">Элссэн хичээлүүд=:</span>
             <span className="font-semibold">0</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-muted-foreground">Дууссан хичээл:</span>
-            <span className="font-semibold">0</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">Элссэн курс:</span>
             <span className="font-semibold">0</span>
           </div>
         </div>

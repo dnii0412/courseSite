@@ -140,7 +140,6 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats?.enrolledCourses || 0}</div>
-              <Progress value={Math.min(((stats?.enrolledCourses || 0) / 10) * 100, 100)} className="mt-2" />
             </CardContent>
           </Card>
 
@@ -151,7 +150,6 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats?.completedLessons || 0}</div>
-              <Progress value={stats?.completedLessons ? Math.min((stats.completedLessons / 50) * 100, 100) : 0} className="mt-2" />
             </CardContent>
           </Card>
 
@@ -238,19 +236,8 @@ export default function DashboardPage() {
                     <h3 className="font-semibold text-foreground mb-2">{course.title}</h3>
                     <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{course.description}</p>
 
-                    {/* Progress Bar */}
-                    <div className="mb-3">
-                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                        <span>Төлөв</span>
-                        <span>{course.progress && course.progress > 0 ? `${course.progress}%` : 'Эхлээгүй'}</span>
-                      </div>
-                      <Progress value={course.progress || 0} className="h-2" />
-                       {course.completedLessons !== undefined && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Дууссан хичээл: {course.completedLessons}
-                        </div>
-                      )}
-                    </div>
+                    {/* Progress Info */}
+                   
 
                     <div className="flex items-center justify-between">
                       <Badge variant="secondary">{course.category}</Badge>
