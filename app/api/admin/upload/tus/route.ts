@@ -13,58 +13,101 @@ export const config = {
 // POST /api/admin/upload/tus - Initialize TUS upload
 export async function POST(request: NextRequest) {
   try {
+    console.log('🎥 TUS upload initialization request received')
+    
     // Verify admin authentication
     const token = request.cookies.get("admin-token")?.value
     if (!token) {
+      console.log('❌ No admin token found')
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const user = verifyToken(token)
     if (!user || user.role !== "admin") {
+      console.log('❌ Invalid admin token or user role')
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    // Get upload metadata from headers
-    const uploadLength = request.headers.get('upload-length')
-    const uploadMetadata = request.headers.get('upload-metadata')
-    const tusResumable = request.headers.get('tus-resumable')
+    console.log('✅ Admin authentication successful')
 
-    console.log('🚀 TUS Upload Request:', {
+    // Get upload metadata from headers OR request body
+    let uploadLength = request.headers.get('upload-length')
+    let uploadMetadata = request.headers.get('upload-metadata')
+    let tusResumable = request.headers.get('tus-resumable')
+    let filename = 'unknown'
+    let contentType = 'application/octet-stream'
+    let fileSize = 0
+
+    console.log('📋 Request headers received:', {
       uploadLength,
       uploadMetadata,
       tusResumable,
-      allHeaders: Object.fromEntries(request.headers.entries())
+      contentType: request.headers.get('content-type')
     })
 
-    if (!uploadLength) {
+    // Check if this is a JSON request (frontend approach)
+    const contentTypeHeader = request.headers.get('content-type')
+    if (contentTypeHeader && contentTypeHeader.includes('application/json')) {
+      console.log('📋 Detected JSON request, reading from body...')
+      
+      try {
+        const body = await request.json()
+        console.log('📋 Request body:', body)
+        
+        // Extract data from JSON body
+        fileSize = body.fileSize || parseInt(uploadLength || '0')
+        filename = body.filename || 'unknown'
+        contentType = body.contentType || 'application/octet-stream'
+        
+        // Set TUS headers for compatibility
+        uploadLength = fileSize.toString()
+        uploadMetadata = `filename ${encodeURIComponent(filename)},contentType ${encodeURIComponent(contentType)}`
+        tusResumable = '1.0.0'
+        
+        console.log('📋 Extracted from JSON body:', { fileSize, filename, contentType })
+      } catch (bodyError) {
+        console.log('⚠️ Failed to parse JSON body:', bodyError)
+        // Fall back to header-based approach
+      }
+    }
+
+    // If still no file size, try to get it from headers
+    if (!fileSize && uploadLength) {
+      fileSize = parseInt(uploadLength)
+    }
+
+    if (!fileSize || fileSize <= 0) {
+      console.log('❌ No valid file size found in headers or body')
       return NextResponse.json({ 
-        error: "Missing Upload-Length header",
-        details: "TUS requires Upload-Length header for file size"
+        error: "Missing or invalid file size",
+        details: "Please provide fileSize in request body or Upload-Length header"
       }, { status: 400 })
     }
 
-    const fileSize = parseInt(uploadLength)
     const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2)
     console.log(`📊 File size: ${fileSizeMB} MB (${fileSize} bytes)`)
 
-    // Parse metadata if provided
-    let filename = 'unknown'
-    let contentType = 'application/octet-stream'
-    
-    if (uploadMetadata) {
-      const metadata = uploadMetadata.split(',').reduce((acc, item) => {
-        const [key, value] = item.split(' ')
-        if (key && value) {
-          acc[key] = decodeURIComponent(value)
-        }
-        return acc
-      }, {} as Record<string, string>)
-      
-      filename = metadata.filename || 'unknown'
-      contentType = metadata.contentType || 'application/octet-stream'
+    // Parse metadata if provided in headers
+    if (uploadMetadata && !filename) {
+      try {
+        const metadata = uploadMetadata.split(',').reduce((acc, item) => {
+          const [key, value] = item.split(' ')
+          if (key && value) {
+            acc[key] = decodeURIComponent(value)
+          }
+          return acc
+        }, {} as Record<string, string>)
+        
+        filename = metadata.filename || 'unknown'
+        contentType = metadata.contentType || 'application/octet-stream'
+        
+        console.log('📋 Parsed metadata from headers:', metadata)
+      } catch (metadataError) {
+        console.log('⚠️ Failed to parse metadata from headers, using defaults:', metadataError)
+      }
     }
 
-    console.log(`📋 File info: ${filename} (${contentType})`)
+    console.log(`📋 Final file info: ${filename} (${contentType})`)
 
     // Validate file type
     const allowedTypes = [
@@ -86,6 +129,8 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
+    console.log('✅ File type validation passed')
+
     // Test Bunny.net connection
     console.log('🔗 Testing Bunny.net connection...')
     const connectionTest = await bunnyVideoService.testConnection()
@@ -97,6 +142,8 @@ export async function POST(request: NextRequest) {
       }, { status: 503 })
     }
 
+    console.log('✅ Bunny.net connection test successful')
+
     // Create video entry in Bunny.net
     console.log('🚀 Creating video entry in Bunny.net...')
     const videoEntry = await bunnyVideoService.getDirectUploadUrl({
@@ -104,6 +151,8 @@ export async function POST(request: NextRequest) {
       fileSize,
       contentType
     })
+
+    console.log('📋 Video entry result:', videoEntry)
 
     if (!videoEntry.success || !videoEntry.videoId) {
       console.log('❌ Failed to create video entry:', videoEntry.error)
@@ -124,6 +173,7 @@ export async function POST(request: NextRequest) {
 
     // Return TUS-compatible response with proper headers
     const response = NextResponse.json({
+      success: true,
       uploadUrl,
       uploadId,
       videoId: videoEntry.videoId,
@@ -147,7 +197,10 @@ export async function POST(request: NextRequest) {
       }, { status: 413 })
     }
     
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : "Internal server error",
+      details: "Check server logs for more information"
+    }, { status: 500 })
   }
 }
 
