@@ -137,6 +137,11 @@ export function useAuth() {
     } catch (error) {
       // console.log("Logout API call failed")
     }
+    
+    // Refresh the page after logout to clear any cached data
+    setTimeout(() => {
+      window.location.reload()
+    }, 100)
   }
 
   const refreshUser = async (): Promise<void> => {

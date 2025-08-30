@@ -48,16 +48,17 @@ export function CourseEnrollmentClient({ course }: CourseEnrollmentClientProps) 
 
                 if (response.ok) {
                     const data = await response.json()
-                    if (data.enrolled) {
+                                        if (data.enrolled) {
                         // Refresh user data to get latest enrollment
                         await refreshUser()
                         setCheckingPayment(false)
-
-                        // Force a page refresh to ensure UI updates immediately
-                        setTimeout(() => {
-                            window.location.reload()
-                        }, 100)
-
+                        
+                        // Remove the payment_success parameter to prevent infinite loop
+                        const url = new URL(window.location.href)
+                        url.searchParams.delete('payment_success')
+                        url.searchParams.delete('t')
+                        window.history.replaceState({}, '', url.toString())
+                        
                         return // Success, exit early
                     }
                 }
