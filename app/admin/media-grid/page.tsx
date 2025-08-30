@@ -79,6 +79,7 @@ export default function AdminMediaGrid() {
     width: 6,
     height: 4
   })
+  const [draggedMedia, setDraggedMedia] = useState<MediaItem | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const { toast } = useToast()
@@ -468,11 +469,36 @@ export default function AdminMediaGrid() {
                   {mediaItems.map((item, index) => (
                     <div
                       key={item._id || `media-${index}`}
-                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                      className={`p-3 border rounded-lg cursor-grab active:cursor-grabbing transition-colors ${
                         selectedMedia?._id === item._id 
                           ? 'border-blue-500 bg-blue-50' 
                           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                       }`}
+                      draggable={true}
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('text/plain', item._id || '')
+                        e.dataTransfer.effectAllowed = 'copy'
+                        setDraggedMedia(item)
+                        // Set drag image to show the actual image
+                        if (item.cloudinarySecureUrl) {
+                          const img = new Image()
+                          img.src = item.cloudinarySecureUrl
+                          img.onload = () => {
+                            const canvas = document.createElement('canvas')
+                            const ctx = canvas.getContext('2d')
+                            if (ctx) {
+                              canvas.width = 120
+                              canvas.height = 120
+                              ctx.drawImage(img, 0, 0, 120, 120)
+                              e.dataTransfer.setDragImage(canvas, 60, 60)
+                            }
+                          }
+                        }
+                        setSelectedMedia(item)
+                      }}
+                      onDragEnd={() => {
+                        setDraggedMedia(null)
+                      }}
                       onClick={() => setSelectedMedia(item)}
                     >
                       <div className="flex items-center gap-3">
@@ -545,6 +571,13 @@ export default function AdminMediaGrid() {
                     <p>Total Span: {gridLayout.cells.reduce((total, c) => total + ((c.spanX || 1) * (c.spanY || 1)), 0)} cells</p>
                   </div>
                 </div>
+                {draggedMedia && (
+                  <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-700">
+                      🖱️ <strong>Dragging:</strong> {draggedMedia.name} - Drop it on a grid cell to place it
+                    </p>
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 {selectedMedia && (
@@ -586,6 +619,47 @@ export default function AdminMediaGrid() {
                           ? 'bg-gray-200 border-gray-300 cursor-not-allowed'
                           : 'bg-gray-50 hover:bg-gray-100'
                       }`}
+                      onDragOver={(e) => {
+                        e.preventDefault()
+                        if (!isCellOccupied(cell.x, cell.y)) {
+                          e.currentTarget.style.borderColor = '#3B82F6'
+                          e.currentTarget.style.backgroundColor = '#DBEAFE'
+                        }
+                      }}
+                      onDragLeave={(e) => {
+                        e.currentTarget.style.borderColor = ''
+                        e.currentTarget.style.backgroundColor = ''
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault()
+                        e.currentTarget.style.borderColor = ''
+                        e.currentTarget.style.backgroundColor = ''
+                        
+                        const mediaId = e.dataTransfer.getData('text/plain')
+                        if (mediaId && !isCellOccupied(cell.x, cell.y)) {
+                          const mediaItem = mediaItems.find(item => item._id === mediaId)
+                          if (mediaItem) {
+                            // Use the same logic as handleCellClick
+                            const updatedCells = gridLayout.cells.map(c => 
+                              c.x === cell.x && c.y === cell.y 
+                                ? { 
+                                    ...c, 
+                                    mediaId: mediaItem._id, 
+                                    media: mediaItem,
+                                    spanX: 1,  // Default to 1x1, can be edited later
+                                    spanY: 1
+                                  }
+                                : c
+                            )
+                            setGridLayout(prev => ({ ...prev, cells: updatedCells }))
+                            setSelectedMedia(null)
+                            toast({
+                              title: "Success",
+                              description: `Added ${mediaItem.name} to grid position (${cell.x}, ${cell.y}) via drag & drop. Click the image to edit size.`
+                            })
+                          }
+                        }
+                      }}
                       onClick={() => !isCellOccupied(cell.x, cell.y) && handleCellClick(cell)}
                     >
                       {cell.mediaId && cell.media ? (

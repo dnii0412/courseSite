@@ -46,25 +46,8 @@ interface PublicMediaGridProps {
 }
 
 export default function PublicMediaGrid({ gridLayout, loading = false }: PublicMediaGridProps) {
-  const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
-
-  useEffect(() => {
-    // Check screen size
-    const checkScreenSize = () => {
-      if (window.innerWidth < 640) {
-        setScreenSize('mobile')
-      } else if (window.innerWidth < 1024) {
-        setScreenSize('tablet')
-      } else {
-        setScreenSize('desktop')
-      }
-    }
-    
-    checkScreenSize()
-    window.addEventListener('resize', checkScreenSize)
-    
-    return () => window.removeEventListener('resize', checkScreenSize)
-  }, [])
+  // Fixed grid - no need for screen size detection
+  const screenSize = 'desktop'
 
   if (loading) {
     return (
@@ -90,24 +73,44 @@ export default function PublicMediaGrid({ gridLayout, loading = false }: PublicM
     return null
   }
 
-  // Responsive grid settings
-  const displayWidth = screenSize === 'mobile' ? 2 : gridLayout.width
-  const displayHeight = screenSize === 'mobile' ? 6 : gridLayout.height
-  const displayCells = screenSize === 'mobile' ? gridLayout.cells.slice(0, 12) : gridLayout.cells
+  // Fixed grid settings - 4x6 grid (24 cells total)
+  const totalCells = 24
+  
+  // Create fixed grid structure
+  const fixedGridCells = Array.from({ length: totalCells }, (_, index) => {
+    const x = index % 4
+    const y = Math.floor(index / 4)
+    
+    // Find if there's media for this position
+    const existingCell = gridLayout.cells.find(cell => 
+      cell.x === x && cell.y === y
+    )
+    
+    return {
+      x,
+      y,
+      mediaId: existingCell?.mediaId,
+      media: existingCell?.media,
+      spanX: existingCell?.spanX || 1,
+      spanY: existingCell?.spanY || 1
+    }
+  })
 
   return (
-    <section className="py-20 bg-gradient-to-br from-muted/30 to-muted/20">
+    <section className="py-20 bg-gradient-to-br from-muted/30 to-muted/20 min-h-[500px]">
       <div className="container mx-auto px-4">
         
 
         {/* Grid Display */}
         <div className="w-full flex justify-center">
           <div className="grid gap-1 sm:gap-2 md:gap-3 lg:gap-4 bg-card/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 lg:p-8 shadow-lg border border-border/20" style={{
-            gridTemplateColumns: `repeat(${displayWidth}, 1fr)`,
-            gridTemplateRows: `repeat(${displayHeight}, 1fr)`,
-            maxWidth: screenSize === 'mobile' ? '320px' : screenSize === 'tablet' ? '600px' : '1200px'
+            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+            gridTemplateRows: 'repeat(6, minmax(0, 1fr))',
+            maxWidth: '800px',
+            height: 'auto',
+            minHeight: '400px'
           }}>
-            {displayCells.map((cell) => (
+            {fixedGridCells.map((cell) => (
               <div
                 key={`${cell.x}-${cell.y}`}
                 className={`aspect-square rounded-md sm:rounded-lg md:rounded-xl overflow-hidden transition-all duration-300 ${
@@ -117,7 +120,9 @@ export default function PublicMediaGrid({ gridLayout, loading = false }: PublicM
                 }`}
                 style={{
                   gridColumn: `${cell.x + 1} / span ${cell.spanX || 1}`,
-                  gridRow: `${cell.y + 1} / span ${cell.spanY || 1}`
+                  gridRow: `${cell.y + 1} / span ${cell.spanY || 1}`,
+                  minHeight: '80px',
+                  height: 'auto'
                 }}
               >
                 {cell.mediaId && cell.media ? (
