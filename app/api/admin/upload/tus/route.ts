@@ -190,9 +190,10 @@ export async function POST(request: NextRequest) {
     // Return TUS-compatible response with proper headers
     const response = NextResponse.json({
       success: true,
-      uploadUrl,
+      uploadUrl: videoEntry.uploadUrl,
       uploadId,
       videoId: videoEntry.videoId,
+      uploadHeaders: videoEntry.headers, // Include the headers needed for Bunny.net upload
       message: "TUS upload initialized successfully. Use the uploadUrl for file uploads."
     })
 

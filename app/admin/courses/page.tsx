@@ -561,53 +561,85 @@ export default function AdminCourses() {
 
       console.log('✅ TUS upload initialized:', tusInitResult.uploadId)
       console.log('🔗 Upload URL:', tusInitResult.uploadUrl)
+      console.log('📋 Upload headers:', tusInitResult.uploadHeaders)
 
-      // Now upload the file using TUS protocol
-      const chunkSize = 5 * 1024 * 1024 // 5MB chunks (under Vercel's limit)
-      const totalChunks = Math.ceil(fileSize / chunkSize)
-      let uploadedBytes = 0
-
-      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-        const start = chunkIndex * chunkSize
-        const end = Math.min(start + chunkSize, fileSize)
-        const chunk = videoFile.slice(start, end)
-        
-        console.log(`📤 Uploading chunk ${chunkIndex + 1}/${totalChunks}: ${(chunk.size / (1024 * 1024)).toFixed(2)} MB`)
-
-        const chunkResponse = await fetch(tusInitResult.uploadUrl, {
-          method: 'PATCH',
+      // Now upload the file directly to Bunny.net using the upload URL
+      console.log('🚀 Starting direct upload to Bunny.net...')
+      
+      try {
+        // Upload the entire file directly to Bunny.net
+        const uploadResponse = await fetch(tusInitResult.uploadUrl, {
+          method: 'PUT',
           headers: {
-            'Content-Length': chunk.size.toString(),
-            'Upload-Offset': uploadedBytes.toString(),
-            'Tus-Resumable': '1.0.0',
-            'Content-Type': 'application/octet-stream'
+            ...tusInitResult.uploadHeaders, // Use the headers from TUS initialization
+            'Content-Type': contentType
           },
-          body: chunk
+          body: videoFile
         })
 
-        if (!chunkResponse.ok) {
-          const errorData = await chunkResponse.json()
-          throw new Error(`Failed to upload chunk ${chunkIndex + 1}: ${errorData.error || chunkResponse.statusText}`)
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text()
+          console.error('❌ Direct upload to Bunny.net failed:', uploadResponse.status, errorText)
+          throw new Error(`Failed to upload to Bunny.net: ${uploadResponse.status} ${errorText}`)
         }
 
-        const chunkResult = await chunkResponse.json()
-        uploadedBytes = chunkResult.offset
-
-        // Update progress
-        const progress = ((chunkIndex + 1) / totalChunks * 100).toFixed(1)
+        console.log('🎉 File uploaded successfully to Bunny.net!')
         toast({
-          title: "Uploading video...",
-          description: `Progress: ${progress}% (${chunkIndex + 1}/${totalChunks} chunks)`,
+          title: "Video uploaded successfully!",
+          description: "Now creating lesson in database...",
         })
 
-        console.log(`✅ Chunk ${chunkIndex + 1} uploaded. Progress: ${progress}%`)
-      }
+      } catch (uploadError) {
+        console.error('❌ Direct upload failed, trying chunked approach:', uploadError)
+        
+        // Fallback to chunked upload if direct upload fails
+        console.log('🔄 Falling back to chunked upload...')
+        
+        const chunkSize = 1 * 1024 * 1024 // 1MB chunks (very small to avoid Vercel limits)
+        const totalChunks = Math.ceil(fileSize / chunkSize)
+        let uploadedBytes = 0
 
-      console.log('🎉 All chunks uploaded successfully!')
-      toast({
-        title: "Video uploaded successfully!",
-        description: "Now creating lesson in database...",
-      })
+        for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+          const start = chunkIndex * chunkSize
+          const end = Math.min(start + chunkSize, fileSize)
+          const chunk = videoFile.slice(start, end)
+          
+          console.log(`📤 Uploading chunk ${chunkIndex + 1}/${totalChunks}: ${(chunk.size / (1024 * 1024)).toFixed(2)} MB`)
+
+          // Upload chunk directly to Bunny.net
+          const chunkResponse = await fetch(tusInitResult.uploadUrl, {
+            method: 'PUT',
+            headers: {
+              ...tusInitResult.uploadHeaders, // Use the headers from TUS initialization
+              'Content-Type': 'application/octet-stream',
+              'Content-Range': `bytes ${start}-${end - 1}/${fileSize}`
+            },
+            body: chunk
+          })
+
+          if (!chunkResponse.ok) {
+            const errorText = await chunkResponse.text()
+            throw new Error(`Failed to upload chunk ${chunkIndex + 1}: ${chunkResponse.status} ${errorText}`)
+          }
+
+          uploadedBytes += chunk.size
+
+          // Update progress
+          const progress = ((chunkIndex + 1) / totalChunks * 100).toFixed(1)
+          toast({
+            title: "Uploading video...",
+            description: `Progress: ${progress}% (${chunkIndex + 1}/${totalChunks} chunks)`,
+          })
+
+          console.log(`✅ Chunk ${chunkIndex + 1} uploaded. Progress: ${progress}%`)
+        }
+
+        console.log('🎉 All chunks uploaded successfully!')
+        toast({
+          title: "Video uploaded successfully!",
+          description: "Now creating lesson in database...",
+        })
+      }
 
       // Create lesson with video upload info
       const response = await fetch('/api/admin/lessons', {
