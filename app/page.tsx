@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import PublicMediaGrid from "@/components/public-media-grid"
+import { VideoPlayer } from "@/components/video-player"
 import { Play, Clock, Star, Users, Trophy } from "lucide-react"
 import type { Course } from "@/lib/types"
 import { getDisplayTitle, getDisplayDescription } from "@/lib/course-utils"
@@ -60,11 +61,12 @@ export default async function Home() {
   }
   let gridLayout: any = null
 
+  // Use absolute URL for server-side fetching
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
+      process.env.NODE_ENV === 'production' ? 'https://edunewera.mn' : 'http://localhost:3000')
+
   try {
-    // Use absolute URL for server-side fetching
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
-       process.env.NODE_ENV === 'production' ? 'https://edunewera.mn' : 'http://localhost:3000')
 
     // Fetch courses
     const coursesResponse = await fetch(`${baseUrl}/api/courses`, { next: { revalidate: 60 } })
@@ -102,8 +104,27 @@ export default async function Home() {
     // Use fallback data if fetching fails
   }
 
-  // Get featured course - use first available course or null
-  const featuredCourse = courses.length > 0 ? courses[0] : null
+  // Get featured course - fetch the latest course specifically
+  let featuredCourse = null
+  let latestLesson = null
+  try {
+    const latestCourseResponse = await fetch(`${baseUrl}/api/courses/latest`, { next: { revalidate: 60 } })
+    if (latestCourseResponse.ok) {
+      const latestCourseData = await latestCourseResponse.json()
+      featuredCourse = latestCourseData.course
+    }
+
+    // Also fetch the latest lesson for video content
+    const latestLessonResponse = await fetch(`${baseUrl}/api/lessons/latest`, { next: { revalidate: 60 } })
+    if (latestLessonResponse.ok) {
+      const latestLessonData = await latestLessonResponse.json()
+      latestLesson = latestLessonData.lesson
+    }
+  } catch (error) {
+    console.error("Error fetching latest course/lesson:", error)
+    // Fallback to first course if latest course fetch fails
+    featuredCourse = courses.length > 0 ? courses[0] : null
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -114,7 +135,7 @@ export default async function Home() {
         <div className="grid lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
           <div className="space-y-8">
             <Badge className="bg-[#5B7FFF] text-white px-6 py-2 rounded-full text-sm font-medium">
-              {featuredCourse ? `🚀 ${featuredCourse.category || 'Хичээл'}` : '🚀 Хичээл'}
+              {featuredCourse ? `🆕 Шинэ ${featuredCourse.category || 'Хичээл'}` : '🆕 Шинэ Хичээл'}
             </Badge>
 
             <div className="space-y-2">
@@ -146,23 +167,39 @@ export default async function Home() {
             <div className="bg-card rounded-2xl shadow-lg border border-border overflow-hidden max-w-sm sm:max-w-md md:max-w-2xl mx-auto">
               <div className="p-4 sm:p-6 md:p-8">
                 <div className="mb-4 sm:mb-6">
-                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-card-foreground mb-2 sm:mb-3">{getDisplayTitle(featuredCourse.title)}</h3>
+                  <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-card-foreground">{getDisplayTitle(featuredCourse.title)}</h3>
+                    <Badge className="bg-green-100 text-green-700 text-xs px-2 py-1">Шинэ</Badge>
+                  </div>
                   <p className="text-sm sm:text-base text-muted-foreground">{getDisplayDescription(featuredCourse.title, featuredCourse.description || "Хичээлийн тайлбар")}</p>
                 </div>
 
-                <div className="relative bg-muted rounded-lg sm:rounded-xl aspect-video mb-4 sm:mb-6 flex items-center justify-center border border-border">
-                  {featuredCourse.thumbnailUrl ? (
-                    <img
-                      src={featuredCourse.thumbnailUrl}
-                      alt={featuredCourse.title}
-                      className="w-full h-full object-cover rounded-lg sm:rounded-xl"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#5B7FFF] rounded-full flex items-center justify-center">
-                      <Play className="w-6 w-6 sm:w-8 sm:h-8 text-white ml-1" />
-                    </div>
-                  )}
-                </div>
+                {(latestLesson?.videoUrl || featuredCourse?.videoUrl) ? (
+                  <VideoPlayer
+                    videoUrl={latestLesson?.videoUrl || featuredCourse?.videoUrl}
+                    thumbnailUrl={featuredCourse?.thumbnailUrl}
+                    title={latestLesson?.title || featuredCourse?.title}
+                    className="mb-4 sm:mb-6"
+                    autoplay={false}
+                    muted={true}
+                    courseId={featuredCourse?._id}
+                    requireAuth={true}
+                  />
+                ) : (
+                  <div className="relative bg-muted rounded-lg sm:rounded-xl aspect-video mb-4 sm:mb-6 flex items-center justify-center border border-border">
+                    {featuredCourse.thumbnailUrl ? (
+                      <img
+                        src={featuredCourse.thumbnailUrl}
+                        alt={featuredCourse.title}
+                        className="w-full h-full object-cover rounded-lg sm:rounded-xl"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#5B7FFF] rounded-full flex items-center justify-center">
+                        <Play className="w-6 w-6 sm:w-8 sm:h-8 text-white ml-1" />
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="mb-4 sm:mb-6">
                   <div className="flex items-baseline gap-2 sm:gap-3 mb-2 sm:mb-3">

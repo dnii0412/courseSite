@@ -14,7 +14,7 @@ export class Database {
   private static instance: Database
   private client: any
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): Database {
     if (!Database.instance) {
@@ -34,17 +34,17 @@ export class Database {
   async createUser(user: Omit<User, "_id" | "createdAt" | "updatedAt">): Promise<ObjectId> {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
-    
+
     // Ensure enrolledCourses is an array of ObjectIds
     const userData = {
       ...user,
-      enrolledCourses: Array.isArray(user.enrolledCourses) 
-        ? user.enrolledCourses 
+      enrolledCourses: Array.isArray(user.enrolledCourses)
+        ? user.enrolledCourses
         : [],
       createdAt: new Date(),
       updatedAt: new Date(),
     }
-    
+
     const result = await db.collection("users").insertOne(userData)
     return result.insertedId
   }
@@ -70,17 +70,17 @@ export class Database {
   async updateUser(userId: ObjectId, updates: Partial<User>): Promise<boolean> {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
-    
+
     console.log("Database updateUser called with:", { userId: userId.toString(), updates })
     console.log("Phone field in updates:", { phone: updates.phone, phoneType: typeof updates.phone, phoneLength: updates.phone?.length })
-    
+
     const result = await db.collection("users").updateOne(
       { _id: userId },
       { $set: { ...updates, updatedAt: new Date() } }
     )
-    
+
     console.log("Database update result:", { modifiedCount: result.modifiedCount, matchedCount: result.matchedCount })
-    
+
     return result.modifiedCount > 0
   }
 
@@ -109,6 +109,26 @@ export class Database {
     return await db.collection("courses").find({ isActive: true }).toArray()
   }
 
+  async getLatestCourse(): Promise<Course | null> {
+    const client = await this.getClient()
+    const db = client.db("new-era-platform")
+    return await db.collection("courses")
+      .findOne(
+        { isActive: true },
+        { sort: { createdAt: -1 } }
+      )
+  }
+
+  async getLatestLesson(): Promise<any | null> {
+    const client = await this.getClient()
+    const db = client.db("new-era-platform")
+    return await db.collection("lessons")
+      .findOne(
+        {},
+        { sort: { createdAt: -1 } }
+      )
+  }
+
   async getCourseById(id: ObjectId): Promise<Course | null> {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
@@ -118,16 +138,16 @@ export class Database {
   async getCourseWithLessons(id: ObjectId): Promise<Course | null> {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
-    
+
     const course = await db.collection("courses").findOne({ _id: id })
     if (!course) return null
-    
+
     // Get sub-courses for this course
     const subCourses = await db.collection("subCourses")
       .find({ courseId: id, isActive: true })
       .sort({ order: 1 })
       .toArray()
-    
+
     // Get all lessons for all sub-courses
     const allLessons = []
     for (const subCourse of subCourses) {
@@ -135,7 +155,7 @@ export class Database {
         .find({ subCourseId: subCourse._id })
         .sort({ order: 1 })
         .toArray()
-      
+
       allLessons.push(...lessons.map((lesson: any) => ({
         _id: lesson._id?.toString(),
         title: lesson.title,
@@ -147,7 +167,7 @@ export class Database {
         subCourseId: lesson.subCourseId?.toString()
       })))
     }
-    
+
     return {
       ...course,
       lessons: allLessons,
@@ -201,9 +221,19 @@ export class Database {
   async getCourseEnrollmentCount(courseId: ObjectId): Promise<number> {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
-    return await db.collection("enrollments").countDocuments({ 
-      courseId, 
-      isActive: true 
+    return await db.collection("enrollments").countDocuments({
+      courseId,
+      isActive: true
+    })
+  }
+
+  async getEnrollment(userId: ObjectId, courseId: ObjectId): Promise<any> {
+    const client = await this.getClient()
+    const db = client.db("new-era-platform")
+    return await db.collection("enrollments").findOne({
+      userId,
+      courseId,
+      isActive: true
     })
   }
 
@@ -222,7 +252,7 @@ export class Database {
   async getAllPaymentsWithDetails(): Promise<any[]> {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
-    
+
     const payments = await db.collection("payments")
       .aggregate([
         {
@@ -278,7 +308,7 @@ export class Database {
           $sort: { createdAt: -1 }
         }
       ]).toArray()
-    
+
     return payments
   }
 
@@ -286,14 +316,14 @@ export class Database {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
     const updates: any = { status, updatedAt: new Date() }
-    
+
     if (transactionId && transactionType === "qpay") {
       updates.qpayTransactionId = transactionId
     } else if (transactionId && transactionType === "byl") {
       // For Byl, we don't want to overwrite the existing bylCheckoutId or bylInvoiceId
       // Just update the status and timestamp
     }
-    
+
     const result = await db.collection("payments").updateOne({ _id: id }, { $set: updates })
     return result.modifiedCount > 0
   }
@@ -302,7 +332,7 @@ export class Database {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
     const result = await db.collection("payments").updateOne(
-      { _id: id }, 
+      { _id: id },
       { $set: { bylCheckoutId, updatedAt: new Date() } }
     )
     return result.modifiedCount > 0
@@ -348,9 +378,9 @@ export class Database {
   async getPlatformSettings() {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
-    
+
     const settings = await db.collection("platform_settings").findOne({})
-    
+
     if (!settings) {
       // Return default settings if none exist
       return {
@@ -373,10 +403,27 @@ export class Database {
         qpayMerchantId: "",
         qpayApiKey: "",
         bunnyApiKey: "",
-        bunnyVideoLibraryId: ""
+        bunnyVideoLibraryId: "",
+        features: {
+          feature1: {
+            title: "Онлайн сургалт",
+            description: "Хугацаатай, хурдан, бүрэн сургалт. Мэргэжлийн багш нартай, чанартай видео хичээллүүд.",
+            icon: "📚"
+          },
+          feature2: {
+            title: "Харилцаа",
+            description: "Багш болон сурагчдын хооронд идэвхтэй харилцаа. Асуулт асуух, хариу авах боломжтой.",
+            icon: "💬"
+          },
+          feature3: {
+            title: "Хувийн хөгжил",
+            description: "Таны хурдад тохируулсан сургалт. Прогресс хяналт, хувийн дэвтэр болон дэмжлэг.",
+            icon: "👥"
+          }
+        }
       }
     }
-    
+
     return settings
   }
 
@@ -384,17 +431,17 @@ export class Database {
     try {
       const client = await this.getClient()
       const db = client.db("new-era-platform")
-      
+
       // Filter out _id field to prevent MongoDB immutable field error
       const { _id, ...settingsWithoutId } = settings
       const cleanSettings = { ...settingsWithoutId, updatedAt: new Date() }
-      
+
       const result = await db.collection("platform_settings").updateOne(
         {}, // Update the first (and only) document
         { $set: cleanSettings },
         { upsert: true } // Create if doesn't exist
       )
-      
+
       return result.modifiedCount > 0 || result.upsertedCount > 0
     } catch (error) {
       console.error("Database error in updatePlatformSettings:", error)
@@ -406,10 +453,10 @@ export class Database {
   async createSubCourse(subCourse: any): Promise<ObjectId> {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
-    
+
     // Convert courseId to ObjectId if it's a string
     const courseId = typeof subCourse.courseId === 'string' ? new ObjectId(subCourse.courseId) : subCourse.courseId
-    
+
     const result = await db.collection("sub_courses").insertOne({
       ...subCourse,
       courseId, // Use converted ObjectId
@@ -491,9 +538,9 @@ export class Database {
   async getMediaGridLayout(): Promise<any> {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
-    
+
     const layout = await db.collection("media_grid_layouts").findOne({})
-    
+
     if (!layout) {
       // Create a more appealing default layout
       const defaultCells = []
@@ -502,7 +549,7 @@ export class Database {
           defaultCells.push({ x, y })
         }
       }
-      
+
       // Add some sample media placements to make it look more interesting
       const sampleLayout = {
         id: "default",
@@ -514,28 +561,28 @@ export class Database {
         isLive: false,
         lastSaved: new Date().toISOString()
       }
-      
+
       // Save the default layout
       await this.updateMediaGridLayout(sampleLayout)
-      
+
       return sampleLayout
     }
-    
 
-    
+
+
     return layout
   }
 
   async updateMediaGridLayout(layout: any): Promise<boolean> {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
-    
+
     const result = await db.collection("media_grid_layouts").updateOne(
       {}, // Update the first (and only) document
       { $set: { ...layout, updatedAt: new Date() } },
       { upsert: true } // Create if doesn't exist
     )
-    
+
     return result.modifiedCount > 0 || result.upsertedCount > 0
   }
 
@@ -544,7 +591,7 @@ export class Database {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
     const mediaItems = await db.collection("media_items").find({}).toArray()
-    
+
     return mediaItems
   }
 
@@ -579,11 +626,11 @@ export class Database {
   async getDatabaseStats() {
     const client = await this.getClient()
     const db = client.db("new-era-platform")
-    
+
     try {
       // Get database stats
       const dbStats = await db.stats()
-      
+
       // Get collections info
       const collections = await db.listCollections().toArray()
       const collectionsInfo = await Promise.all(
@@ -591,7 +638,7 @@ export class Database {
           const coll = db.collection(collection.name)
           const stats = await coll.stats()
           const lastDoc = await coll.findOne({}, { sort: { _id: -1 } })
-          
+
           return {
             name: collection.name,
             size: stats.size || 0,
@@ -601,7 +648,7 @@ export class Database {
           }
         })
       )
-      
+
       const stats = {
         collections: collections.length,
         totalSize: dbStats.dataSize || 0,
@@ -609,7 +656,7 @@ export class Database {
         storageUsed: dbStats.storageSize || 0,
         storageTotal: (dbStats.storageSize || 0) * 2 // Approximate total storage
       }
-      
+
       return { stats, collections: collectionsInfo }
     } catch (error) {
 
@@ -644,13 +691,13 @@ export class Database {
     try {
       const client = await this.getClient()
       const db = client.db("new-era-platform")
-      
+
       const result = await db.collection("videos").insertOne({
         ...videoData,
         createdAt: new Date(),
         updatedAt: new Date()
       })
-      
+
       return result.insertedId.toString()
     } catch (error) {
 
@@ -662,7 +709,7 @@ export class Database {
     try {
       const client = await this.getClient()
       const db = client.db("new-era-platform")
-      
+
       return await db.collection("videos").findOne({ _id: new ObjectId(videoId) })
     } catch (error) {
 
@@ -674,21 +721,21 @@ export class Database {
     try {
       const client = await this.getClient()
       const db = client.db("new-era-platform")
-      
-      const updateData: any = { 
-        status, 
-        updatedAt: new Date() 
+
+      const updateData: any = {
+        status,
+        updatedAt: new Date()
       }
-      
+
       if (metadata) {
         updateData.metadata = metadata
       }
-      
+
       const result = await db.collection("videos").updateOne(
         { _id: new ObjectId(videoId) },
         { $set: updateData }
       )
-      
+
       return result.modifiedCount > 0
     } catch (error) {
 
@@ -708,10 +755,10 @@ export class Database {
     // Get all sub-courses for this course first
     const subCourses = await db.collection("subcourses").find({ courseId: courseId }).toArray()
     const subCourseIds = subCourses.map((sc: any) => sc._id)
-    
+
     // Find lessons that belong to any of these sub-courses
-    return await db.collection("lessons").find({ 
-      subCourseId: { $in: subCourseIds } 
+    return await db.collection("lessons").find({
+      subCourseId: { $in: subCourseIds }
     }).toArray()
   }
 
@@ -720,7 +767,7 @@ export class Database {
     try {
       const client = await this.getClient()
       const db = client.db("new-era-platform")
-      
+
       // Get recent activities from different collections
       const [recentUsers, recentCourses, recentPayments, recentEnrollments] = await Promise.all([
         // Recent users (last 5)
@@ -729,21 +776,21 @@ export class Database {
           .sort({ createdAt: -1 })
           .limit(5)
           .toArray(),
-        
+
         // Recent courses (last 5)
         db.collection("courses")
           .find({})
           .sort({ createdAt: -1 })
           .limit(5)
           .toArray(),
-        
+
         // Recent payments (last 5)
         db.collection("payments")
           .find({})
           .sort({ createdAt: -1 })
           .limit(5)
           .toArray(),
-        
+
         // Recent enrollments (last 5)
         db.collection("enrollments")
           .find({})
@@ -751,7 +798,7 @@ export class Database {
           .limit(5)
           .toArray()
       ])
-      
+
       // Define activity interface
       interface Activity {
         id: string
@@ -763,10 +810,10 @@ export class Database {
         status: string
         icon: string
       }
-      
+
       // Combine and format activities
       const activities: Activity[] = []
-      
+
       // Add user activities
       recentUsers.forEach((user: any) => {
         activities.push({
@@ -780,7 +827,7 @@ export class Database {
           icon: '👤'
         })
       })
-      
+
       // Add course activities
       recentCourses.forEach((course: any) => {
         activities.push({
@@ -794,7 +841,7 @@ export class Database {
           icon: '📚'
         })
       })
-      
+
       // Add payment activities
       recentPayments.forEach((payment: any) => {
         activities.push({
@@ -808,7 +855,7 @@ export class Database {
           icon: '💰'
         })
       })
-      
+
       // Add enrollment activities
       recentEnrollments.forEach((enrollment: any) => {
         activities.push({
@@ -822,12 +869,12 @@ export class Database {
           icon: '🎓'
         })
       })
-      
+
       // Sort all activities by timestamp (most recent first) and return top 10
       return activities
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
         .slice(0, 10)
-        
+
     } catch (error) {
       console.error("Error fetching recent activities:", error)
       return []
@@ -839,7 +886,7 @@ export class Database {
     try {
       const client = await this.getClient()
       const db = client.db("new-era-platform")
-      
+
       // Check if progress record exists
       const existingProgress = await db.collection("userProgress").findOne({
         userId,
@@ -851,8 +898,8 @@ export class Database {
         // Update existing progress
         const result = await db.collection("userProgress").updateOne(
           { _id: existingProgress._id },
-          { 
-            $set: { 
+          {
+            $set: {
               isCompleted: true,
               completedAt: new Date(),
               updatedAt: new Date()
@@ -885,38 +932,38 @@ export class Database {
     try {
       const client = await this.getClient()
       const db = client.db("new-era-platform")
-      
+
       // Get all completed lessons for this user and course
       const completedLessons = await db.collection("userProgress")
         .find({ userId, courseId, isCompleted: true })
         .toArray()
-      
+
       // Get course with lessons using the proper method
       const course = await this.getCourseWithLessons(courseId)
       let totalLessons = 0
-      
+
       // Count total lessons from subcourses
       if (course && 'subCourses' in course && course.subCourses) {
         totalLessons = (course as any).subCourses.reduce((total: number, subCourse: any) => {
           return total + (subCourse.lessons?.length || 0)
         }, 0)
       }
-      
+
       // Fallback to direct lessons if no subcourses
       if (totalLessons === 0 && course && 'lessons' in course && course.lessons) {
         totalLessons = (course as any).lessons.length
       }
-      
+
       console.log(`Progress calculation for course ${courseId}:`, {
         completedLessons: completedLessons.length,
         totalLessons,
         courseHasSubCourses: !!(course && 'subCourses' in course && course.subCourses),
         courseHasLessons: !!(course && 'lessons' in course && course.lessons)
       })
-      
+
       // Calculate progress percentage
       const progress = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0
-      
+
       return {
         completedLessons: completedLessons.map((p: any) => p.lessonId),
         totalLessons,
@@ -936,12 +983,12 @@ export class Database {
     try {
       const client = await this.getClient()
       const db = client.db("new-era-platform")
-      
+
       const completedLessons = await db.collection("userProgress")
         .find({ userId, isCompleted: true })
         .project({ lessonId: 1 })
         .toArray()
-      
+
       return completedLessons.map((p: any) => p.lessonId)
     } catch (error) {
       console.error("Failed to get completed lessons:", error)
@@ -953,12 +1000,12 @@ export class Database {
     try {
       const client = await this.getClient()
       const db = client.db("new-era-platform")
-      
+
       const result = await db.collection("users").updateOne(
         { _id: userId },
         { $push: { enrolledCourses: courseId } }
       )
-      
+
       return result.modifiedCount > 0
     } catch (error) {
       console.error("Failed to add course to user:", error)

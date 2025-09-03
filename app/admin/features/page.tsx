@@ -26,17 +26,17 @@ export default function AdminFeatures() {
   const [features, setFeatures] = useState<PlatformFeatures>({
     feature1: {
       title: "Онлайн сургалт",
-      description: "Хугацаатай, хурдан, хүнсэн сургалт",
+      description: "Хугацаатай, хурдан, бүрэн сургалт. Мэргэжлийн багш нартай, чанартай видео хичээллүүд.",
       icon: "📚"
     },
     feature2: {
-      title: "Харилцах",
-      description: "Харилцах, харилцах, харилцах",
+      title: "Харилцаа",
+      description: "Багш болон сурагчдын хооронд идэвхтэй харилцаа. Асуулт асуух, хариу авах боломжтой.",
       icon: "💬"
     },
     feature3: {
-      title: "Хувь хүн",
-      description: "Хувь хүн, хувь хүн, хувь хүн",
+      title: "Хувийн хөгжил",
+      description: "Таны хурдад тохируулсан сургалт. Прогресс хяналт, хувийн дэвтэр болон дэмжлэг.",
       icon: "👥"
     }
   })
@@ -197,7 +197,7 @@ export default function AdminFeatures() {
                 id="feature1Description"
                 value={features.feature1.description}
                 onChange={(e) => handleFeatureChange("feature1", "description", e.target.value)}
-                placeholder="Хугацаатай, хурдан, хүнсэн сургалт"
+                placeholder="Хугацаатай, хурдан, бүрэн сургалт. Мэргэжлийн багш нартай, чанартай видео хичээллүүд."
                 rows={3}
               />
             </div>
@@ -219,7 +219,7 @@ export default function AdminFeatures() {
                 id="feature2Title"
                 value={features.feature2.title}
                 onChange={(e) => handleFeatureChange("feature2", "title", e.target.value)}
-                placeholder="Харилцах"
+                placeholder="Харилцаа"
               />
             </div>
             <div>
@@ -237,7 +237,7 @@ export default function AdminFeatures() {
                 id="feature2Description"
                 value={features.feature2.description}
                 onChange={(e) => handleFeatureChange("feature2", "description", e.target.value)}
-                placeholder="Харилцах, харилцах, харилцах"
+                placeholder="Багш болон сурагчдын хооронд идэвхтэй харилцаа. Асуулт асуух, хариу авах боломжтой."
                 rows={3}
               />
             </div>
@@ -259,7 +259,7 @@ export default function AdminFeatures() {
                 id="feature3Title"
                 value={features.feature3.title}
                 onChange={(e) => handleFeatureChange("feature3", "title", e.target.value)}
-                placeholder="Хувь хүн"
+                placeholder="Хувийн хөгжил"
               />
             </div>
             <div>
@@ -277,7 +277,7 @@ export default function AdminFeatures() {
                 id="feature3Description"
                 value={features.feature3.description}
                 onChange={(e) => handleFeatureChange("feature3", "description", e.target.value)}
-                placeholder="Хувь хүн, хувь хүн, хувь хүн"
+                placeholder="Таны хурдад тохируулсан сургалт. Прогресс хяналт, хувийн дэвтэр болон дэмжлэг."
                 rows={3}
               />
             </div>

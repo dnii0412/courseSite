@@ -6,12 +6,13 @@ import { ObjectId } from "mongodb"
 // GET /api/admin/sub-courses/[id] - Get sub-course by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const subCourseId = new ObjectId(params.id)
+    const { id } = await params
+    const subCourseId = new ObjectId(id)
     const subCourse = await db.getSubCourseById(subCourseId)
-    
+
     if (!subCourse) {
       return NextResponse.json({ error: "Sub-course not found" }, { status: 404 })
     }
@@ -26,7 +27,7 @@ export async function GET(
 // PUT /api/admin/sub-courses/[id] - Update sub-course
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify admin authentication
@@ -40,7 +41,8 @@ export async function PUT(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const subCourseId = new ObjectId(params.id)
+    const { id } = await params
+    const subCourseId = new ObjectId(id)
     const updates = await request.json()
 
     // Check if sub-course exists
@@ -51,14 +53,14 @@ export async function PUT(
 
     // Update sub-course
     const success = await db.updateSubCourse(subCourseId, updates)
-    
+
     if (!success) {
       return NextResponse.json({ error: "Failed to update sub-course" }, { status: 500 })
     }
 
     return NextResponse.json({ message: "Sub-course updated successfully" })
   } catch (error) {
-    
+
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -66,7 +68,7 @@ export async function PUT(
 // DELETE /api/admin/sub-courses/[id] - Delete sub-course
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify admin authentication
@@ -80,7 +82,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const subCourseId = new ObjectId(params.id)
+    const { id } = await params
+    const subCourseId = new ObjectId(id)
 
     // Check if sub-course exists
     const existingSubCourse = await db.getSubCourseById(subCourseId)
@@ -90,14 +93,14 @@ export async function DELETE(
 
     // Delete sub-course
     const success = await db.deleteSubCourse(subCourseId)
-    
+
     if (!success) {
       return NextResponse.json({ error: "Failed to delete sub-course" }, { status: 500 })
     }
 
     return NextResponse.json({ message: "Sub-course deleted successfully" })
   } catch (error) {
-    
+
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

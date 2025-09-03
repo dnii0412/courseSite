@@ -184,6 +184,10 @@ export function CourseEnrollmentClient({ course }: CourseEnrollmentClientProps) 
             {showPaymentModal && (
                 <PaymentModal
                     course={course}
+                    user={user ? {
+                        name: user.name,
+                        email: user.email
+                    } : undefined}
                     onClose={() => {
                         setShowPaymentModal(false)
                         refreshUser() // Refresh user data after payment modal closes

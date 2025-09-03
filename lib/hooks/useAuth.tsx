@@ -5,8 +5,20 @@ import { useState, useEffect } from "react"
 import type { AuthUser } from "@/lib/types"
 
 export function useAuth() {
-  const { data: session, status } = useSession()
   const [localUser, setLocalUser] = useState<AuthUser | null>(null)
+
+  // Safely use useSession with error handling
+  let session = null
+  let status = "unauthenticated"
+
+  try {
+    const sessionData = useSession()
+    session = sessionData.data
+    status = sessionData.status
+  } catch (error) {
+    // NextAuth not available or SessionProvider not found
+    console.log("NextAuth not available, using local auth only")
+  }
 
   // Check for local auth token on mount
   useEffect(() => {
@@ -137,7 +149,7 @@ export function useAuth() {
     } catch (error) {
       // console.log("Logout API call failed")
     }
-    
+
     // Refresh the page after logout to clear any cached data
     setTimeout(() => {
       window.location.reload()

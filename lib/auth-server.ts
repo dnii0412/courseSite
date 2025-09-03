@@ -74,7 +74,7 @@ export async function createAdminUser(name: string, email: string, password: str
 
 export async function authenticateUser(email: string, password: string): Promise<AuthUser | null> {
   const user = await db.getUserByEmail(email)
-  if (!user) {
+  if (!user || !user.password) {
     return null
   }
 

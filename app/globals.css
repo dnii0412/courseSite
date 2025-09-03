@@ -11,14 +11,15 @@
 
 /* Custom animations for auth forms */
 @keyframes authIn {
-  from { 
-    opacity: 0; 
-    transform: translateY(8px) scale(0.98); 
-  } 
-  to { 
-    opacity: 1; 
-    transform: translateY(0) scale(1); 
-  } 
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .animate-authIn {
@@ -61,7 +62,7 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  --shadow-soft: 0 8px 24px rgba(0,0,0,0.08);
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .dark {
@@ -144,6 +145,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -160,4 +162,44 @@
 
 .bg-new-era-blue {
   background-color: #5b7fff;
+}
+
+/* Video Player Styles */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-track {
+  background: rgba(255, 255, 255, 0.3);
+  height: 4px;
+  border-radius: 2px;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #ffffff;
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.slider::-moz-range-track {
+  background: rgba(255, 255, 255, 0.3);
+  height: 4px;
+  border-radius: 2px;
+  border: none;
+}
+
+.slider::-moz-range-thumb {
+  background: #ffffff;
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
 }

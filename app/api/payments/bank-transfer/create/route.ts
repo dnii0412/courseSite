@@ -1,18 +1,32 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 import { verifyToken } from "@/lib/auth-server"
-import { db } from "@/lib/database"
+import { auth } from "@/auth"
+import { Database } from "@/lib/database"
 
 export async function POST(request: NextRequest) {
     try {
-        const token = request.cookies.get("auth-token")?.value
-        if (!token) {
-            return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+        // Check for NextAuth session first, then custom auth token
+        const session = await auth()
+        let user = null
+
+        if (session?.user) {
+            // NextAuth user
+            user = {
+                id: session.user.id!,
+                email: session.user.email!,
+                name: session.user.name!
+            }
+        } else {
+            // Custom auth token
+            const token = request.cookies.get("auth-token")?.value
+            if (token) {
+                user = verifyToken(token)
+            }
         }
 
-        const user = verifyToken(token)
         if (!user) {
-            return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+            return NextResponse.json({ error: "Authentication required" }, { status: 401 })
         }
 
         const { courseId } = await request.json()
@@ -22,6 +36,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Get course details
+        const db = Database.getInstance()
         const course = await db.getCourseById(new ObjectId(courseId))
         if (!course) {
             return NextResponse.json({ error: "Course not found" }, { status: 404 })

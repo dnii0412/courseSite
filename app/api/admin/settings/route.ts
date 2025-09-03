@@ -18,10 +18,10 @@ export async function GET(request: NextRequest) {
 
     // Get platform settings
     const settings = await db.getPlatformSettings()
-    
+
     return NextResponse.json({ settings })
   } catch (error) {
-    
+
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -41,12 +41,17 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const settings = body.settings
+    console.log("Settings update request body:", body)
 
-    if (!settings) {
+    // Handle both direct settings and nested settings
+    const settings = body.settings || body
+
+    if (!settings || Object.keys(settings).length === 0) {
+      console.log("No settings data provided in request body")
       return NextResponse.json({ error: "Settings data is required" }, { status: 400 })
     }
 
+    console.log("Updating settings:", settings)
     const success = await db.updatePlatformSettings(settings)
 
     if (success) {
@@ -55,6 +60,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Failed to update settings" }, { status: 500 })
     }
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Settings update error:", error)
+    return NextResponse.json({ error: "Internal server error", details: error instanceof Error ? error.message : "Unknown error" }, { status: 500 })
   }
 }

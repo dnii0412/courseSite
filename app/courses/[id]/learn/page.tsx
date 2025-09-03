@@ -10,6 +10,7 @@ import { Footer } from "@/components/footer"
 import { Play, Clock, BookOpen, ChevronLeft, Check, Lock, Video, UserPlus, ShoppingCart } from "lucide-react"
 import { useAuth } from "@/lib/hooks/useAuth"
 import { useToast } from "@/hooks/use-toast"
+import { VideoPlayer } from "@/components/video-player"
 import type { Course, Lesson } from "@/lib/types"
 import Link from "next/link"
 
@@ -55,9 +56,9 @@ export default function LearnPage() {
         setCourse(targetCourse)
 
         // Check if user is enrolled in this course
-        if (user) {
+        if (user && user.enrolledCourses) {
           const courseId = params.id as string
-          const isEnrolledInThisCourse = user.enrolledCourses?.includes(courseId)
+          const isEnrolledInThisCourse = user.enrolledCourses.includes(courseId)
           if (isEnrolledInThisCourse) {
             setEnrolledCourses([{
               courseId: courseId,
@@ -75,7 +76,7 @@ export default function LearnPage() {
         // Set lesson from URL parameter or first lesson as default
         const lessonParam = searchParams.get('lesson')
         if (lessonParam && targetCourse.lessons) {
-          const specificLesson = targetCourse.lessons.find(lesson => lesson._id === lessonParam)
+          const specificLesson = targetCourse.lessons.find((lesson: any) => lesson._id === lessonParam)
           if (specificLesson) {
             setSelectedLesson(specificLesson)
           } else {
@@ -87,7 +88,7 @@ export default function LearnPage() {
         }
 
         // Load user's progress for this course
-        if (user && targetCourse._id) {
+        if (user && user.id && targetCourse._id) {
           try {
             const progressResponse = await fetch(`/api/auth/progress?courseId=${targetCourse._id}`, {
               credentials: 'include'
@@ -130,12 +131,12 @@ export default function LearnPage() {
 
   const hasAccess = (courseId: string) => {
     // Admin has access to all courses
-    if (user?.role === 'admin') {
+    if (user && user.role === 'admin') {
       return true
     }
 
     // Regular users need to be enrolled - check user's enrolledCourses array
-    return user?.enrolledCourses?.includes(courseId) || false
+    return user && user.enrolledCourses && user.enrolledCourses.includes(courseId) || false
   }
 
   const handleLessonSelect = (lesson: Lesson) => {
@@ -437,23 +438,24 @@ export default function LearnPage() {
               <CardContent>
                 {selectedLesson ? (
                   <div className="space-y-4">
-                    <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                      {selectedLesson.videoUrl ? (
-                        <iframe
-                          src={selectedLesson.videoUrl}
-                          className="w-full h-full"
-                          allowFullScreen
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white">
-                          <div className="text-center">
-                            <Video className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                            <p>Видео олдсонгүй</p>
-                          </div>
+                    {selectedLesson.videoUrl ? (
+                      <VideoPlayer
+                        videoUrl={selectedLesson.videoUrl}
+                        title={selectedLesson.title}
+                        courseId={params.id as string}
+                        requireAuth={true}
+                        className="mb-4"
+                        autoplay={false}
+                        muted={true}
+                      />
+                    ) : (
+                      <div className="aspect-video bg-black rounded-lg overflow-hidden flex items-center justify-center text-white">
+                        <div className="text-center">
+                          <Video className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                          <p>Видео олдсонгүй</p>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                     <div>
                       <h3 className="text-xl font-semibold mb-2 text-foreground">{selectedLesson.title}</h3>
                       <p className="text-muted-foreground mb-4">{selectedLesson.description}</p>

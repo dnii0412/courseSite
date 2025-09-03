@@ -6,21 +6,22 @@ import { ObjectId } from "mongodb"
 // GET /api/admin/lessons/[id] - Get lesson by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     let lessonId: ObjectId
     try {
-      lessonId = new ObjectId(params.id)
+      lessonId = new ObjectId(id)
     } catch {
       return NextResponse.json({ error: "Invalid lesson id" }, { status: 400 })
     }
 
     // For build-time compatibility, return a simple response
     // The actual lesson data will be fetched when needed at runtime
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: "Lesson endpoint available",
-      lessonId: params.id 
+      lessonId: id
     })
   } catch (error) {
     console.error("Failed to get lesson:", error)
@@ -31,7 +32,7 @@ export async function GET(
 // DELETE /api/admin/lessons/[id]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.cookies.get("admin-token")?.value
@@ -44,9 +45,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
+    const { id } = await params
     let lessonId: ObjectId
     try {
-      lessonId = new ObjectId(params.id)
+      lessonId = new ObjectId(id)
     } catch {
       return NextResponse.json({ error: "Invalid lesson id" }, { status: 400 })
     }
@@ -58,7 +60,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Lesson deleted successfully" })
   } catch (error) {
-    
+
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -66,7 +68,7 @@ export async function DELETE(
 // PUT /api/admin/lessons/[id]
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.cookies.get("admin-token")?.value
@@ -79,9 +81,10 @@ export async function PUT(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
+    const { id } = await params
     let lessonId: ObjectId
     try {
-      lessonId = new ObjectId(params.id)
+      lessonId = new ObjectId(id)
     } catch {
       return NextResponse.json({ error: "Invalid lesson id" }, { status: 400 })
     }
@@ -94,9 +97,7 @@ export async function PUT(
 
     return NextResponse.json({ message: "Lesson updated successfully" })
   } catch (error) {
-    
+
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
-
-

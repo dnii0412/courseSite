@@ -6,16 +6,17 @@ import { ObjectId } from "mongodb"
 // GET /api/admin/users/[id]/courses - Get user's enrolled courses
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = new ObjectId(params.id)
-    
+    const { id } = await params
+    const userId = new ObjectId(id)
+
     // For build-time compatibility, return a simple response
     // The actual user course data will be fetched when needed at runtime
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: "User courses endpoint available",
-      userId: params.id 
+      userId: id
     })
   } catch (error) {
     console.error("Failed to get user courses:", error)
@@ -26,7 +27,7 @@ export async function GET(
 // PUT /api/admin/users/[id]/courses - Update user course access
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify admin authentication
@@ -40,7 +41,8 @@ export async function PUT(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const userId = new ObjectId(params.id)
+    const { id } = await params
+    const userId = new ObjectId(id)
     const { courseIds } = await request.json()
 
     // Validate input
@@ -64,12 +66,12 @@ export async function PUT(
     const success = await db.updateUser(userId, {
       enrolledCourses: validCourseIds
     })
-    
+
     if (!success) {
       return NextResponse.json({ error: "Failed to update user course access" }, { status: 500 })
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: "User course access updated successfully",
       enrolledCourses: validCourseIds
     })

@@ -1,16 +1,35 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 import { verifyToken } from "@/lib/auth-server"
-import { db } from "@/lib/database"
+import { auth } from "@/auth"
+import { Database } from "@/lib/database"
 
 export async function POST(request: NextRequest) {
     try {
-        const token = request.cookies.get("auth-token")?.value
-        if (!token) {
-            return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+        // Check for NextAuth session first, then custom auth token
+        const session = await auth()
+        let user = null
+
+        if (session?.user) {
+            // NextAuth user - check if admin
+            const db = Database.getInstance()
+            const dbUser = await db.getUserById(new ObjectId(session.user.id))
+            if (dbUser && dbUser.role === "admin") {
+                user = {
+                    id: session.user.id!,
+                    email: session.user.email!,
+                    name: session.user.name!,
+                    role: "admin"
+                }
+            }
+        } else {
+            // Custom auth token
+            const token = request.cookies.get("auth-token")?.value
+            if (token) {
+                user = verifyToken(token)
+            }
         }
 
-        const user = verifyToken(token)
         if (!user || user.role !== "admin") {
             return NextResponse.json({ error: "Admin access required" }, { status: 403 })
         }
@@ -36,10 +55,10 @@ export async function POST(request: NextRequest) {
         }
 
         // Use MongoDB transactions for atomic operations
-        const session = client.startSession()
+        const mongoSession = client.startSession()
 
         try {
-            await session.withTransaction(async () => {
+            await mongoSession.withTransaction(async () => {
                 // Update payment status
                 await db_conn.collection("payments").updateOne(
                     { _id: new ObjectId(paymentId) },
@@ -50,7 +69,7 @@ export async function POST(request: NextRequest) {
                             updatedAt: new Date()
                         }
                     },
-                    { session }
+                    { session: mongoSession }
                 )
 
                 // Create enrollment
@@ -62,17 +81,17 @@ export async function POST(request: NextRequest) {
                     completedLessons: [],
                     progress: 0,
                     isActive: true,
-                }, { session })
+                }, { session: mongoSession })
 
                 // Update user's enrolledCourses array
                 await db_conn.collection("users").updateOne(
                     { _id: payment.userId },
                     { $addToSet: { enrolledCourses: payment.courseId.toString() } },
-                    { session }
+                    { session: mongoSession }
                 )
             })
         } finally {
-            await session.endSession()
+            await mongoSession.endSession()
         }
 
         return NextResponse.json({

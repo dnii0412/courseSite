@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     if (session?.user) {
       // NextAuth user - get full user data from database
       const dbUser = await db.getUserByEmail(session.user.email!)
-      if (dbUser && dbUser.role === "admin") {
+      if (dbUser && dbUser._id && dbUser.role === "admin") {
         user = { id: dbUser._id.toString(), role: dbUser.role }
       }
     } else {
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     if (session?.user) {
       // NextAuth user - get full user data from database
       const dbUser = await db.getUserByEmail(session.user.email!)
-      if (dbUser && dbUser.role === "admin") {
+      if (dbUser && dbUser._id && dbUser.role === "admin") {
         user = { id: dbUser._id.toString(), role: dbUser.role }
       }
     } else {

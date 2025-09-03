@@ -57,12 +57,26 @@ export default function AdminStats() {
       const response = await fetch("/api/admin/settings")
       if (response.ok) {
         const data = await response.json()
-        if (data.settings.stats) {
+        console.log("Fetched settings data:", data)
+        if (data.settings && data.settings.stats) {
           setStats(data.settings.stats)
         }
+      } else {
+        const errorData = await response.json()
+        console.error("Error fetching stats:", errorData)
+        toast({
+          title: "Error",
+          description: "Failed to load statistics",
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error("Error fetching stats:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load statistics",
+        variant: "destructive"
+      })
     } finally {
       setLoading(false)
     }
@@ -94,7 +108,7 @@ export default function AdminStats() {
       const response = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedSettings)
+        body: JSON.stringify({ settings: updatedSettings })
       })
 
       if (response.ok) {
@@ -103,9 +117,11 @@ export default function AdminStats() {
           description: "Statistics updated successfully"
         })
       } else {
+        const errorData = await response.json()
+        console.error("Update error response:", errorData)
         toast({
           title: "Error",
-          description: "Failed to update statistics",
+          description: errorData.error || "Failed to update statistics",
           variant: "destructive"
         })
       }

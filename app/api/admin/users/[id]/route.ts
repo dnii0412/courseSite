@@ -8,12 +8,13 @@ import { auth } from "@/auth"
 // GET /api/admin/users/[id] - Get user by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = new ObjectId(params.id)
+    const { id } = await params
+    const userId = new ObjectId(id)
     const user = await db.getUserById(userId)
-    
+
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
@@ -30,7 +31,7 @@ export async function GET(
 // PUT /api/admin/users/[id] - Update user
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check for NextAuth session first, then admin token
@@ -40,7 +41,7 @@ export async function PUT(
     if (session?.user) {
       // NextAuth user - get full user data from database
       const dbUser = await db.getUserByEmail(session.user.email!)
-      if (dbUser && dbUser.role === "admin") {
+      if (dbUser && dbUser._id && dbUser.role === "admin") {
         user = { id: dbUser._id.toString(), role: dbUser.role }
       }
     } else {
@@ -55,7 +56,8 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = new ObjectId(params.id)
+    const { id } = await params
+    const userId = new ObjectId(id)
     const { name, email, password, role } = await request.json()
 
     // Validate input
@@ -76,7 +78,7 @@ export async function PUT(
     // Check if email is already taken by another user
     if (email !== existingUser.email) {
       const userWithEmail = await db.getUserByEmail(email)
-      if (userWithEmail && userWithEmail._id?.toString() !== params.id) {
+      if (userWithEmail && userWithEmail._id?.toString() !== id) {
         return NextResponse.json({ error: "Email already taken" }, { status: 409 })
       }
     }
@@ -95,14 +97,14 @@ export async function PUT(
 
     // Update user
     const success = await db.updateUser(userId, updateData)
-    
+
     if (!success) {
       return NextResponse.json({ error: "Failed to update user" }, { status: 500 })
     }
 
     return NextResponse.json({ message: "User updated successfully" })
   } catch (error) {
-    
+
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -110,7 +112,7 @@ export async function PUT(
 // DELETE /api/admin/users/[id] - Delete user
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check for NextAuth session first, then admin token
@@ -120,7 +122,7 @@ export async function DELETE(
     if (session?.user) {
       // NextAuth user - get full user data from database
       const dbUser = await db.getUserByEmail(session.user.email!)
-      if (dbUser && dbUser.role === "admin") {
+      if (dbUser && dbUser._id && dbUser.role === "admin") {
         user = { id: dbUser._id.toString(), role: dbUser.role }
       }
     } else {
@@ -135,7 +137,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = new ObjectId(params.id)
+    const { id } = await params
+    const userId = new ObjectId(id)
 
     // Check if user exists
     const existingUser = await db.getUserById(userId)
@@ -144,20 +147,20 @@ export async function DELETE(
     }
 
     // Prevent admin from deleting themselves
-    if (user.id === params.id) {
+    if (user.id === id) {
       return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 })
     }
 
     // Delete user
     const success = await db.deleteUser(userId)
-    
+
     if (!success) {
       return NextResponse.json({ error: "Failed to delete user" }, { status: 500 })
     }
 
     return NextResponse.json({ message: "User deleted successfully" })
   } catch (error) {
-    
+
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

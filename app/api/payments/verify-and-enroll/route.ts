@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     // Use MongoDB transactions for atomic enrollment (faster and more reliable)
     const mongoSession = client.startSession()
-    let enrollmentResult
+    let enrollmentResult: any
 
     try {
       await mongoSession.withTransaction(async () => {
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: "Enrollment created successfully",
       enrolled: true,
-      enrollmentId: enrollmentResult.insertedId.toString()
+      enrollmentId: enrollmentResult?.insertedId?.toString() || "unknown"
     })
 
   } catch (error) {
