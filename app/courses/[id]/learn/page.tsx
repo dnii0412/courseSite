@@ -441,6 +441,7 @@ export default function LearnPage() {
                     {selectedLesson.videoUrl ? (
                       <VideoPlayer
                         videoUrl={selectedLesson.videoUrl}
+                        thumbnailUrl={course?.thumbnailUrl}
                         title={selectedLesson.title}
                         courseId={params.id as string}
                         requireAuth={true}

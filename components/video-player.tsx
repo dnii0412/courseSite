@@ -1,9 +1,8 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, Lock } from "lucide-react"
+import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useSession } from "next-auth/react"
 
 interface VideoPlayerProps {
   videoUrl: string
@@ -32,34 +31,9 @@ export function VideoPlayer({
   const [duration, setDuration] = useState(0)
   const [showControls, setShowControls] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [isEnrolled, setIsEnrolled] = useState(false)
-  const [checkingEnrollment, setCheckingEnrollment] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
-  const { data: session, status } = useSession()
 
-  // Check enrollment status when component mounts or session changes
-  useEffect(() => {
-    const checkEnrollment = async () => {
-      if (!requireAuth || !courseId || !session?.user?.id) {
-        setIsEnrolled(!requireAuth) // If no auth required, allow access
-        return
-      }
 
-      setCheckingEnrollment(true)
-      try {
-        const response = await fetch(`/api/courses/${courseId}/enrollment-status`)
-        const data = await response.json()
-        setIsEnrolled(data.isEnrolled)
-      } catch (error) {
-        console.error("Error checking enrollment:", error)
-        setIsEnrolled(false)
-      } finally {
-        setCheckingEnrollment(false)
-      }
-    }
-
-    checkEnrollment()
-  }, [session, courseId, requireAuth])
 
   useEffect(() => {
     const video = videoRef.current
@@ -92,25 +66,6 @@ export function VideoPlayer({
   const togglePlay = () => {
     const video = videoRef.current
     if (!video) return
-
-    // Check authentication and enrollment if required
-    if (requireAuth) {
-      if (status === "loading" || checkingEnrollment) {
-        return // Wait for auth check to complete
-      }
-
-      if (!session?.user?.id) {
-        // Redirect to login
-        window.location.href = "/login"
-        return
-      }
-
-      if (!isEnrolled) {
-        // Show enrollment message or redirect to course page
-        alert("Та энэ хичээлд бүртгүүлэх шаардлагатай. (You need to enroll in this course to watch the video.)")
-        return
-      }
-    }
 
     if (isPlaying) {
       video.pause()
@@ -184,48 +139,26 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Authentication/Enrollment Lock Overlay */}
-      {requireAuth && (!session?.user?.id || !isEnrolled) && (
-        <div className="absolute inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center text-white p-6">
-          <Lock className="w-16 h-16 mb-4 text-gray-400" />
-          <h3 className="text-xl font-semibold mb-2">
-            {!session?.user?.id ? "Нэвтрэх шаардлагатай" : "Бүртгүүлэх шаардлагатай"}
-          </h3>
-          <p className="text-center text-gray-300 mb-4">
-            {!session?.user?.id
-              ? "Видео үзэхийн тулд эхлээд нэвтэрнэ үү"
-              : "Энэ хичээлийн видеог үзэхийн тулд бүртгүүлнэ үү"
-            }
-          </p>
-          <Button
-            onClick={() => {
-              if (!session?.user?.id) {
-                window.location.href = "/login"
-              } else {
-                window.location.href = `/courses/${courseId}`
-              }
-            }}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            {!session?.user?.id ? "Нэвтрэх" : "Хичээлд бүртгүүлэх"}
-          </Button>
+      {/* Thumbnail Display - Always show thumbnail regardless of authentication */}
+      {thumbnailUrl && (
+        <div className="absolute inset-0 z-10">
+          <img
+            src={thumbnailUrl}
+            alt={title}
+            className="w-full h-full object-cover"
+          />
         </div>
       )}
 
       {/* Play/Pause Overlay */}
-      {!isPlaying && (!requireAuth || (session?.user?.id && isEnrolled)) && (
+      {!isPlaying && (
         <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
           <Button
             onClick={togglePlay}
             size="lg"
             className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white border-0 rounded-full w-16 h-16"
-            disabled={checkingEnrollment}
           >
-            {checkingEnrollment ? (
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-            ) : (
-              <Play className="w-8 h-8 ml-1" />
-            )}
+            <Play className="w-8 h-8 ml-1" />
           </Button>
         </div>
       )}
