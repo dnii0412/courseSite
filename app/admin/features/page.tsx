@@ -58,13 +58,13 @@ export default function AdminFeatures() {
         router.push("/admin/login")
         return
       }
-      
+
       const data = await response.json()
       if (data.user.role !== "admin") {
         router.push("/admin/login")
         return
       }
-      
+
       fetchFeatures()
     } catch (error) {
       router.push("/admin/login")
@@ -105,16 +105,16 @@ export default function AdminFeatures() {
       if (!currentSettingsResponse.ok) {
         throw new Error("Failed to fetch current settings")
       }
-      
+
       const currentSettings = await currentSettingsResponse.json()
-      
+
       // Merge features with existing settings, but remove _id field
       const { _id, ...settingsWithoutId } = currentSettings.settings
       const updatedSettings = {
         ...settingsWithoutId,
         features: features
       }
-      
+
       // Save updated settings
       const response = await fetch("/api/admin/settings", {
         method: "PUT",
@@ -123,6 +123,18 @@ export default function AdminFeatures() {
       })
 
       if (response.ok) {
+        // Trigger revalidation of the homepage
+        try {
+          await fetch("/api/revalidate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path: "/" })
+          })
+        } catch (revalidateError) {
+          console.error("Revalidation error:", revalidateError)
+          // Don't fail the save operation if revalidation fails
+        }
+
         toast({
           title: "Success",
           description: "Features updated successfully"

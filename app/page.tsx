@@ -67,6 +67,19 @@ export default async function Home() {
       process.env.NODE_ENV === 'production' ? 'https://edunewera.mn' : 'http://localhost:3000')
 
   try {
+    // Fetch platform settings first
+    const settingsResponse = await fetch(`${baseUrl}/api/features`, {
+      next: { revalidate: 30 } // Cache for 30 seconds, then revalidate
+    })
+    if (settingsResponse.ok) {
+      const settingsData = await settingsResponse.json()
+      if (settingsData.features) {
+        features = settingsData.features
+      }
+      if (settingsData.stats) {
+        stats = settingsData.stats
+      }
+    }
 
     // Fetch courses
     const coursesResponse = await fetch(`${baseUrl}/api/courses`, { next: { revalidate: 60 } })

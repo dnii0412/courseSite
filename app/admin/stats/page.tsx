@@ -39,13 +39,13 @@ export default function AdminStats() {
         router.push("/admin/login")
         return
       }
-      
+
       const data = await response.json()
       if (data.user.role !== "admin") {
         router.push("/admin/login")
         return
       }
-      
+
       fetchStats()
     } catch (error) {
       router.push("/admin/login")
@@ -94,16 +94,16 @@ export default function AdminStats() {
       if (!currentSettingsResponse.ok) {
         throw new Error("Failed to fetch current settings")
       }
-      
+
       const currentSettings = await currentSettingsResponse.json()
-      
+
       // Merge stats with existing settings, but remove _id field
       const { _id, ...settingsWithoutId } = currentSettings.settings
       const updatedSettings = {
         ...settingsWithoutId,
         stats: stats
       }
-      
+
       // Save updated settings
       const response = await fetch("/api/admin/settings", {
         method: "PUT",
@@ -112,6 +112,18 @@ export default function AdminStats() {
       })
 
       if (response.ok) {
+        // Trigger revalidation of the homepage
+        try {
+          await fetch("/api/revalidate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path: "/" })
+          })
+        } catch (revalidateError) {
+          console.error("Revalidation error:", revalidateError)
+          // Don't fail the save operation if revalidation fails
+        }
+
         toast({
           title: "Success",
           description: "Statistics updated successfully"
